@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Properties | Structurebase</title>
+  <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet">
+</head>
+<body>
+  <header>
+   <div class="logo">
+      <a href="index.html">
+        <img src="Images/LOGO1.webp" alt="Structurebase" width="100" height="100">
+      </a>
+    </div>
+    <nav id="main-nav" class="nav">
+      <ul>
+        <li><a href="index.html">Home</a></li>
+        <li><a href="properties.html" class="active">Properties</a></li>
+        <li><a href="about.html">About</a></li>
+        <li><a href="#contact">Contact</a></li>
+      </ul>
+    </nav>
+    <button class="hamburger" id="nav-toggle" aria-label="Open navigation" aria-expanded="false" aria-controls="main-nav">
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+  </header>
+  <main>
+    <section class="page-title">
+      <h1>Featured Properties</h1>
+      <p>Exclusive listings for the discerning investor.</p>
+    </section>
+
+    <aside class="filter-panel" aria-label="Filter Properties">
+      <div class="filters">
+        <form id="listing-filters" autocomplete="off">
+          <fieldset>
+            <legend>City</legend>
+            <div id="city-checkboxes"></div>
+          </fieldset>
+          <fieldset>
+            <legend>Status</legend>
+            <label>
+              <input type="checkbox" name="status" value="For Sale" checked>
+              For Sale
+            </label>
+            <label>
+              <input type="checkbox" name="status" value="For Rent" checked>
+              For Rent
+            </label>
+          </fieldset>
+          <fieldset>
+            <legend>Price Range</legend>
+            <div class="range-group">
+              <input type="range" id="price-range" min="0" max="20000000" step="50000" value="20000000">
+              <span id="price-range-value">Any</span>
+            </div>
+          </fieldset>
+        </form>
+      </div>
+    </aside>
+
+    <section class="property-list" id="property-list">
+      <div class="featured-listings property-grid">
+        <div class="property-card"
+             data-city="London"
+             data-status="For Sale"
+             data-price="12500000">
+          <div class="property-img-wrap">
+            <img loading="lazy" src="Images/Modern-London-Townhouse.webp" width="400" height="250" alt="London, Townhouse, £12,500,000">
+            <span class="property-location">London</span>
+          </div>
+          <div class="property-info">
+            <span class="property-price">£12,500,000</span>
+            <a href="#" class="property-link">View Details</a>
+          </div>
+        </div>
+        <!-- ...more .property-card items... -->
+      </div>
+    </section>
+
+    <section class="pagination" id="pagination" aria-label="Pagination"></section>
+  </main>
+  <footer class="modern-footer">
+    <div class="footer-main">
+      <div class="footer-brand">
+        <a href="index.html" aria-label="Structurebase Home">
+          <img src="Images/LOGO1.webp" alt="Structurebase logo" width="64" height="64" />
+        </a>
+        <div class="footer-tagline">Trusted Advisors in Global Real Estate</div>
+      </div>
+      <nav class="footer-nav" aria-label="Footer Navigation">
+        <ul>
+          <li><a href="index.html">Home</a></li>
+          <li><a href="properties.html">Properties</a></li>
+          <li><a href="about.html">About</a></li>
+          <li><a href="about.html#contact">Contact</a></li>
+        </ul>
+      </nav>
+      <div class="footer-contact">
+        <div>
+          <strong>Lagos</strong><br>
+          <a href="tel:+2348001234567">+234 800 123 4567</a>
+        </div>
+        <div>
+          <strong>Abuja</strong><br>
+          <a href="tel:+2348009876543">+234 800 987 6543</a>
+        </div>
+        <div>
+          <strong>London</strong><br>
+          <a href="tel:+442079460123">+44 20 7946 0123</a>
+        </div>
+        <div>
+          <a href="mailto:info@structurebase.com" class="footer-email">info@structurebase.com</a>
+        </div>
+      </div>
+      <div class="footer-social">
+        <a href="#" aria-label="Instagram" class="footer-icon"><i class="fab fa-instagram"></i></a>
+        <a href="#" aria-label="LinkedIn" class="footer-icon"><i class="fab fa-linkedin-in"></i></a>
+        <a href="#" aria-label="X (Twitter)" class="footer-icon"><i class="fab fa-x-twitter"></i></a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>&copy; 2025 Structurebase. All rights reserved.</span>
+      <span class="footer-privacy">
+        <a href="#">Privacy Policy</a>
+        &middot;
+        <a href="#">Terms of Service</a>
+      </span>
+    </div>
+  </footer>
+  <script>
+    // Hamburger menu toggle
+    const nav = document.getElementById('main-nav');
+    const toggle = document.getElementById('nav-toggle');
+    toggle.addEventListener('click', () => {
+      nav.classList.toggle('open');
+      const expanded = nav.classList.contains('open');
+      toggle.setAttribute('aria-expanded', expanded);
+    });
+
+    // Collect unique cities from property cards
+    const citySet = new Set();
+    document.querySelectorAll('.property-card').forEach(card => {
+      citySet.add(card.dataset.city);
+    });
+    const cityList = Array.from(citySet).sort();
+    const cityContainer = document.getElementById('city-checkboxes');
+    cityList.forEach(city => {
+      const label = document.createElement('label');
+      label.innerHTML = `<input type="checkbox" name="city" value="${city}" checked> ${city}`;
+      cityContainer.appendChild(label);
+    });
+
+    // Filtering logic
+    const filterForm = document.getElementById('listing-filters');
+    const priceRange = document.getElementById('price-range');
+    const priceValue = document.getElementById('price-range-value');
+    const allCards = Array.from(document.querySelectorAll('.property-card'));
+
+    function filterCards() {
+      const checkedCities = Array.from(filterForm.querySelectorAll('input[name="city"]:checked')).map(cb => cb.value);
+      const checkedStatuses = Array.from(filterForm.querySelectorAll('input[name="status"]:checked')).map(cb => cb.value);
+      const maxPrice = parseInt(priceRange.value, 10);
+
+      allCards.forEach(card => {
+        const city = card.dataset.city;
+        const status = card.dataset.status;
+        const price = parseInt(card.dataset.price, 10);
+        const show =
+          (checkedCities.length === 0 || checkedCities.includes(city)) &&
+          (checkedStatuses.length === 0 || checkedStatuses.includes(status)) &&
+          (isNaN(maxPrice) || price <= maxPrice);
+        card.classList.toggle('hidden', !show);
+      });
+    }
+
+    // Update price label
+    priceRange.addEventListener('input', () => {
+      priceValue.textContent = priceRange.value >= priceRange.max ? 'Any' : '≤ ' + Number(priceRange.value).toLocaleString();
+      filterCards();
+    });
+
+    // Listen to filter changes
+    filterForm.addEventListener('change', filterCards);
+
+    // Initial label and filter
+    priceValue.textContent = priceRange.value >= priceRange.max ? 'Any' : '≤ ' + Number(priceRange.value).toLocaleString();
+    filterCards();
+
+    // PAGINATION LOGIC
+    const propertyList = document.getElementById('property-list');
+    const allCardsPagination = Array.from(propertyList.children).filter(
+      el => el.classList.contains('property-card') || el.classList.contains('propertyCard')
+    );
+    const cardsPerPage = 6;
+    let currentPage = 1;
+
+    function getVisibleCards() {
+      // Only filter .property-card, not .propertyCard (for demo, you may adapt)
+      return allCardsPagination.filter(card => card.style.display !== 'none');
+    }
+
+    function renderPagination() {
+      const pagination = document.getElementById('pagination');
+      const visibleCards = getVisibleCards();
+      const totalPages = Math.max(1, Math.ceil(visibleCards.length / cardsPerPage));
+      let html = '';
+
+      if (totalPages > 1) {
+        html += `<button class="page-link" data-page="${currentPage - 1}" ${currentPage === 1 ? 'disabled' : ''}>Prev</button>`;
+        for (let i = 1; i <= totalPages; i++) {
+          html += `<button class="page-link${i === currentPage ? ' active' : ''}" data-page="${i}">${i}</button>`;
+        }
+        html += `<button class="page-link" data-page="${currentPage + 1}" ${currentPage === totalPages ? 'disabled' : ''}>Next</button>`;
+      }
+      pagination.innerHTML = html;
+
+      // Add event listeners
+      pagination.querySelectorAll('.page-link').forEach(btn => {
+        btn.addEventListener('click', e => {
+          const page = parseInt(btn.getAttribute('data-page'), 10);
+          if (!isNaN(page) && page >= 1 && page <= totalPages && page !== currentPage) {
+            currentPage = page;
+            showPage();
+            renderPagination();
+          }
+        });
+      });
+    }
+
+    function showPage() {
+      const visibleCards = getVisibleCards();
+      visibleCards.forEach((card, i) => {
+        card.style.display = (i >= (currentPage - 1) * cardsPerPage && i < currentPage * cardsPerPage) ? '' : 'none';
+      });
+    }
+
+    // Integrate with filter
+    function filterPropertiesWithPagination() {
+      filterCards();
+      currentPage = 1;
+      showPage();
+      renderPagination();
+    }
+
+    // Override filter event listeners
+    filterForm.removeEventListener('input', filterCards);
+    filterForm.addEventListener('input', filterPropertiesWithPagination);
+    priceRange.removeEventListener('change', filterCards);
+    priceRange.addEventListener('change', filterPropertiesWithPagination);
+
+    // Initial render
+    filterPropertiesWithPagination();
+  </script>
+</body>
+</html>

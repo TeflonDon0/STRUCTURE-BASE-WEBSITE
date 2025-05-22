@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>About | Structurebase</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <div class="logo">
+      <a href="index.html">
+        <img src="Images/LOGO1.webp" alt="Structurebase" width="100" height="100">
+      </a>
+    </div>
+    <nav id="main-nav" class="nav">
+      <ul>
+        <li><a href="index.html">Home</a></li>
+        <li><a href="properties.html">Properties</a></li>
+        <li><a href="about.html" class="active">About</a></li>
+        <li><a href="#contact">Contact</a></li>
+      </ul>
+    </nav>
+    <button class="hamburger" id="nav-toggle" aria-label="Open navigation" aria-expanded="false" aria-controls="main-nav">
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+  </header>
+  <main>
+    <section class="page-title">
+      <h1>About Structurebase</h1>
+      <p>Trusted advisors for high-net-worth real estate investors.</p>
+    </section>
+    <section class="about-content">
+      <div>
+        <h2>Our Philosophy</h2>
+        <p>We believe in timeless value, privacy, and building lasting relationships. Our team brings decades of experience in global real estate, finance, and client service.</p>
+      </div>
+      <div>
+        <h2>Discretion & Expertise</h2>
+        <p>Every transaction is handled with utmost confidentiality and care. We curate only the finest properties and guide you with integrity at every step.</p>
+      </div>
+    </section>
+    <section class="about-milestones">
+      <div class="milestones-col">
+        <h2 class="milestones-headline">A Decade of Transparent Deals.</h2>
+        <ol class="milestones-timeline" aria-label="Company Milestones">
+          <li>
+            <span class="timeline-dot"></span>
+            <span class="timeline-year">2013</span>
+            <span class="timeline-desc">Structurebase founded in Lagos, Nigeria.</span>
+          </li>
+          <li>
+            <span class="timeline-dot"></span>
+            <span class="timeline-year">2016</span>
+            <span class="timeline-desc">First international property acquisition in London.</span>
+          </li>
+          <li>
+            <span class="timeline-dot"></span>
+            <span class="timeline-year">2019</span>
+            <span class="timeline-desc">Expanded services to commercial leasing and management.</span>
+          </li>
+          <li>
+            <span class="timeline-dot"></span>
+            <span class="timeline-year">2022</span>
+            <span class="timeline-desc">Opened new office in Abuja, Nigeria.</span>
+          </li>
+          <li>
+            <span class="timeline-dot"></span>
+            <span class="timeline-year">2025</span>
+            <span class="timeline-desc">Celebrating 10+ years of trusted real estate partnerships.</span>
+          </li>
+        </ol>
+      </div>
+      <div class="milestones-image-col">
+        <img src="Images/Team-Handshake.webp" alt="Structurebase team handshake" width="300" height="300" class="milestones-image" loading="lazy">
+      </div>
+    </section>
+    <section class="about-team">
+      <h2 class="team-headline">Meet Our Team</h2>
+      <div class="team-grid">
+        <div class="team-card">
+          <div class="team-photo-wrap">
+            <img src="staff1.jpg" alt="Ada Okafor" class="team-photo" loading="lazy">
+          </div>
+          <div class="team-info">
+            <div class="team-name">Ada Okafor</div>
+            <div class="team-role">Managing Director</div>
+            <div class="team-motto">"Integrity in every deal."</div>
+          </div>
+        </div>
+        <div class="team-card">
+          <div class="team-photo-wrap">
+            <img src="staff2.jpg" alt="Tunde Balogun" class="team-photo" loading="lazy">
+          </div>
+          <div class="team-info">
+            <div class="team-name">Tunde Balogun</div>
+            <div class="team-role">Head of Investments</div>
+            <div class="team-motto">"Your vision, our mission."</div>
+          </div>
+        </div>
+        <div class="team-card">
+          <div class="team-photo-wrap">
+            <img src="staff3.jpg" alt="Fatima Bello" class="team-photo" loading="lazy">
+          </div>
+          <div class="team-info">
+            <div class="team-name">Fatima Bello</div>
+            <div class="team-role">Client Relations</div>
+            <div class="team-motto">"Service with discretion."</div>
+          </div>
+        </div>
+        <div class="team-card">
+          <div class="team-photo-wrap">
+            <img src="staff4.jpg" alt="Chinedu Eze" class="team-photo" loading="lazy">
+          </div>
+          <div class="team-info">
+            <div class="team-name">Chinedu Eze</div>
+            <div class="team-role">Property Specialist</div>
+            <div class="team-motto">"Quality above all."</div>
+          </div>
+        </div>
+      </div>
+    </section>
+    <section class="about-contact" id="contact">
+      <div class="contact-grid">
+        <form id="contactForm" novalidate>
+          <h2>Contact Us</h2>
+          <div class="form-group">
+            <label for="contact-name">Name*</label>
+            <input type="text" id="contact-name" name="name" required>
+          </div>
+          <div class="form-group">
+            <label for="contact-email">Email*</label>
+            <input type="email" id="contact-email" name="email" required>
+          </div>
+          <div class="form-group">
+            <label for="contact-phone">Phone</label>
+            <input type="tel" id="contact-phone" name="phone">
+          </div>
+          <div class="form-group">
+            <label for="contact-message">Message*</label>
+            <textarea id="contact-message" name="message" rows="4" required></textarea>
+          </div>
+          <button type="submit" class="cta">Send Message</button>
+        </form>
+        <div class="contact-map">
+          <iframe
+            title="Structurebase Lagos HQ"
+            src="https://www.google.com/maps?q=Lagos,+Nigeria&output=embed"
+            width="100%" height="320" style="border:0;" allowfullscreen="" loading="lazy"></iframe>
+        </div>
+      </div>
+    </section>
+  </main>
+  <footer class="modern-footer">
+    <div class="footer-main">
+      <div class="footer-brand">
+        <a href="index.html" aria-label="Structurebase Home">
+          <img src="Images/LOGO1.webp" alt="Structurebase logo" width="64" height="64" />
+        </a>
+        <div class="footer-tagline">Trusted Advisors in Global Real Estate</div>
+      </div>
+      <nav class="footer-nav" aria-label="Footer Navigation">
+        <ul>
+          <li><a href="index.html">Home</a></li>
+          <li><a href="properties.html">Properties</a></li>
+          <li><a href="about.html">About</a></li>
+          <li><a href="about.html#contact">Contact</a></li>
+        </ul>
+      </nav>
+      <div class="footer-contact">
+        <div>
+          <strong>Lagos</strong><br>
+          <a href="tel:+2348001234567">+234 800 123 4567</a>
+        </div>
+        <div>
+          <strong>Abuja</strong><br>
+          <a href="tel:+2348009876543">+234 800 987 6543</a>
+        </div>
+        <div>
+          <strong>London</strong><br>
+          <a href="tel:+442079460123">+44 20 7946 0123</a>
+        </div>
+        <div>
+          <a href="mailto:info@structurebase.com" class="footer-email">info@structurebase.com</a>
+        </div>
+      </div>
+      <div class="footer-social">
+        <a href="#" aria-label="Instagram" class="footer-icon"><i class="fab fa-instagram"></i></a>
+        <a href="#" aria-label="LinkedIn" class="footer-icon"><i class="fab fa-linkedin-in"></i></a>
+        <a href="#" aria-label="X (Twitter)" class="footer-icon"><i class="fab fa-x-twitter"></i></a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>&copy; 2025 Structurebase. All rights reserved.</span>
+      <span class="footer-privacy">
+        <a href="#">Privacy Policy</a>
+        &middot;
+        <a href="#">Terms of Service</a>
+      </span>
+    </div>
+  </footer>
+  <script>
+    // Hamburger menu toggle
+    const nav = document.getElementById('main-nav');
+    const toggle = document.getElementById('nav-toggle');
+    toggle.addEventListener('click', () => {
+      nav.classList.toggle('open');
+      const expanded = nav.classList.contains('open');
+      toggle.setAttribute('aria-expanded', expanded);
+    });
+
+    document.getElementById('contactForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const accent = getComputedStyle(document.documentElement).getPropertyValue('--gold') || '#BFA760';
+      let valid = true;
+      this.querySelectorAll('[required]').forEach(field => {
+        if (!field.value.trim()) {
+          field.style.borderColor = accent;
+          field.style.background = 'rgba(191,167,96,0.08)';
+          valid = false;
+        } else {
+          field.style.borderColor = '';
+          field.style.background = '';
+        }
+      });
+      if (valid) {
+        alert("Thanks, we’ll be in touch within 24h");
+        this.reset();
+      }
+    });
+
+    // Fade-in Intersection Observer for [data-animate]
+    document.addEventListener('DOMContentLoaded', function () {
+      const animatedEls = document.querySelectorAll('[data-animate]');
+      if ('IntersectionObserver' in window) {
+        const observer = new IntersectionObserver((entries, obs) => {
+          entries.forEach(entry => {
+            if (entry.isIntersecting) {
+              entry.target.classList.add('is-visible');
+              obs.unobserve(entry.target);
+            }
+          });
+        }, { threshold: 0.1 });
+        animatedEls.forEach(el => observer.observe(el));
+      } else {
+        // Fallback: show all if no IntersectionObserver
+        animatedEls.forEach(el => el.classList.add('is-visible'));
+      }
+    });
+  </script>
+</body>
+</html>
+``` 

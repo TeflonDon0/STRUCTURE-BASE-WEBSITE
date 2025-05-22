@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Structurebase | High-End Real Estate</title>
+  <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+  <a href="#main" class="skip-link">Skip to main content</a>
+  <header>
+    <div class="logo">
+      <a href="index.html">
+        <img src="Images/LOGO1.webp" alt="Structurebase" width="100" height="100">
+      </a>
+    </div>
+    <nav id="main-nav" class="nav">
+      <ul>
+        <li><a href="index.html" class="active">Home</a></li>
+        <li><a href="properties.html">Properties</a></li>
+        <li><a href="about.html">About</a></li>
+        <li><a href="#contact">Contact</a></li>
+      </ul>
+    </nav>
+    <button class="hamburger" id="nav-toggle" aria-label="Open navigation" aria-expanded="false" aria-controls="main-nav">
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+  </header>
+  <main id="main">
+
+    <!-- HERO -->
+    <section class="hero full-hero">
+      <div class="hero-bg"></div>
+      <div class="hero-content">
+        <h1>Your Clear Path to Trusted Property Investments</h1>
+        <p>Structurebase screens every square metre in Lagos, Abuja, and London, so you buy once and build wealth for generations.</p>
+        <a href="about.html#contact" class="cta accent">Request Consultation</a>
+      </div>
+    </section>
+
+    <!-- TRUST/STATS BAR -->
+    <section class="stats-bar">
+      <div class="stat">
+        <span class="stat-number">10+ Years</span>
+        <span class="stat-label">Experience</span>
+      </div>
+      <div class="stat">
+        <span class="stat-number">£500M</span>
+        <span class="stat-label">Assets Managed</span>
+      </div>
+      <div class="stat">
+        <span class="stat-number">97%</span>
+        <span class="stat-label">Client Retention</span>
+      </div>
+    </section>
+
+    <!-- FEATURES SECTION -->
+    <section class="features cards">
+      <div class="feature-card">
+        <i class="fas fa-map-marked-alt feature-icon" aria-hidden="true"></i>
+        <h2>Prime Locations</h2>
+        <p>Handpicked assets in the world’s most desirable markets.</p>
+      </div>
+      <div class="feature-card">
+        <i class="fas fa-user-shield feature-icon" aria-hidden="true"></i>
+        <h2>Discreet Service</h2>
+        <p>Personalized, confidential guidance at every step.</p>
+      </div>
+      <div class="feature-card">
+        <i class="fas fa-crown feature-icon" aria-hidden="true"></i>
+        <h2>Legacy Focus</h2>
+        <p>Opportunities designed for generational wealth.</p>
+      </div>
+    </section>
+
+    <!-- SERVICES SECTION -->
+    <section class="services cards">
+      <div class="service-card">
+        <i class="fas fa-home service-icon"></i>
+        <h3>Residential Development</h3>
+        <p>Exclusive homes in prime locations, designed for lasting value and comfort.</p>
+      </div>
+      <div class="service-card">
+        <i class="fas fa-building service-icon"></i>
+        <h3>Commercial Leasing</h3>
+        <p>Secure, high-yield commercial spaces for stable returns.</p>
+      </div>
+      <div class="service-card">
+        <i class="fas fa-briefcase service-icon"></i>
+        <h3>Property Management & Investment</h3>
+        <p>Comprehensive strategies for long-term, generational wealth.</p>
+      </div>
+    </section>
+
+    <!-- FEATURED PROPERTIES -->
+    <section class="property-grid" aria-label="Featured Properties">
+      <h2 class="section-title">Featured Properties</h2>
+      <div class="property-grid-list">
+        <!-- Property Card 1 -->
+        <div class="property-card">
+          <div class="property-img-wrap">
+            <img src="Images/Zurich painthouse 1.png" alt="Zurich Penthouse" loading="lazy">
+            <span class="property-badge luxury">Luxury</span>
+            <span class="property-location"><i class="fas fa-map-marker-alt"></i> Zurich</span>
+          </div>
+          <div class="property-info">
+            <h3>Zurich Penthouse</h3>
+            <span class="property-price">CHF 7,200,000</span>
+            <ul class="property-features">
+              <li><i class="fas fa-bed"></i> 4 Beds</li>
+              <li><i class="fas fa-bath"></i> 3 Baths</li>
+              <li><i class="fas fa-expand"></i> 320m²</li>
+            </ul>
+            <a href="#" class="property-link">View Details</a>
+          </div>
+        </div>
+        <!-- Property Card 2 -->
+        <div class="property-card">
+          <div class="property-img-wrap">
+            <img src="Images/Modern-London-Townhouse.webp" alt="London Townhouse" loading="lazy">
+            <span class="property-badge new">New</span>
+            <span class="property-location"><i class="fas fa-map-marker-alt"></i> London</span>
+          </div>
+          <div class="property-info">
+            <h3>London Townhouse</h3>
+            <span class="property-price">£12,500,000</span>
+            <ul class="property-features">
+              <li><i class="fas fa-bed"></i> 5 Beds</li>
+              <li><i class="fas fa-bath"></i> 4 Baths</li>
+              <li><i class="fas fa-expand"></i> 410m²</li>
+            </ul>
+            <a href="#" class="property-link">View Details</a>
+          </div>
+        </div>
+        <a href="properties.html" class="cta accent" style="display:inline-block;margin-top:2rem;">View All Properties</a>
+      </div>
+    </section>
+
+    <!-- Modern Client Testimonials Section -->
+    <section class="testimonials-carousel" aria-label="Client Testimonials">
+      <h2 class="section-title">What Our Clients Say</h2>
+      <div class="carousel-track">
+        <ul class="carousel-list">
+          <li class="testimonial-slide active">
+            <div class="testimonial-card">
+              <span class="quote-mark"><i class="fas fa-quote-left"></i></span>
+              <p><em>Structurebase guided us with professionalism and discretion. Their market knowledge and attention to detail made our investment journey seamless and rewarding.</em></p>
+              <footer>
+                <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="M. Fischer" class="testimonial-avatar">
+                <div class="testimonial-meta">
+                  <span class="testimonial-name">M. Fischer</span>
+                  <span class="testimonial-location">Zurich</span>
+                </div>
+              </footer>
+            </div>
+          </li>
+          <li class="testimonial-slide">
+            <div class="testimonial-card">
+              <span class="quote-mark"><i class="fas fa-quote-left"></i></span>
+              <p><em>We felt truly understood and supported at every step. The team’s integrity and expertise gave us confidence in building our property portfolio.</em></p>
+              <footer>
+                <img src="https://randomuser.me/api/portraits/women/44.jpg" alt="L. Bennett" class="testimonial-avatar">
+                <div class="testimonial-meta">
+                  <span class="testimonial-name">L. Bennett</span>
+                  <span class="testimonial-location">London</span>
+                </div>
+              </footer>
+            </div>
+          </li>
+          <li class="testimonial-slide">
+            <div class="testimonial-card">
+              <span class="quote-mark"><i class="fas fa-quote-left"></i></span>
+              <p><em>Discreet, responsive, and always a step ahead. Structurebase delivered results beyond our expectations and made us clients for life.</em></p>
+              <footer>
+                <img src="https://randomuser.me/api/portraits/men/65.jpg" alt="A. Okafor" class="testimonial-avatar">
+                <div class="testimonial-meta">
+                  <span class="testimonial-name">A. Okafor</span>
+                  <span class="testimonial-location">Lagos</span>
+                </div>
+              </footer>
+            </div>
+          </li>
+        </ul>
+        <!-- Carousel Controls -->
+        <button class="carousel-control prev" aria-label="Previous testimonial"><i class="fas fa-chevron-left"></i></button>
+        <button class="carousel-control next" aria-label="Next testimonial"><i class="fas fa-chevron-right"></i></button>
+      </div>
+    </section>
+
+    <!-- CTA STRIP -->
+    <section class="cta-strip" aria-label="Call to Action">
+      <div class="cta-strip-content">
+        <span class="cta-strip-text">Ready to secure your next property?</span>
+        <a href="mailto:info@structurebase.com?subject=Request%20a%20Quote" class="cta cta-strip-btn">Request a Quote</a>
+      </div>
+    </section>
+
+  </main>
+  <footer class="modern-footer">
+    <div class="footer-main">
+      <div class="footer-brand">
+        <a href="index.html" aria-label="Structurebase Home">
+          <img src="Images/LOGO1.webp" alt="Structurebase logo" width="64" height="64" />
+        </a>
+        <div class="footer-tagline">Trusted Advisors in Global Real Estate</div>
+      </div>
+      <nav class="footer-nav" aria-label="Footer Navigation">
+        <ul>
+          <li><a href="index.html">Home</a></li>
+          <li><a href="properties.html">Properties</a></li>
+          <li><a href="about.html">About</a></li>
+          <li><a href="about.html#contact">Contact</a></li>
+        </ul>
+      </nav>
+      <div class="footer-contact">
+        <div>
+          <strong>Lagos</strong><br>
+          <a href="tel:+2348001234567">+234 800 123 4567</a>
+        </div>
+        <div>
+          <strong>Abuja</strong><br>
+          <a href="tel:+2348009876543">+234 800 987 6543</a>
+        </div>
+        <div>
+          <strong>London</strong><br>
+          <a href="tel:+442079460123">+44 20 7946 0123</a>
+        </div>
+        <div>
+          <a href="mailto:info@structurebase.com" class="footer-email">info@structurebase.com</a>
+        </div>
+      </div>
+      <div class="footer-social">
+        <a href="#" aria-label="Instagram" class="footer-icon"><i class="fab fa-instagram"></i></a>
+        <a href="#" aria-label="LinkedIn" class="footer-icon"><i class="fab fa-linkedin-in"></i></a>
+        <a href="#" aria-label="X (Twitter)" class="footer-icon"><i class="fab fa-x-twitter"></i></a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>&copy; 2025 Structurebase. All rights reserved.</span>
+      <span class="footer-privacy">
+        <a href="#">Privacy Policy</a>
+        &middot;
+        <a href="#">Terms of Service</a>
+      </span>
+    </div>
+  </footer>
+  <script>
+    // Hamburger menu toggle
+    const nav = document.getElementById('main-nav');
+    const toggle = document.getElementById('nav-toggle');
+    toggle.addEventListener('click', () => {
+      nav.classList.toggle('open');
+      const expanded = nav.classList.contains('open');
+      toggle.setAttribute('aria-expanded', expanded);
+    });
+
+    // Simple carousel for testimonials
+    document.addEventListener('DOMContentLoaded', function () {
+      const slides = document.querySelectorAll('.testimonial-slide');
+      const prevBtn = document.querySelector('.carousel-control.prev');
+      const nextBtn = document.querySelector('.carousel-control.next');
+      let current = 0;
+
+      function showSlide(idx) {
+        slides.forEach((slide, i) => {
+          slide.classList.toggle('active', i === idx);
+        });
+      }
+
+      if (prevBtn && nextBtn && slides.length) {
+        prevBtn.addEventListener('click', () => {
+          current = (current - 1 + slides.length) % slides.length;
+          showSlide(current);
+        });
+        nextBtn.addEventListener('click', () => {
+          current = (current + 1) % slides.length;
+          showSlide(current);
+        });
+        showSlide(current);
+      }
+    });
+  </script>
+</body>
+</html>
