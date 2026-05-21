@@ -461,11 +461,18 @@ def utc_now_iso() -> str:
     return datetime.now(UTC).isoformat(timespec="seconds").replace("+00:00", "Z")
 
 
+def is_valid_mongodb_uri(uri: str) -> bool:
+    uri = uri.strip()
+    return uri.startswith("mongodb://") or uri.startswith("mongodb+srv://")
+
+
 def database_backend() -> str:
     configured = app.config["DATABASE_BACKEND"]
-    if configured in {"sqlite", "mongodb"}:
-        return configured
-    return "mongodb" if app.config["MONGODB_URI"] else "sqlite"
+    if configured == "sqlite":
+        return "sqlite"
+    if configured == "mongodb":
+        return "mongodb" if is_valid_mongodb_uri(app.config["MONGODB_URI"]) else "sqlite"
+    return "mongodb" if is_valid_mongodb_uri(app.config["MONGODB_URI"]) else "sqlite"
 
 
 def cloudinary_is_configured() -> bool:
@@ -1232,6 +1239,12 @@ def init_data_store() -> None:
     UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
     DOCUMENTS_DIR.mkdir(parents=True, exist_ok=True)
     if database_backend() == "mongodb":
+        mongodb_uri = app.config["MONGODB_URI"]
+        if not is_valid_mongodb_uri(mongodb_uri):
+            raise RuntimeError(
+                "Invalid or missing STRUCTUREBASE_MONGODB_URI. "
+                "Set it to a valid MongoDB URI like mongodb+srv://... or mongodb://..."
+            )
         get_mongo_client().admin.command("ping")
         init_mongodb()
         return
@@ -1534,6 +1547,10 @@ def startup_validation_issues() -> tuple[list[str], list[str]]:
     if app.config["DATABASE_BACKEND"] == "mongodb" and not app.config["MONGODB_URI"]:
         blocking_errors.append(
             "MongoDB backend is selected but STRUCTUREBASE_MONGODB_URI is empty."
+        )
+    elif app.config["DATABASE_BACKEND"] == "mongodb" and not is_valid_mongodb_uri(app.config["MONGODB_URI"]):
+        blocking_errors.append(
+            "MongoDB backend is selected but STRUCTUREBASE_MONGODB_URI is not a valid MongoDB URI."
         )
 
     if app.config["STORAGE_BACKEND"] in {"cloudinary", "r2"} and not cloudinary_is_configured():

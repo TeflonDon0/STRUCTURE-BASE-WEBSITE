@@ -1,0 +1,56 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      - name: Import check
+        env:
+          # avoid importing services that require secrets; empty values will fall back to sqlite/local
+          STRUCTUREBASE_MONGODB_URI: ''
+          CLOUDINARY_URL: ''
+        run: |
+          python - <<'PY'
+          try:
+              import app
+              print('app import OK')
+          except Exception as e:
+              print('Import failed:', e)
+              raise
+          PY
+      - name: Deployment env smoke check
+        env:
+          STRUCTUREBASE_ENV: production
+          STRUCTUREBASE_SECRET: ci-only-not-a-real-secret
+          STRUCTUREBASE_STRICT_STARTUP_CHECKS: "1"
+          STRUCTUREBASE_TRUST_PROXY_COUNT: "1"
+          STRUCTUREBASE_LOG_LEVEL: INFO
+          STRUCTUREBASE_DATABASE_BACKEND: sqlite
+          STRUCTUREBASE_STORAGE_BACKEND: local
+          STRUCTUREBASE_ADMIN_USERNAME: admin
+          STRUCTUREBASE_ADMIN_PASSWORD: ci-only-admin-password
+          STRUCTUREBASE_SESSION_COOKIE_SECURE: "1"
+          STRUCTUREBASE_SESSION_HOURS: "12"
+          STRUCTUREBASE_LOGIN_MAX_ATTEMPTS: "5"
+          STRUCTUREBASE_LOGIN_WINDOW_MINUTES: "15"
+          STRUCTUREBASE_CONTACT_EMAIL: ci@example.com
+          STRUCTUREBASE_CONTACT_PHONE: "+234 800 123 4567"
+          STRUCTUREBASE_CONTACT_PHONE_RAW: "+2348001234567"
+          STRUCTUREBASE_WHATSAPP_PHONE: "2348001234567"
+          STRUCTUREBASE_SITE_NAME: Structurebase
+        run: python scripts/deploy_smoke_check.py
