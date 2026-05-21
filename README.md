@@ -2,7 +2,7 @@
 
 Flask property listing app for sale, rent, and operations workflows across Nigeria, prepared for a starter production stack:
 
-- `Render` for app hosting
+- `Railway` for app hosting
 - `MongoDB Atlas` for the primary database
 - `Cloudinary` for image storage when you are ready
 - local SQLite and local uploads still available for fallback development
@@ -15,7 +15,7 @@ Flask property listing app for sale, rent, and operations workflows across Niger
 - Upload storage now auto-selects:
   - `Cloudinary` when `CLOUDINARY_URL` or explicit Cloudinary credentials are set
   - local `static/uploads` when they are not
-- Added `render.yaml` and `/healthz` for Render deployment
+- Added `railway.json`, `render.yaml`, and `/healthz` for deployment
 - Added a SQLite-to-Mongo migration script
 
 ## Local Run
@@ -59,7 +59,7 @@ Database:
 
 - `STRUCTUREBASE_DATABASE_BACKEND`
   - use `auto` locally
-  - use `mongodb` on Render when Atlas is ready
+  - use `mongodb` on Railway when Atlas is ready
 - `STRUCTUREBASE_MONGODB_URI`
 - `STRUCTUREBASE_MONGODB_DB_NAME`
 - `STRUCTUREBASE_MONGODB_COLLECTION`
@@ -91,7 +91,7 @@ Your part:
 
 - Create an Atlas cluster
 - Create a database user
-- Allow Render outbound access in Atlas network settings
+- Allow Railway outbound access in Atlas network settings
 - Copy the connection string
 - Set:
   - `STRUCTUREBASE_DATABASE_BACKEND=mongodb`
@@ -123,22 +123,22 @@ Your part:
 
 If these are not present, uploads continue using local disk.
 
-### 3. Render
+### 3. Railway
 
 Your part:
 
 - Push this repo to GitHub
-- Create a new Render Web Service from the repo
-- Render will detect `render.yaml`, or you can configure manually:
-  - Build command: `pip install -r requirements.txt`
-  - Start command: `waitress-serve --listen=0.0.0.0:$PORT wsgi:app`
-- Add the environment variables from `.env.example`
+- Create a new Railway service from the GitHub repo
+- Railway will detect `railway.json`
+- Confirm the start command is:
+  - `waitress-serve --listen=0.0.0.0:$PORT wsgi:app`
+- Add the environment variables from `RAILWAY_ENVIRONMENT.txt`
 - Health check path: `/healthz`
 
 Notes:
 
-- Free tier cold starts are expected
-- You will get an `onrender.com` URL until you buy a domain
+- You will get a Railway URL until you connect a custom domain
+- Keep the client test service separate from the future production service
 
 ## Migrating Existing SQLite Data To MongoDB
 

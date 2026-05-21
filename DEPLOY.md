@@ -2,21 +2,22 @@
 
 This document describes recommended steps to deploy `Structurebase` to a staging environment and production, and lists checks to perform before giving the site to a client for testing.
 
-## Quick start (Render / Railway)
+## Quick start (Railway)
 - Start command: `waitress-serve --listen=0.0.0.0:$PORT wsgi:app`
-- Create two services: `structurebase-staging` and `structurebase-prod`.
+- Create one Railway web service for client testing: `structurebase-staging`.
+- Later, create a separate service/project for production.
 - Use separate environment variables for each service. Do NOT commit secrets to the repo.
+- Paste the service variables from `RAILWAY_ENVIRONMENT.txt` into Railway Variables, then replace every placeholder value.
 
 ## Recommended client-testing path
-Use Render for the first client staging link.
+Use Railway for the client staging link.
 
 Why:
-- The repo has a checked-in `render.yaml` Blueprint.
-- Secrets marked `sync: false` are clearly prompted in the dashboard.
 - The Flask app runs as a normal Python web service instead of a static/serverless app.
 - `/healthz` is already configured as the health check.
+- The repo has `railway.json`, `.python-version`, `runtime.txt`, `Procfile`, and a WSGI start command.
 
-Use Railway only after the service passes the live smoke check. If Railway returns `502`, treat the service as unhealthy and inspect deploy logs before testing login.
+If Railway returns `502`, treat the service as unhealthy and inspect deploy logs before testing login. The usual causes are missing variables, MongoDB Atlas network access, wrong MongoDB credentials, or a partial SMTP configuration.
 
 ## Required environment variables (minimum)
 - `STRUCTUREBASE_ENV=production`
@@ -51,11 +52,11 @@ Use Railway only after the service passes the live smoke check. If Railway retur
 ## Security & secrets
 - Rotate and reissue any credentials accidentally posted in logs or chat.
 - Create a dedicated, least-privilege MongoDB user for the app.
-- Store secrets in Render/Railway secret store; do not use `.env` in repo.
+- Store secrets in Railway Variables; do not use `.env` in repo.
 
 ## Staging for client testing
 - Use the `structurebase-staging` service as the client test instance.
-- Prefer Render for the first client-testing deployment because this repo already includes `render.yaml`, `runtime.txt`, `Procfile`, and a WSGI start command. Railway can work, but only after its variables and MongoDB network access are proven with the smoke check.
+- Railway should deploy from the clean GitHub repo, not the older local folder with unpushed changes.
 - Create a test admin user and share credentials with the client.
 - Ask the client to test the critical flows: login, create listing, upload image, generate document, submit enquiry.
 - Keep production separate from staging. Do not give clients the production URL until staging passes smoke checks and critical-flow testing.
