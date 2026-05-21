@@ -1508,7 +1508,6 @@ def smtp_is_configured() -> bool:
     return all(
         [
             app.config["SMTP_HOST"],
-            app.config["SMTP_PORT"],
             app.config["SMTP_USERNAME"],
             app.config["SMTP_PASSWORD"],
             app.config["SMTP_FROM_EMAIL"],
@@ -1532,7 +1531,6 @@ def startup_validation_issues() -> tuple[list[str], list[str]]:
 
     smtp_values = [
         app.config["SMTP_HOST"],
-        app.config["SMTP_PORT"],
         app.config["SMTP_USERNAME"],
         app.config["SMTP_PASSWORD"],
         app.config["SMTP_FROM_EMAIL"],
