@@ -471,7 +471,7 @@ def database_backend() -> str:
     if configured == "sqlite":
         return "sqlite"
     if configured == "mongodb":
-        return "mongodb" if is_valid_mongodb_uri(app.config["MONGODB_URI"]) else "sqlite"
+        return "mongodb"
     return "mongodb" if is_valid_mongodb_uri(app.config["MONGODB_URI"]) else "sqlite"
 
 
@@ -1245,9 +1245,11 @@ def init_data_store() -> None:
                 "Invalid or missing STRUCTUREBASE_MONGODB_URI. "
                 "Set it to a valid MongoDB URI like mongodb+srv://... or mongodb://..."
             )
+        app.logger.info("Initializing MongoDB data store.")
         get_mongo_client().admin.command("ping")
         init_mongodb()
         return
+    app.logger.info("Initializing SQLite data store.")
     init_sqlite_db()
 
 
@@ -1598,7 +1600,7 @@ def startup_validation_issues() -> tuple[list[str], list[str]]:
             "Trusted proxy count is zero in production; client IP and scheme detection may be inaccurate."
         )
 
-    if is_placeholder_email(str(site_settings().get("contact_email") or "")):
+    if is_placeholder_email(str(app.config["CONTACT_EMAIL"] or "")):
         warnings.append(
             "Contact email still uses a placeholder or fallback value."
         )
@@ -1628,7 +1630,9 @@ def enforce_startup_checks() -> None:
     if blocking_errors:
         for error in blocking_errors:
             app.logger.error("Startup check failed: %s", error)
-        raise RuntimeError("Startup checks failed. Review logs for the blocking configuration issues.")
+        if app.config["STRICT_STARTUP_CHECKS"]:
+            raise RuntimeError("Startup checks failed. Review logs for the blocking configuration issues.")
+        app.logger.warning("Startup checks found blocking issues, but strict checks are disabled.")
 
 
 def email_logo_asset() -> tuple[str, bytes] | None:
@@ -6796,8 +6800,18 @@ def handle_large_upload(_error):
 configure_logging()
 
 with app.app_context():
-    init_data_store()
     enforce_startup_checks()
+    try:
+        init_data_store()
+    except PyMongoError as exc:
+        app.logger.exception(
+            "Startup data store initialization failed. Check MongoDB URI, "
+            "Atlas network access, database user credentials, and allowed IPs."
+        )
+        raise RuntimeError("Startup data store initialization failed.") from exc
+    except Exception:
+        app.logger.exception("Startup data store initialization failed.")
+        raise
 
 
 if __name__ == "__main__":
