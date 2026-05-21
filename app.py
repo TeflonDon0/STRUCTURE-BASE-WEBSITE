@@ -45,14 +45,6 @@ from flask import (
 )
 from cloudinary.exceptions import Error as CloudinaryError
 from cloudinary.utils import cloudinary_url
-
-# Prevent Cloudinary initialization errors on startup if CLOUDINARY_URL is missing
-# by temporarily clearing it during module import, then configuring it properly later
-_cloudinary_url_env = os.environ.get("CLOUDINARY_URL", "").strip()
-if not _cloudinary_url_env or not _cloudinary_url_env.startswith("cloudinary://"):
-    # Remove invalid CLOUDINARY_URL from environment to prevent import-time errors
-    os.environ.pop("CLOUDINARY_URL", None)
-    cloudinary.reset_config()
 from document_generation import (
     DOCUMENT_TEMPLATE_VERSION,
     document_generator_catalog,
@@ -80,6 +72,13 @@ UPLOAD_DIR = STATIC_DIR / "uploads"
 DOCUMENTS_DIR = BASE_DIR / "data" / "documents"
 load_dotenv(BASE_DIR / ".env")
 EMAIL_LOGO_PATH = STATIC_DIR / "images" / "LOGO2-email.png"
+
+# Prevent Cloudinary initialization errors on startup if CLOUDINARY_URL is missing
+# by clearing invalid URLs from environment before Cloudinary config is accessed
+_cloudinary_url_env = os.environ.get("CLOUDINARY_URL", "").strip()
+if _cloudinary_url_env and not _cloudinary_url_env.startswith("cloudinary://"):
+    # Remove invalid CLOUDINARY_URL to prevent import-time errors
+    os.environ.pop("CLOUDINARY_URL", None)
 
 ALLOWED_EXTENSIONS = {"jpg", "jpeg", "png", "webp"}
 ALLOWED_DOCUMENT_EXTENSIONS = {"pdf", "jpg", "jpeg", "png", "webp"}
