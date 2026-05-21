@@ -6742,6 +6742,10 @@ def healthcheck():
         "smtp_configured": smtp_is_configured(),
         "proxy_trust_count": app.config["TRUST_PROXY_COUNT"],
         "mapbox_configured": app.config["MAPBOX_TOKEN"] != "YOUR_MAPBOX_TOKEN_HERE",
+        "admin_username_configured": app.config["ADMIN_USERNAME"] != DEFAULT_ADMIN_USERNAME,
+        "admin_password_configured": bool(app.config["ADMIN_PASSWORD_HASH"])
+        or app.config["ADMIN_PASSWORD"] != DEFAULT_ADMIN_PASSWORD,
+        "using_default_credentials": site_settings()["using_default_credentials"],
     }
     if database_backend() == "mongodb":
         try:
