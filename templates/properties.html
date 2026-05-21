@@ -1,0 +1,232 @@
+{% extends "base.html" %}
+
+{% block title %}Property Listings | {{ site_settings.site_name }}{% endblock %}
+{% block meta_description %}Browse the current {{ site_settings.site_name }} property catalogue by district, type, sale, rent, or lease intent, and live availability.{% endblock %}
+{% block body_class %}properties-page{% endblock %}
+{% block head_extras %}
+  <link href="https://api.mapbox.com/mapbox-gl-js/v3.17.0/mapbox-gl.css" rel="stylesheet">
+  <script src="https://api.mapbox.com/mapbox-gl-js/v3.17.0/mapbox-gl.js"></script>
+{% endblock %}
+
+{% block content %}
+  <section class="page-hero" data-reveal>
+    <div class="shell page-hero-shell">
+      <div>
+        <p class="eyebrow">Live Catalogue</p>
+        <h1>Browse properties.</h1>
+        <p class="page-intro">
+          Filter the live inventory by district, type, sale, rent, or lease status, and keyword.
+        </p>
+        <div class="masthead-signal-row" aria-label="Catalogue signals">
+          <span>{{ listings|length }} live listing{% if listings|length != 1 %}s{% endif %}</span>
+          <span>Sale, rent, and lease</span>
+          <span>Availability and viewing checks</span>
+        </div>
+        <div class="hero-actions masthead-actions">
+          <a href="#listing-filters" class="cta">Filter listings</a>
+          <a href="{{ general_whatsapp_url }}" class="text-link text-link-strong" target="_blank" rel="noreferrer">Talk to an advisor</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section shell section-tight" data-reveal>
+    <div class="inner-summary-strip catalogue-summary-strip" aria-label="Current listing view">
+      <div>
+        <p class="eyebrow">Current view</p>
+        <p><strong>{{ listings|length }} listing{% if listings|length != 1 %}s{% endif %}</strong> in the live catalogue. Use filters to narrow by district, type, market intent, or availability.</p>
+      </div>
+      <a href="{{ general_whatsapp_url }}" class="text-link text-link-strong" target="_blank" rel="noreferrer">Talk to an advisor</a>
+    </div>
+  </section>
+
+  <section class="section shell section-tight" data-reveal>
+    <details class="filter-panel" open>
+      <summary>
+        <span>Filters</span>
+        <strong>{{ listings|length }} result{% if listings|length != 1 %}s{% endif %}</strong>
+      </summary>
+      <form method="get" action="{{ url_for('properties') }}" class="listing-filters" id="listing-filters" aria-label="Filter property listings">
+        <div class="form-group">
+          <label for="q">Search</label>
+          <input type="search" id="q" name="q" value="{{ filters.q }}" placeholder="Ikoyi penthouse, Lekki rent, office">
+        </div>
+
+        <div class="form-group">
+          <label for="status">Status</label>
+          <select id="status" name="status">
+            <option value="">All</option>
+            {% for option in status_options %}
+              <option value="{{ option }}" {% if filters.status == option %}selected{% endif %}>{{ option }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="availability">Availability</label>
+          <select id="availability" name="availability">
+            <option value="">All availability</option>
+            {% for item in availabilities %}
+              <option value="{{ item.availability }}" {% if filters.availability == item.availability %}selected{% endif %}>{{ item.availability }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="district">District</label>
+          <select id="district" name="district">
+            <option value="">All districts</option>
+            {% for district in districts %}
+              <option value="{{ district.district }}" {% if filters.district == district.district %}selected{% endif %}>{{ district.district }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="property_type">Type</label>
+          <select id="property_type" name="property_type">
+            <option value="">All types</option>
+            {% for item in property_types %}
+              <option value="{{ item.property_type }}" {% if filters.property_type == item.property_type %}selected{% endif %}>{{ item.property_type }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="filter-actions">
+          <button type="submit" class="cta cta-small">Apply filters</button>
+          <a href="{{ url_for('properties') }}" class="text-link">Reset</a>
+        </div>
+
+        <div class="filter-chip-row">
+          <label class="checkbox filter-chip">
+            <input type="checkbox" name="verified_only" value="1" {% if filters.verified_only %}checked{% endif %}>
+            <span>Verified only</span>
+          </label>
+          {% for key, label in feature_filter_fields %}
+            <label class="checkbox filter-chip">
+              <input type="checkbox" name="{{ key }}" value="1" {% if filters[key] %}checked{% endif %}>
+              <span>{{ label }}</span>
+            </label>
+          {% endfor %}
+        </div>
+      </form>
+    </details>
+  </section>
+
+  <section class="section shell section-tight" data-reveal>
+    <div class="objection-strip" aria-label="Listing reassurance">
+      <article>
+        <strong>Before you view</strong>
+        <p>Ask the team to confirm current availability, access timing, and viewing windows.</p>
+      </article>
+      <article>
+        <strong>Price questions</strong>
+        <p>Confirm agency fees, service charges, payment terms, and negotiation room before travelling.</p>
+      </article>
+      <article>
+        <strong>Listing confidence</strong>
+        <p>Verified badges indicate reviewed availability, price, and basic listing details.</p>
+      </article>
+    </div>
+  </section>
+
+  <section class="section shell section-tight" data-reveal>
+    {% if listings %}
+      <div class="property-grid-list">
+        {% for listing in listings %}
+          <article class="property-card" id="listing-{{ listing.id }}">
+            <a href="{{ url_for('property_detail', listing_id=listing.id) }}" class="property-media-link" aria-label="View {{ listing.title }}">
+              <div class="property-media" style="--media-bg: url('{{ asset_url(listing_image_path(listing)) }}')">
+                <img src="{{ asset_url(listing_image_path(listing)) }}" alt="{{ listing.title }}" loading="{% if loop.index <= 4 %}eager{% else %}lazy{% endif %}" decoding="async">
+                <span class="property-badge">{{ listing.status }}</span>
+                {% if listing.verified_property %}
+                  <span class="property-badge property-badge-verified" title="Availability, price, and basic listing details reviewed before publishing.">Verified</span>
+                {% endif %}
+                {% if listing.availability != 'Available' %}
+                  <span class="property-badge property-badge-secondary">{{ listing.availability }}</span>
+                {% endif %}
+                {% if not listing_has_uploaded_image(listing) %}
+                  <span class="property-badge property-badge-secondary {% if listing.availability != 'Available' %}property-badge-stacked{% endif %}" title="Representative image. Ask for current photos before final decisions.">Representative image</span>
+                {% endif %}
+              </div>
+            </a>
+            <div class="property-body">
+              <div class="property-copy">
+                <div class="property-card-topline">
+                  <p class="property-location">{{ listing.district }}</p>
+                  <p class="property-availability">{{ listing.availability }}</p>
+                </div>
+                <p class="property-price property-price-card">{{ listing.price | naira }}{{ listing.price_suffix }}</p>
+                <h2>{{ listing.title }}</h2>
+                <p class="property-summary">{{ listing.summary }}</p>
+              </div>
+              <ul class="property-meta">
+                <li>{{ listing.property_type }}</li>
+                {% if listing.bedrooms %}<li>{{ listing.bedrooms }} beds</li>{% endif %}
+                {% if listing.bathrooms %}<li>{{ listing.bathrooms }} baths</li>{% endif %}
+                {% if listing.area_sqm %}<li>{{ listing.area_sqm }} sqm</li>{% endif %}
+              </ul>
+              {% set feature_labels = listing_feature_labels(listing) %}
+              {% if feature_labels %}
+                <div class="feature-chip-row">
+                  {% for label in feature_labels[:4] %}
+                    <span class="feature-chip">{{ label }}</span>
+                  {% endfor %}
+                </div>
+              {% endif %}
+              <div class="property-footer">
+                <p class="property-note">{{ listing.address }}</p>
+                <div class="property-actions">
+                  <a href="{{ url_for('property_detail', listing_id=listing.id) }}" class="cta cta-small">View details</a>
+                  <a href="{{ listing_whatsapp_url(listing) }}" class="cta cta-small cta-card-secondary" target="_blank" rel="noreferrer">Ask to view</a>
+                </div>
+                <p class="property-note property-reassurance">Ask about availability, fees, and viewing times before you travel.</p>
+              </div>
+            </div>
+          </article>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="empty-state">
+        <p>No listings match those filters right now.</p>
+        <div class="property-actions">
+          {% if is_authenticated %}
+            <a href="{{ url_for('create_listing') }}" class="cta cta-small">Post a new listing</a>
+          {% else %}
+            <a href="{{ general_whatsapp_url }}" class="cta cta-small" target="_blank" rel="noreferrer">Ask the team to source options</a>
+          {% endif %}
+          <a href="{{ general_whatsapp_url }}" class="text-link text-link-strong" target="_blank" rel="noreferrer">Chat on WhatsApp</a>
+        </div>
+      </div>
+    {% endif %}
+  </section>
+
+  <section class="section shell section-tight" data-reveal>
+    <article class="page-hero-card listing-map-card">
+      <div class="listing-map-head">
+        <div>
+          <p class="eyebrow">Map View</p>
+          <h2>Catalogue map</h2>
+        </div>
+        <div class="listing-map-meta">
+          <p class="page-hero-note">
+            {{ map_summary.mapped_count }} of {{ listings|length }} listing{% if listings|length != 1 %}s{% endif %} are mapped on this view.
+          </p>
+          {% if map_summary.approximate_count %}
+            <p class="map-note">{{ map_summary.approximate_count }} marker{% if map_summary.approximate_count != 1 %}s use{% else %} uses{% endif %} district-centre fallback until exact coordinates are added.</p>
+          {% endif %}
+        </div>
+      </div>
+      <div
+        id="map"
+        class="listing-map"
+        data-token="{{ mapbox_token }}"
+        data-longitude="3.3792"
+        data-latitude="6.5244"
+        data-zoom="12"
+        aria-label="Interactive property map"
+      ></div>
+      <script id="map-data" type="application/json" nonce="{{ csp_nonce() }}">{{ map_feature_collection | tojson }}</script>
+    </article>
+  </section>
+{% endblock %}

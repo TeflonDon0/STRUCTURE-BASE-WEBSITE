@@ -1,0 +1,59 @@
+<tr>
+  <td class="content-shell">
+    <p class="eyebrow">Enquiry receipt</p>
+    <h1>We received your enquiry for {{ payload.listing_title }}.</h1>
+    <p class="lead">
+      {% if payload.greeting_line %}{{ payload.greeting_line }}{% endif %}
+      {{ payload.response_window }}
+    </p>
+
+    <table role="presentation" width="100%" class="summary-card" style="margin: 18px 0 20px;">
+      <tr>
+        <td>
+          <table role="presentation" width="100%" class="summary-grid">
+            <tr>
+              <td>
+                <p class="summary-label">Reference</p>
+                <p class="summary-value">{{ payload.reference }}</p>
+              </td>
+              <td>
+                <p class="summary-label">Listing</p>
+                <p class="summary-value">{{ payload.listing_title }}</p>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <p class="summary-label">Price</p>
+                <p class="summary-value">{{ payload.listing_price }}</p>
+              </td>
+              <td>
+                <p class="summary-label">Follow-up route</p>
+                <p class="summary-value">
+                  {{ payload.preferred_contact }}{% if payload.reply_line %} via {{ payload.reply_line }}{% endif %}
+                </p>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+
+    {% if payload.message_excerpt %}
+      <table role="presentation" width="100%" class="callout-card" style="margin: 0 0 20px;">
+        <tr>
+          <td>
+            <p class="summary-label">Your message</p>
+            <p style="margin-bottom: 0;">{{ payload.message_excerpt }}</p>
+          </td>
+        </tr>
+      </table>
+    {% endif %}
+
+    {% if payload.cta_url and payload.cta_label %}
+      <div class="button-wrap">
+        <a href="{{ payload.cta_url }}" class="button">{{ payload.cta_label }}</a>
+        <p class="button-note">Keep your reference handy if you need to add more detail before the team replies.</p>
+      </div>
+    {% endif %}
+  </td>
+</tr>

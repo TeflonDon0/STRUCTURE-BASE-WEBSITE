@@ -1,0 +1,254 @@
+{% extends "base.html" %}
+
+{% block title %}Listings Admin | {{ site_settings.site_name }}{% endblock %}
+{% block robots %}noindex,nofollow{% endblock %}
+{% block body_class %}dashboard-page admin-module-page{% endblock %}
+
+{% block content %}
+  {% set next_url = request.full_path.rstrip('?') %}
+  <section class="page-hero admin-module-hero">
+    <div class="shell admin-module-hero-shell">
+      <div>
+        <p class="eyebrow">Listings</p>
+        <h1>Manage live, draft, and off-market inventory.</h1>
+        <p class="page-intro">
+          Search, filter, bulk update, and move listings without leaving the inventory queue.
+        </p>
+      </div>
+      <div class="admin-module-actions">
+        <a href="{{ url_for('create_listing', next=next_url) }}" class="cta">New listing</a>
+        <a href="{{ url_for('dashboard') }}" class="text-link">Back to overview</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="section shell section-tight">
+    <div class="dashboard-section-head admin-section-head">
+      <div>
+        <p class="dashboard-section-kicker">Saved views</p>
+        <h2>Common inventory states</h2>
+      </div>
+      <div class="dashboard-section-meta">
+        <span class="dashboard-badge">{{ listings|length }} shown</span>
+        <span class="dashboard-badge dashboard-badge-muted">{{ inventory_total }} total</span>
+      </div>
+    </div>
+    <div class="admin-chip-grid">
+      {% for value, label in listing_saved_views %}
+        <a href="{{ url_for('admin_listings', view=value) }}" class="admin-chip-link {% if listing_filters.view == value %}is-active{% endif %}">
+          <span>{{ label }}</span>
+          <strong>{{ listing_saved_view_counts.get(value, 0) }}</strong>
+        </a>
+      {% endfor %}
+    </div>
+  </section>
+
+  <section class="section shell section-tight">
+    <div class="admin-insight-strip" aria-label="Inventory management summary">
+      <article>
+        <span>Published</span>
+        <strong>{{ listing_summary.published_count }}</strong>
+        <p>Visible on the public catalogue.</p>
+      </article>
+      <article>
+        <span>Needs publishing decision</span>
+        <strong>{{ listing_summary.draft_count }}</strong>
+        <p>Drafts should be completed, held, or removed.</p>
+      </article>
+      <article>
+        <span>Trust gaps</span>
+        <strong>{{ listing_summary.unverified_count }}</strong>
+        <p>Listings without property or landlord verification.</p>
+      </article>
+      <article>
+        <span>Market movement</span>
+        <strong>{{ listing_summary.under_offer_count }}</strong>
+        <p>Under-offer records to keep current.</p>
+      </article>
+    </div>
+  </section>
+
+  <section class="section shell section-tight">
+    <form method="get" action="{{ url_for('admin_listings') }}" class="dashboard-filter-bar admin-filter-bar" aria-label="Filter listings">
+      <input type="hidden" name="view" value="{{ listing_filters.view }}">
+      <div class="dashboard-filter-grid">
+        <div class="form-group dashboard-filter-search">
+          <label for="dashboard-q">Search</label>
+          <input type="search" id="dashboard-q" name="q" value="{{ listing_filters.q }}" placeholder="Title, summary, district, address">
+        </div>
+        <div class="form-group">
+          <label for="dashboard-status">Market</label>
+          <select id="dashboard-status" name="status">
+            <option value="">All</option>
+            {% for option in status_options %}
+              <option value="{{ option }}" {% if listing_filters.status == option %}selected{% endif %}>{{ option }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="dashboard-availability">Availability</label>
+          <select id="dashboard-availability" name="availability">
+            <option value="">All</option>
+            {% for item in dashboard_availabilities %}
+              <option value="{{ item.availability }}" {% if listing_filters.availability == item.availability %}selected{% endif %}>{{ item.availability }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="dashboard-district">District</label>
+          <select id="dashboard-district" name="district">
+            <option value="">All districts</option>
+            {% for item in dashboard_districts %}
+              <option value="{{ item.district }}" {% if listing_filters.district == item.district %}selected{% endif %}>{{ item.district }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="dashboard-property-type">Type</label>
+          <select id="dashboard-property-type" name="property_type">
+            <option value="">All types</option>
+            {% for item in dashboard_property_types %}
+              <option value="{{ item.property_type }}" {% if listing_filters.property_type == item.property_type %}selected{% endif %}>{{ item.property_type }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="dashboard-publication">Visibility</label>
+          <select id="dashboard-publication" name="publication">
+            <option value="">All visibility</option>
+            <option value="published" {% if listing_filters.publication == 'published' %}selected{% endif %}>Published only</option>
+            <option value="draft" {% if listing_filters.publication == 'draft' %}selected{% endif %}>Drafts only</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="dashboard-sort">Sort</label>
+          <select id="dashboard-sort" name="sort">
+            {% for value, label in dashboard_sort_options %}
+              <option value="{{ value }}" {% if listing_filters.sort == value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+
+      <div class="dashboard-filter-footer">
+        <div class="filter-chip-row dashboard-filter-chip-row">
+          <label class="checkbox filter-chip">
+            <input type="checkbox" name="featured_only" value="1" {% if listing_filters.featured_only %}checked{% endif %}>
+            <span>Featured only</span>
+          </label>
+          <label class="checkbox filter-chip">
+            <input type="checkbox" name="verified_property_only" value="1" {% if listing_filters.verified_property_only %}checked{% endif %}>
+            <span>Property vetted</span>
+          </label>
+          <label class="checkbox filter-chip">
+            <input type="checkbox" name="verified_landlord_only" value="1" {% if listing_filters.verified_landlord_only %}checked{% endif %}>
+            <span>Landlord vetted</span>
+          </label>
+        </div>
+
+        <div class="filter-actions dashboard-filter-actions">
+          <button type="submit" class="cta cta-small">Apply</button>
+          <a href="{{ url_for('admin_listings') }}" class="text-link">Reset</a>
+        </div>
+      </div>
+    </form>
+
+    {% if dashboard_active_filter_labels %}
+      <div class="dashboard-active-filters" aria-label="Active listing filters">
+        {% for label in dashboard_active_filter_labels %}
+          <span class="dashboard-filter-pill">{{ label }}</span>
+        {% endfor %}
+      </div>
+    {% endif %}
+  </section>
+
+  <section class="section shell section-tight">
+    {% if listings %}
+      <form method="post" action="{{ url_for('bulk_update_listings') }}" class="admin-bulk-shell">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="next" value="{{ next_url }}">
+        <div class="admin-bulk-bar">
+          <div class="admin-bulk-copy">
+            <p class="dashboard-section-kicker">Bulk actions</p>
+            <h2>Apply one change across selected listings</h2>
+          </div>
+          <div class="admin-bulk-controls">
+            <select name="action" aria-label="Choose bulk action">
+              <option value="">Choose action</option>
+              {% for value, label in listing_bulk_action_options %}
+                <option value="{{ value }}">{{ label }}</option>
+              {% endfor %}
+            </select>
+            <button type="submit" class="cta cta-small">Apply to selected</button>
+          </div>
+        </div>
+
+        <div class="admin-record-grid admin-record-grid-listings">
+          {% for listing in listings %}
+            <article class="admin-record-card admin-record-card-listing">
+              <div class="admin-record-select">
+                <label class="checkbox">
+                  <input type="checkbox" name="listing_ids" value="{{ listing.id }}">
+                  <span>Select</span>
+                </label>
+              </div>
+              <div class="admin-record-media">
+                <img src="{{ asset_url(listing_image_path(listing)) }}" alt="{{ listing.title }}" loading="lazy" decoding="async">
+              </div>
+              <div class="admin-record-copy">
+                <div class="admin-record-head">
+                  <div>
+                    <p class="property-location">{{ listing.district }}</p>
+                    <h3>{{ listing.title }}</h3>
+                  </div>
+                  <div class="status-cluster">
+                    <span class="dashboard-badge">{{ listing.status }}</span>
+                    <span class="dashboard-badge dashboard-badge-muted">{{ listing.availability }}</span>
+                    {% if listing.featured %}<span class="dashboard-badge dashboard-badge-accent">Featured</span>{% endif %}
+                    {% if not listing.published %}<span class="dashboard-badge dashboard-badge-muted">Draft</span>{% endif %}
+                  </div>
+                </div>
+
+                <p class="dashboard-summary">{{ listing.summary }}</p>
+                <div class="dashboard-meta">
+                  <span>{{ listing.property_type }}</span>
+                  <span>{{ listing.price | naira }}{{ listing.price_suffix }}</span>
+                  <span>{{ listing.view_count or 0 }} views</span>
+                  <span>{{ listing.address }}</span>
+                </div>
+
+                {% set feature_labels = listing_feature_labels(listing) %}
+                {% if feature_labels %}
+                  <div class="feature-chip-row">
+                    {% for label in feature_labels[:4] %}
+                      <span class="feature-chip">{{ label }}</span>
+                    {% endfor %}
+                  </div>
+                {% endif %}
+              </div>
+              <div class="admin-record-actions">
+                {% if listing.published %}
+                  <a href="{{ url_for('property_detail', listing_id=listing.id) }}" class="cta cta-small cta-outline">Preview</a>
+                {% endif %}
+                <a href="{{ url_for('edit_listing', listing_id=listing.id, next=next_url) }}" class="cta cta-small">Edit</a>
+                <form method="post" action="{{ url_for('delete_listing', listing_id=listing.id) }}" data-confirm-message="Delete &quot;{{ listing.title }}&quot; permanently?">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <input type="hidden" name="next" value="{{ next_url }}">
+                  <button type="submit" class="cta cta-small cta-danger" data-loading-label="Deleting...">Delete</button>
+                </form>
+              </div>
+            </article>
+          {% endfor %}
+        </div>
+      </form>
+    {% else %}
+      <div class="empty-state dashboard-empty-state">
+        <p>No listings match the current inventory view.</p>
+        <div class="dashboard-empty-actions">
+          <a href="{{ url_for('admin_listings') }}" class="cta cta-small cta-outline">Clear filters</a>
+          <a href="{{ url_for('create_listing', next=next_url) }}" class="cta cta-small">Create listing</a>
+        </div>
+      </div>
+    {% endif %}
+  </section>
+{% endblock %}

@@ -1,0 +1,267 @@
+{% extends "base.html" %}
+
+{% block title %}{{ page_title }} | {{ site_settings.site_name }}{% endblock %}
+{% block robots %}noindex,nofollow{% endblock %}
+{% block body_class %}form-page{% endblock %}
+
+{% block content %}
+  <section class="page-hero">
+    <div class="shell page-hero-shell">
+      <div>
+        <p class="eyebrow">Listing Editor</p>
+        <h1>{{ page_title }}</h1>
+        <p class="page-intro">
+          Fill in the listing details below. Published listings appear on the public property catalogue immediately after save.
+        </p>
+      </div>
+
+      <aside class="page-hero-card">
+        <p class="eyebrow">Publishing Checklist</p>
+        <ul class="hero-proof hero-proof-compact">
+          <li>Use clear district and address fields for Lagos search intent</li>
+          <li>Add a strong summary for better scan value on the catalogue page</li>
+          <li>Upload property photography to improve trust and conversion</li>
+        </ul>
+      </aside>
+    </div>
+  </section>
+
+  <section class="section shell section-tight">
+    <form method="post" enctype="multipart/form-data" class="contact-form listing-form">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="next" value="{{ back_url }}">
+      <input type="hidden" name="existing_image_path" value="{{ form_data.image_path }}">
+      <input type="hidden" name="existing_gallery_paths" value="{{ form_data.gallery_paths | tojson }}">
+
+      <section class="form-section">
+        <div class="form-section-head">
+          <div>
+            <p class="form-section-kicker">Core details</p>
+            <h2>Identity and market intent</h2>
+          </div>
+          <p class="form-note">Keep titles, type, status, and location clean so the catalogue remains easy to filter.</p>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="title">Listing title</label>
+            <input type="text" id="title" name="title" value="{{ form_data.title }}" required>
+          </div>
+          <div class="form-group">
+            <label for="property_type">Property type</label>
+            <input type="text" id="property_type" name="property_type" value="{{ form_data.property_type }}" placeholder="Apartment, Duplex, Office, Land" required>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="status">Status</label>
+            <select id="status" name="status" required>
+              {% for option in status_options %}
+                <option value="{{ option }}" {% if form_data.status == option %}selected{% endif %}>{{ option }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="availability">Availability</label>
+            <select id="availability" name="availability" required>
+              {% for option in availability_options %}
+                <option value="{{ option }}" {% if form_data.availability == option %}selected{% endif %}>{{ option }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="district">District</label>
+            <input type="text" id="district" name="district" value="{{ form_data.district }}" placeholder="Ikoyi, Lekki, Victoria Island" required>
+          </div>
+          <div class="form-group">
+            <label for="address">Address or area marker</label>
+            <input type="text" id="address" name="address" value="{{ form_data.address }}" placeholder="Bourdillon Road, Ikoyi, Lagos" required>
+          </div>
+        </div>
+      </section>
+
+      <section class="form-section">
+        <div class="form-section-head">
+          <div>
+            <p class="form-section-kicker">Location and pricing</p>
+            <h2>Map accuracy and commercial terms</h2>
+          </div>
+          <p class="form-note">Exact coordinates improve the public map and reduce ambiguity for staff and clients.</p>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="longitude">Longitude</label>
+            <input type="number" id="longitude" name="longitude" step="any" value="{{ form_data.longitude|default('', true) }}" placeholder="3.4476">
+          </div>
+          <div class="form-group">
+            <label for="latitude">Latitude</label>
+            <input type="number" id="latitude" name="latitude" step="any" value="{{ form_data.latitude|default('', true) }}" placeholder="6.4549">
+          </div>
+        </div>
+
+        <p class="form-note">
+          Add exact coordinates to place this property precisely on the public map. If you leave them blank, the catalogue falls back to an approximate district-centre marker where possible.
+        </p>
+
+        <div class="form-row form-row-pricing">
+          <div class="form-group">
+            <label for="price">Price</label>
+            <input type="number" id="price" name="price" min="1" value="{{ form_data.price }}" required>
+          </div>
+          <div class="form-group">
+            <label for="price_suffix">Price suffix</label>
+            <select id="price_suffix" name="price_suffix">
+              <option value="" {% if form_data.price_suffix == '' %}selected{% endif %}>No suffix</option>
+              <option value="/ year" {% if form_data.price_suffix == '/ year' %}selected{% endif %}>/ year</option>
+              <option value="/ month" {% if form_data.price_suffix == '/ month' %}selected{% endif %}>/ month</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="bedrooms">Bedrooms</label>
+            <input type="number" id="bedrooms" name="bedrooms" min="0" value="{{ form_data.bedrooms }}">
+          </div>
+          <div class="form-group">
+            <label for="bathrooms">Bathrooms</label>
+            <input type="number" id="bathrooms" name="bathrooms" min="0" value="{{ form_data.bathrooms }}">
+          </div>
+          <div class="form-group">
+            <label for="area_sqm">Area (sqm)</label>
+            <input type="number" id="area_sqm" name="area_sqm" min="0" value="{{ form_data.area_sqm }}">
+          </div>
+        </div>
+      </section>
+
+      <section class="form-section">
+        <div class="form-section-head">
+          <div>
+            <p class="form-section-kicker">Narrative</p>
+            <h2>Catalogue summary and description</h2>
+          </div>
+          <p class="form-note">Keep the short summary skimmable and use the full description for details that matter in follow-up.</p>
+        </div>
+
+        <div class="form-group">
+          <label for="summary">Summary</label>
+          <textarea id="summary" name="summary" rows="3" required>{{ form_data.summary }}</textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="virtual_tour_url">360 tour URL</label>
+          <input type="url" id="virtual_tour_url" name="virtual_tour_url" value="{{ form_data.virtual_tour_url }}" placeholder="https://my.matterport.com/show/?m=...">
+          <p class="form-note">Add a Matterport, Kuula, YouTube 360, or other hosted tour URL when available.</p>
+        </div>
+
+        <div class="form-group">
+          <label for="description">Description</label>
+          <textarea id="description" name="description" rows="6" required>{{ form_data.description }}</textarea>
+        </div>
+      </section>
+
+      <section class="form-section">
+        <div class="form-section-head">
+          <div>
+            <p class="form-section-kicker">Media</p>
+            <h2>Cover image and gallery assets</h2>
+          </div>
+          <p class="form-note">Use this section to control the main listing image and any supporting gallery frames.</p>
+        </div>
+
+        <div class="form-group">
+          <label for="image">Property image</label>
+          <input type="file" id="image" name="image" accept=".jpg,.jpeg,.png,.webp">
+          <p class="form-note">Upload JPG, PNG, or WEBP. Files must stay under 10MB.</p>
+        </div>
+
+        <div class="form-group">
+          <label for="gallery_images">Gallery images</label>
+          <input type="file" id="gallery_images" name="gallery_images" accept=".jpg,.jpeg,.png,.webp" multiple>
+          <p class="form-note">Add multiple supporting images for the detail gallery. New uploads are appended unless you remove existing gallery items below.</p>
+        </div>
+
+        {% if form_data.image_path %}
+          <div class="upload-preview" id="preview-wrap">
+            <p class="form-note">Current image</p>
+            <img src="{{ asset_url(form_data.image_path) }}" alt="Current listing image" class="preview-image" id="image-preview">
+          </div>
+        {% else %}
+          <div class="upload-preview" hidden id="preview-wrap">
+            <p class="form-note">Selected image preview</p>
+            <img src="" alt="Selected listing image preview" class="preview-image" id="image-preview">
+          </div>
+        {% endif %}
+
+        {% if form_data.gallery_paths %}
+          <div class="gallery-manager">
+            <p class="form-note">Current gallery</p>
+            <div class="gallery-manager-grid">
+              {% for image_path in form_data.gallery_paths %}
+                <label class="gallery-manager-item">
+                  <img src="{{ asset_url(image_path) }}" alt="Gallery image {{ loop.index }}">
+                  <span>
+                    <input type="checkbox" name="remove_gallery_paths" value="{{ image_path }}">
+                    Remove this image
+                  </span>
+                </label>
+              {% endfor %}
+            </div>
+          </div>
+        {% endif %}
+      </section>
+
+      <section class="form-section">
+        <div class="form-section-head">
+          <div>
+            <p class="form-section-kicker">Publishing controls</p>
+            <h2>Filters, trust flags, and visibility</h2>
+          </div>
+          <p class="form-note">Set discovery attributes and public visibility here without changing the core listing details above.</p>
+        </div>
+
+        <div class="form-group">
+          <p class="form-note form-note-heading">Hyper-local discovery filters</p>
+          <div class="checkbox-row checkbox-grid">
+            {% for key, label in discovery_feature_fields %}
+              <label class="checkbox">
+                <input type="checkbox" name="{{ key }}" value="1" {% if form_data[key] %}checked{% endif %}>
+                <span>{{ label }}</span>
+              </label>
+            {% endfor %}
+          </div>
+        </div>
+
+        <div class="form-group">
+          <p class="form-note form-note-heading">Verification badges</p>
+          <div class="checkbox-row">
+            {% for key, label in verification_fields %}
+              <label class="checkbox">
+                <input type="checkbox" name="{{ key }}" value="1" {% if form_data[key] %}checked{% endif %}>
+                <span>{{ label }}</span>
+              </label>
+            {% endfor %}
+          </div>
+        </div>
+
+        <div class="checkbox-row">
+          <label class="checkbox">
+            <input type="checkbox" name="featured" value="1" {% if form_data.featured %}checked{% endif %}>
+            <span>Show as featured listing</span>
+          </label>
+          <label class="checkbox">
+            <input type="checkbox" name="published" value="1" {% if form_data.published %}checked{% endif %}>
+            <span>Publish on public site</span>
+          </label>
+        </div>
+      </section>
+
+      <div class="form-actions">
+        <button type="submit" class="cta" data-loading-label="Saving...">{{ submit_label }}</button>
+        <a href="{{ back_url }}" class="text-link">Back</a>
+      </div>
+    </form>
+  </section>
+{% endblock %}

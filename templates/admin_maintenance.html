@@ -1,0 +1,190 @@
+{% extends "base.html" %}
+
+{% block title %}Operations Admin | {{ site_settings.site_name }}{% endblock %}
+{% block robots %}noindex,nofollow{% endblock %}
+{% block body_class %}dashboard-page admin-module-page{% endblock %}
+
+{% block content %}
+  {% set next_url = request.full_path.rstrip('?') %}
+  <section class="page-hero admin-module-hero">
+    <div class="shell admin-module-hero-shell">
+      <div>
+        <p class="eyebrow">Operations</p>
+        <h1>Manage maintenance tickets and vendor follow-up.</h1>
+        <p class="page-intro">
+          Keep the ticket queue current with internal ownership, vendor assignment, and status updates.
+        </p>
+      </div>
+      <div class="admin-module-actions">
+        <a href="{{ url_for('tenant_services') }}" class="cta cta-outline">Open public request form</a>
+        <a href="{{ url_for('dashboard') }}" class="text-link">Back to overview</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="section shell section-tight">
+    <div class="admin-insight-strip" aria-label="Operations management summary">
+      <article>
+        <span>Open tickets</span>
+        <strong>{{ maintenance_summary.open_count }}</strong>
+        <p>New, assigned, and in-progress work.</p>
+      </article>
+      <article>
+        <span>Emergency</span>
+        <strong>{{ maintenance_summary.emergency_count }}</strong>
+        <p>Handle before routine support requests.</p>
+      </article>
+      <article>
+        <span>Owner gaps</span>
+        <strong>{{ maintenance_summary.owner_gap_count }}</strong>
+        <p>Tickets without an accountable manager.</p>
+      </article>
+      <article>
+        <span>Vendor gaps</span>
+        <strong>{{ maintenance_summary.vendor_gap_count }}</strong>
+        <p>Open tickets not yet tied to vendor cover.</p>
+      </article>
+    </div>
+  </section>
+
+  <section class="section shell section-tight">
+    <form method="get" action="{{ url_for('admin_maintenance') }}" class="dashboard-filter-bar admin-filter-bar" aria-label="Filter maintenance tickets">
+      <div class="dashboard-filter-grid admin-toolbar-grid">
+        <div class="form-group dashboard-filter-search">
+          <label for="maintenance-q">Search</label>
+          <input type="search" id="maintenance-q" name="q" value="{{ maintenance_filters.q }}" placeholder="Resident, unit, property, vendor, note">
+        </div>
+        <div class="form-group">
+          <label for="maintenance-status">Status</label>
+          <select id="maintenance-status" name="status">
+            <option value="">All statuses</option>
+            {% for option in maintenance_status_options %}
+              <option value="{{ option }}" {% if maintenance_filters.status == option %}selected{% endif %}>{{ option }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="maintenance-priority">Priority</label>
+          <select id="maintenance-priority" name="priority">
+            <option value="">All priorities</option>
+            {% for option in maintenance_priority_options %}
+              <option value="{{ option }}" {% if maintenance_filters.priority == option %}selected{% endif %}>{{ option }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="maintenance-owner">Owner</label>
+          <select id="maintenance-owner" name="assigned_manager">
+            <option value="">All owners</option>
+            {% for option in maintenance_managers %}
+              <option value="{{ option }}" {% if maintenance_filters.assigned_manager == option %}selected{% endif %}>{{ option }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="maintenance-sort">Sort</label>
+          <select id="maintenance-sort" name="sort">
+            {% for value, label in maintenance_sort_options %}
+              <option value="{{ value }}" {% if maintenance_filters.sort == value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+      <div class="dashboard-filter-actions filter-actions">
+        <button type="submit" class="cta cta-small">Apply</button>
+        <a href="{{ url_for('admin_maintenance') }}" class="text-link">Reset</a>
+      </div>
+    </form>
+
+    {% if active_filter_labels %}
+      <div class="dashboard-active-filters" aria-label="Active maintenance filters">
+        {% for label in active_filter_labels %}
+          <span class="dashboard-filter-pill">{{ label }}</span>
+        {% endfor %}
+      </div>
+    {% endif %}
+  </section>
+
+  <section class="section shell section-tight">
+    <div class="dashboard-section-head admin-section-head">
+      <div>
+        <p class="dashboard-section-kicker">Queue</p>
+        <h2>{{ maintenance_tickets|length }} ticket{{ '' if maintenance_tickets|length == 1 else 's' }} shown</h2>
+      </div>
+      <div class="dashboard-section-meta">
+        <span class="dashboard-badge dashboard-badge-muted">{{ maintenance_total }} total</span>
+      </div>
+    </div>
+
+    {% if maintenance_tickets %}
+      <div class="admin-record-grid">
+        {% for ticket in maintenance_tickets %}
+          <article class="admin-record-card">
+            <div class="admin-record-head">
+              <div>
+                <p class="property-location">{{ ticket.property_title or 'Property not linked yet' }}</p>
+                <h3>{{ ticket.unit_reference }}</h3>
+              </div>
+              <div class="status-cluster">
+                <span class="dashboard-badge">{{ ticket.status }}</span>
+                <span class="dashboard-badge dashboard-badge-muted">{{ ticket.priority }}</span>
+              </div>
+            </div>
+
+            <div class="admin-record-meta">
+              <span>{{ ticket.resident_name }}</span>
+              <span><a href="mailto:{{ ticket.email }}">{{ ticket.email }}</a></span>
+              <span><a href="tel:{{ ticket.phone }}">{{ ticket.phone }}</a></span>
+              <span>{{ ticket.issue_category }}</span>
+              {% if ticket.related_listing_edit_url %}
+                <span><a href="{{ ticket.related_listing_edit_url }}">Find in inventory</a></span>
+              {% endif %}
+            </div>
+
+            <p class="admin-record-message">{{ ticket.description }}</p>
+
+            {% if ticket.image_path %}
+              <div class="admin-record-preview">
+                <img src="{{ asset_url(ticket.image_path) }}" alt="Issue image for {{ ticket.unit_reference }}" loading="lazy" decoding="async">
+              </div>
+            {% endif %}
+
+            <form method="post" action="{{ url_for('update_maintenance', ticket_id=ticket.id) }}" class="admin-inline-form">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <input type="hidden" name="next" value="{{ next_url }}">
+              <div class="admin-form-grid admin-form-grid-compact">
+                <div class="form-group">
+                  <label for="maintenance-status-{{ ticket.id }}">Status</label>
+                  <select id="maintenance-status-{{ ticket.id }}" name="status">
+                    {% for option in maintenance_status_options %}
+                      <option value="{{ option }}" {% if ticket.status == option %}selected{% endif %}>{{ option }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="assigned-manager-{{ ticket.id }}">Owner</label>
+                  <input type="text" id="assigned-manager-{{ ticket.id }}" name="assigned_manager" value="{{ ticket.assigned_manager }}">
+                </div>
+                <div class="form-group">
+                  <label for="assigned-vendor-{{ ticket.id }}">Assigned vendor</label>
+                  <input type="text" id="assigned-vendor-{{ ticket.id }}" name="assigned_vendor" value="{{ ticket.assigned_vendor }}">
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="maintenance-note-{{ ticket.id }}">Internal note</label>
+                <textarea id="maintenance-note-{{ ticket.id }}" name="internal_note" rows="3">{{ ticket.internal_note }}</textarea>
+              </div>
+              <div class="admin-inline-actions">
+                <button type="submit" class="cta cta-small" data-loading-label="Saving...">Save update</button>
+              </div>
+            </form>
+          </article>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="empty-state dashboard-empty-state">
+        <p>No maintenance tickets match the current filters.</p>
+      </div>
+    {% endif %}
+  </section>
+{% endblock %}

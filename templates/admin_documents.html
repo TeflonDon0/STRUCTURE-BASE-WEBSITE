@@ -1,0 +1,175 @@
+{% extends "base.html" %}
+
+{% block title %}Documents Admin | {{ site_settings.site_name }}{% endblock %}
+{% block robots %}noindex,nofollow{% endblock %}
+{% block body_class %}dashboard-page admin-module-page{% endblock %}
+
+{% block content %}
+  {% set next_url = request.full_path.rstrip('?') %}
+  <section class="page-hero admin-module-hero">
+    <div class="shell admin-module-hero-shell">
+      <div>
+        <p class="eyebrow">Documents</p>
+        <h1>Keep agreements, receipts, and KYC files organized.</h1>
+        <p class="page-intro">
+          Keep titles, notes, and linked records tidy so the right file is easy to find when the team needs it.
+        </p>
+      </div>
+      <div class="admin-module-actions">
+        <a href="{{ url_for('generate_document_pdf') }}" class="cta cta-outline">Generate PDF</a>
+        <a href="{{ url_for('create_document', next=next_url) }}" class="cta">Upload document</a>
+        <a href="{{ url_for('dashboard') }}" class="text-link">Back to overview</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="section shell section-tight">
+    <div class="admin-insight-strip" aria-label="Document management summary">
+      <article>
+        <span>Generated</span>
+        <strong>{{ document_summary.generated_count }}</strong>
+        <p>Files created from admin templates.</p>
+      </article>
+      <article>
+        <span>Uploaded</span>
+        <strong>{{ document_summary.uploaded_count }}</strong>
+        <p>External files stored in the archive.</p>
+      </article>
+      <article>
+        <span>Linked records</span>
+        <strong>{{ document_summary.linked_count }}</strong>
+        <p>Documents connected to inventory.</p>
+      </article>
+      <article>
+        <span>Needs linking</span>
+        <strong>{{ document_summary.unlinked_count }}</strong>
+        <p>Files that may need property context.</p>
+      </article>
+    </div>
+  </section>
+
+  <section class="section shell section-tight">
+    <form method="get" action="{{ url_for('admin_documents') }}" class="dashboard-filter-bar admin-filter-bar" aria-label="Filter documents">
+      <div class="dashboard-filter-grid admin-toolbar-grid">
+        <div class="form-group dashboard-filter-search">
+          <label for="document-q">Search</label>
+          <input type="search" id="document-q" name="q" value="{{ document_filters.q }}" placeholder="Title, resident, unit, property, note">
+        </div>
+        <div class="form-group">
+          <label for="document-type">Document type</label>
+          <select id="document-type" name="document_type">
+            <option value="">All types</option>
+            {% for option in document_type_options %}
+              <option value="{{ option }}" {% if document_filters.document_type == option %}selected{% endif %}>{{ option }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="document-sort">Sort</label>
+          <select id="document-sort" name="sort">
+            {% for value, label in document_sort_options %}
+              <option value="{{ value }}" {% if document_filters.sort == value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+      <div class="dashboard-filter-actions filter-actions">
+        <button type="submit" class="cta cta-small">Apply</button>
+        <a href="{{ url_for('admin_documents') }}" class="text-link">Reset</a>
+      </div>
+    </form>
+
+    {% if active_filter_labels %}
+      <div class="dashboard-active-filters" aria-label="Active document filters">
+        {% for label in active_filter_labels %}
+          <span class="dashboard-filter-pill">{{ label }}</span>
+        {% endfor %}
+      </div>
+    {% endif %}
+  </section>
+
+  <section class="section shell section-tight">
+    <div class="dashboard-section-head admin-section-head">
+      <div>
+        <p class="dashboard-section-kicker">Archive</p>
+        <h2>{{ documents|length }} file{{ '' if documents|length == 1 else 's' }} shown</h2>
+      </div>
+      <div class="dashboard-section-meta">
+        <span class="dashboard-badge dashboard-badge-muted">{{ document_total }} total</span>
+      </div>
+    </div>
+
+    {% if documents %}
+      <div class="admin-record-grid">
+        {% for document in documents %}
+          <article class="admin-record-card">
+            <div class="admin-record-head">
+              <div>
+                <p class="property-location">{{ document.property_title or 'Property not linked yet' }}</p>
+                <h3>{{ document.title }}</h3>
+              </div>
+              <div class="status-cluster">
+                <span class="dashboard-badge">{{ document.document_type }}</span>
+                {% if document.source_kind == 'generated' %}
+                  <span class="dashboard-badge dashboard-badge-accent">{{ document.template_key.replace('_', ' ')|title }}</span>
+                {% else %}
+                  <span class="dashboard-badge dashboard-badge-muted">Uploaded</span>
+                {% endif %}
+              </div>
+            </div>
+
+            <div class="admin-record-meta">
+              <span>{{ document.resident_name }}</span>
+              <span>{{ document.unit_reference }}</span>
+              <span>{{ document.original_filename }}</span>
+              <span>{{ document.created_at[:10] }}</span>
+              {% if document.related_listing_edit_url %}
+                <span><a href="{{ document.related_listing_edit_url }}">Find in inventory</a></span>
+              {% endif %}
+            </div>
+
+            <form method="post" action="{{ url_for('update_document', document_id=document.id) }}" class="admin-inline-form">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <input type="hidden" name="next" value="{{ next_url }}">
+              <div class="admin-form-grid admin-form-grid-compact">
+                <div class="form-group">
+                  <label for="document-title-{{ document.id }}">Title</label>
+                  <input type="text" id="document-title-{{ document.id }}" name="title" value="{{ document.title }}" required>
+                </div>
+                <div class="form-group">
+                  <label for="document-type-{{ document.id }}">Type</label>
+                  <select id="document-type-{{ document.id }}" name="document_type">
+                    {% for option in document_type_options %}
+                      <option value="{{ option }}" {% if document.document_type == option %}selected{% endif %}>{{ option }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="document-note-{{ document.id }}">Note</label>
+                <textarea id="document-note-{{ document.id }}" name="note" rows="3">{{ document.note }}</textarea>
+              </div>
+              <div class="admin-inline-actions">
+                <button type="submit" class="cta cta-small" data-loading-label="Saving...">Save details</button>
+                <a href="{{ url_for('download_document', document_id=document.id) }}" class="cta cta-small cta-outline">Download</a>
+                <button
+                  type="submit"
+                  class="cta cta-small cta-danger"
+                  formaction="{{ url_for('delete_document', document_id=document.id) }}"
+                  data-confirm-message="Delete &quot;{{ document.title }}&quot; from documents?"
+                  data-loading-label="Deleting..."
+                >
+                  Delete
+                </button>
+              </div>
+            </form>
+          </article>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="empty-state dashboard-empty-state">
+        <p>No documents match the current filters.</p>
+      </div>
+    {% endif %}
+  </section>
+{% endblock %}

@@ -1,0 +1,13 @@
+__pycache__/
+data/*.db
+static/uploads/*
+!static/uploads/.gitkeep
+
+.env
+.env.*
+!.env.example
+server*.log
+tmp/
+tmp_server*.log
+__pycache__/
+*.pyc

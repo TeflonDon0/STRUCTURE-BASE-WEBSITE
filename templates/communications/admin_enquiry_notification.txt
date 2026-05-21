@@ -1,0 +1,25 @@
+{{ subject }}
+
+Review the request, assign follow-up, and reply using the client's selected route.
+
+Reference: {{ payload.reference }}
+Sender: {{ payload.sender_name }}
+Listing: {{ payload.listing_title }}
+Preferred contact: {{ payload.preferred_contact }}
+Source: {{ payload.source_label }}
+Email: {{ payload.sender_email or "Not provided" }}
+Phone / WhatsApp: {{ payload.sender_phone or "Not provided" }}
+
+{% if payload.message_excerpt -%}
+Message:
+{{ payload.message_excerpt }}
+
+{% endif -%}
+{% if payload.cta_url -%}
+{{ payload.cta_label }}: {{ payload.cta_url }}
+
+{% endif -%}
+Internal notification generated from a new website enquiry.
+
+{{ site_name }}
+{{ contact_email }}{% if contact_phone_display %} | {{ contact_phone_display }}{% endif %}

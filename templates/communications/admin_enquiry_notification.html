@@ -1,0 +1,66 @@
+<tr>
+  <td class="content-shell">
+    <p class="eyebrow">New enquiry</p>
+    <h1>A new enquiry came in from {{ payload.sender_name }}.</h1>
+    <p class="lead">
+      Review the request, assign follow-up, and reply using the route the client selected.
+    </p>
+
+    <table role="presentation" width="100%" class="summary-card" style="margin: 18px 0 20px;">
+      <tr>
+        <td>
+          <table role="presentation" width="100%" class="summary-grid">
+            <tr>
+              <td>
+                <p class="summary-label">Reference</p>
+                <p class="summary-value">{{ payload.reference }}</p>
+              </td>
+              <td>
+                <p class="summary-label">Listing</p>
+                <p class="summary-value">{{ payload.listing_title }}</p>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <p class="summary-label">Preferred contact</p>
+                <p class="summary-value">{{ payload.preferred_contact }}</p>
+              </td>
+              <td>
+                <p class="summary-label">Source</p>
+                <p class="summary-value">{{ payload.source_label }}</p>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <p class="summary-label">Email</p>
+                <p class="summary-value">{{ payload.sender_email or "Not provided" }}</p>
+              </td>
+              <td>
+                <p class="summary-label">Phone / WhatsApp</p>
+                <p class="summary-value">{{ payload.sender_phone or "Not provided" }}</p>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+
+    {% if payload.message_excerpt %}
+      <table role="presentation" width="100%" class="callout-card" style="margin: 0 0 20px;">
+        <tr>
+          <td>
+            <p class="summary-label">Message</p>
+            <p style="margin-bottom: 0;">{{ payload.message_excerpt }}</p>
+          </td>
+        </tr>
+      </table>
+    {% endif %}
+
+    {% if payload.cta_url and payload.cta_label %}
+      <div class="button-wrap">
+        <a href="{{ payload.cta_url }}" class="button">{{ payload.cta_label }}</a>
+        <p class="button-note">Reference {{ payload.reference }} stays attached to the lead inside the queue.</p>
+      </div>
+    {% endif %}
+  </td>
+</tr>

@@ -1,0 +1,31 @@
+{{ subject }}
+
+{% if payload.recipient_name -%}
+Hello {{ payload.recipient_name }},
+
+{% endif -%}
+Reference: {{ payload.ticket_reference }}
+Issue: {{ payload.issue_category }}
+Priority: {{ payload.priority }}
+Property: {{ payload.property_title }}
+Unit: {{ payload.unit_reference }}
+Follow-up contact: {{ payload.contact_line }}
+
+{{ payload.response_window }}
+
+{% if payload.is_emergency -%}
+Urgent escalation:
+The request is logged. If there is active risk to safety, access, power, water, or security, contact the operations desk immediately.
+
+{% endif -%}
+{% if payload.cta_url -%}
+{{ payload.cta_label }}: {{ payload.cta_url }}
+
+{% endif -%}
+Need to add access details or new evidence? Reply to this email and keep reference {{ payload.ticket_reference }} handy.
+
+You are receiving this email because a maintenance request was submitted on Structurebase.
+
+{{ site_name }}
+{{ coverage_area }}
+{{ contact_email }}{% if contact_phone_display %} | {{ contact_phone_display }}{% endif %}

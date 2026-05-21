@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+
+{% block title %}{{ page_title }} | {{ site_settings.site_name }}{% endblock %}
+{% block robots %}noindex,nofollow{% endblock %}
+{% block body_class %}dashboard-page admin-module-page communication-preview-page{% endblock %}
+
+{% block content %}
+  <section class="page-hero admin-module-hero">
+    <div class="shell admin-module-hero-shell">
+      <div>
+        <p class="eyebrow">Communications</p>
+        <h1>Review email communications before they reach clients or staff.</h1>
+        <p class="page-intro">
+          Check the brand lockup, tone, CTA hierarchy, footer details, and the text fallback using the current brand settings.
+        </p>
+      </div>
+      <div class="admin-module-actions">
+        <a href="{{ url_for('admin_settings') }}" class="text-link">Back to settings</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="section shell section-tight">
+    <form method="get" action="{{ url_for('communication_preview') }}" class="dashboard-filter-bar admin-filter-bar" aria-label="Choose communication template">
+      <div class="dashboard-filter-grid communication-toolbar-grid">
+        <div class="form-group">
+          <label for="template_key">Template</label>
+          <select id="template_key" name="template_key" data-auto-submit-select="true">
+            {% for value, label in template_choices %}
+              <option value="{{ value }}" {% if selected_template == value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+      <div class="dashboard-filter-actions filter-actions">
+        <button type="submit" class="cta cta-small">Preview</button>
+      </div>
+    </form>
+  </section>
+
+  <section class="section shell section-tight">
+    <div class="admin-chip-grid">
+      <article class="admin-chip-link admin-chip-static">
+        <span>Brand lockup</span>
+        <strong>Logo and name alignment</strong>
+      </article>
+      <article class="admin-chip-link admin-chip-static">
+        <span>CTA hierarchy</span>
+        <strong>Primary action clarity</strong>
+      </article>
+      <article class="admin-chip-link admin-chip-static">
+        <span>Support footer</span>
+        <strong>Contact and trust cues</strong>
+      </article>
+      <article class="admin-chip-link admin-chip-static">
+        <span>Text fallback</span>
+        <strong>Inbox-safe version included</strong>
+      </article>
+    </div>
+  </section>
+
+  <section class="section shell section-tight">
+    <div class="communication-preview-layout">
+      <article class="admin-panel communication-preview-stage">
+        <div class="admin-panel-head">
+          <div>
+            <p class="dashboard-section-kicker">Email preview</p>
+            <h2>{{ rendered.label }}</h2>
+          </div>
+        </div>
+        <p class="page-intro document-generator-copy">{{ rendered.description }}</p>
+        <div class="communication-preview-frame">
+          <iframe
+            src="{{ url_for('communication_preview_frame', template_key=selected_template) }}"
+            title="{{ rendered.label }} preview"
+            class="communication-preview-iframe"
+            loading="lazy"
+          ></iframe>
+        </div>
+      </article>
+
+      <aside class="communication-preview-sidebar">
+        <article class="admin-panel admin-panel-subtle">
+          <div class="admin-panel-head">
+            <div>
+              <p class="dashboard-section-kicker">Message details</p>
+              <h2>Subject and inbox preview</h2>
+            </div>
+          </div>
+          <dl class="communication-meta-list">
+            <div>
+              <dt>Subject</dt>
+              <dd>{{ rendered.subject }}</dd>
+            </div>
+            <div>
+              <dt>Preheader</dt>
+              <dd>{{ rendered.preheader }}</dd>
+            </div>
+          </dl>
+        </article>
+
+        <article class="admin-panel admin-panel-subtle">
+          <div class="admin-panel-head">
+            <div>
+              <p class="dashboard-section-kicker">Text fallback</p>
+              <h2>Plain-text version</h2>
+            </div>
+          </div>
+          <pre class="communication-code-block">{{ rendered.text }}</pre>
+        </article>
+
+        <article class="admin-panel admin-panel-subtle">
+          <div class="admin-panel-head">
+            <div>
+              <p class="dashboard-section-kicker">Sample values</p>
+              <h2>Preview data</h2>
+            </div>
+          </div>
+          <pre class="communication-code-block">{{ payload_json }}</pre>
+        </article>
+      </aside>
+    </div>
+  </section>
+{% endblock %}

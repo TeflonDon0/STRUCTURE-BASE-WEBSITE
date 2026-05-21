@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block title %}Privacy | {{ site_settings.site_name }}{% endblock %}
+{% block body_class %}legal-page privacy-page{% endblock %}
+
+{% block content %}
+  <section class="page-hero">
+    <div class="shell page-hero-shell">
+      <div>
+        <p class="eyebrow">Privacy</p>
+        <h1>How listing and enquiry information is handled.</h1>
+        <p class="page-intro">
+          {{ site_settings.site_name }} uses the information on this site to publish property listings and route enquiries to the right team.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section shell">
+    <div class="card-grid two-up">
+      <article class="info-card">
+        <h2>Listing Data</h2>
+        <p>Property details added through the dashboard are used to build public listing pages whenever a record is published.</p>
+      </article>
+      <article class="info-card">
+        <h2>Uploaded Images</h2>
+        <p>Uploaded photos are attached to their relevant listings and displayed where needed across the site.</p>
+      </article>
+      <article class="info-card">
+        <h2>Direct Enquiries</h2>
+        <p>Enquiry links route users to your direct email or phone contact so lead handling stays simple and transparent.</p>
+      </article>
+      <article class="info-card">
+        <h2>Questions</h2>
+        <p>For privacy questions, contact <a href="mailto:{{ site_settings.contact_email }}">{{ site_settings.contact_email }}</a>.</p>
+      </article>
+    </div>
+  </section>
+{% endblock %}

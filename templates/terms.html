@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block title %}Terms | {{ site_settings.site_name }}{% endblock %}
+{% block body_class %}legal-page terms-page{% endblock %}
+
+{% block content %}
+  <section class="page-hero">
+    <div class="shell page-hero-shell">
+      <div>
+        <p class="eyebrow">Terms</p>
+        <h1>Website terms and listing expectations.</h1>
+        <p class="page-intro">
+          Property details, prices, and availability should be confirmed directly before a transaction is concluded. Listings can be updated or removed at any time.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section shell">
+    <div class="card-grid two-up">
+      <article class="info-card">
+        <h2>Catalogue Use</h2>
+        <p>The public catalogue is designed to help buyers and renters understand current availability and route enquiries quickly.</p>
+      </article>
+      <article class="info-card">
+        <h2>Listing Accuracy</h2>
+        <p>Keep dashboard data current so pricing, status, and address detail remain aligned with the actual market offering.</p>
+      </article>
+      <article class="info-card">
+        <h2>Image Use</h2>
+        <p>Only upload photographs or marketing images you have the right to use for the listing.</p>
+      </article>
+      <article class="info-card">
+        <h2>Contact</h2>
+        <p>Questions about site use can be sent to <a href="mailto:{{ site_settings.contact_email }}">{{ site_settings.contact_email }}</a>.</p>
+      </article>
+    </div>
+  </section>
+{% endblock %}

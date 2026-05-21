@@ -1,0 +1,316 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Overview | {{ site_settings.site_name }}{% endblock %}
+{% block meta_description %}Admin overview for listings, leads, operations, finance, documents, and site controls on {{ site_settings.site_name }}.{% endblock %}
+{% block robots %}noindex,nofollow{% endblock %}
+{% block body_class %}dashboard-page admin-workspace-page{% endblock %}
+
+{% block content %}
+  <section class="page-hero admin-overview-hero">
+    <div class="shell admin-overview-shell">
+      <div class="admin-overview-intro">
+        <p class="eyebrow">Operational overview</p>
+        <h1>Run the business from one workspace.</h1>
+        <p class="page-intro">
+          Start with what needs attention now, then move into the right queue for deeper record work.
+        </p>
+      </div>
+
+      <div class="admin-hero-actions">
+        <a href="{{ url_for('create_listing', next=url_for('admin_listings')) }}" class="cta">New listing</a>
+        <a href="{{ url_for('admin_enquiries') }}" class="cta cta-outline">Review leads</a>
+        <a href="{{ url_for('admin_maintenance') }}" class="cta cta-outline">Review operations</a>
+        <a href="{{ url_for('admin_finance') }}" class="cta cta-outline">Review finance</a>
+        <a href="{{ url_for('admin_settings') }}" class="text-link">Site settings</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="section shell section-tight">
+    <div class="admin-command-center">
+      <div class="dashboard-section-head admin-section-head">
+        <div>
+          <p class="dashboard-section-kicker">Today</p>
+          <h2>Priority actions for the business.</h2>
+        </div>
+        <div class="dashboard-section-meta">
+          <span class="dashboard-badge dashboard-badge-muted">{{ action_items|length }} active</span>
+        </div>
+      </div>
+
+      {% if action_items %}
+        <div class="admin-action-grid">
+          {% for item in action_items %}
+            <a href="{{ item.href }}" class="admin-action-card admin-action-card-{{ item.tone }}">
+              <span class="admin-action-count">{{ item.count }}</span>
+              <span class="admin-action-copy">
+                <strong>{{ item.title }}</strong>
+                <span>{{ item.detail }}</span>
+              </span>
+              <span class="admin-action-label">{{ item.label }}</span>
+            </a>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="empty-state admin-empty-state admin-action-empty">
+          <p>No urgent items are waiting. Use the modules below to review routine work.</p>
+        </div>
+      {% endif %}
+    </div>
+  </section>
+
+  <section class="section shell section-tight">
+    <div class="admin-stat-grid">
+      <article class="admin-stat-card admin-stat-card-emphasis">
+        <span class="admin-stat-label">Lead follow-up</span>
+        <strong class="admin-stat-value">{{ overview_metrics.lead_attention_count or 0 }}</strong>
+        <span class="admin-stat-meta">{{ overview_metrics.due_follow_up_count or 0 }} due now &middot; {{ overview_metrics.unassigned_leads_count or 0 }} unassigned</span>
+      </article>
+      <article class="admin-stat-card admin-stat-card-emphasis">
+        <span class="admin-stat-label">Urgent operations</span>
+        <strong class="admin-stat-value">{{ overview_metrics.urgent_ticket_count or 0 }}</strong>
+        <span class="admin-stat-meta">{{ overview_metrics.emergency_ticket_count or 0 }} emergency &middot; {{ overview_metrics.unassigned_ticket_count or 0 }} without owner</span>
+      </article>
+      <article class="admin-stat-card admin-stat-card-emphasis">
+        <span class="admin-stat-label">Overdue finance</span>
+        <strong class="admin-stat-value">{{ overview_metrics.overdue_finance_count or 0 }}</strong>
+        <span class="admin-stat-meta">{{ overview_metrics.overdue_finance_amount | naira }} outstanding &middot; {{ overview_metrics.finance_owner_gap_count or 0 }} owner gaps</span>
+      </article>
+      <article class="admin-stat-card admin-stat-card-context">
+        <span class="admin-stat-label">Inventory</span>
+        <strong class="admin-stat-value">{{ stats.total }}</strong>
+        <span class="admin-stat-meta">{{ stats.published_count or 0 }} published &middot; {{ inventory_overview.draft_count or 0 }} drafts</span>
+      </article>
+      <article class="admin-stat-card admin-stat-card-context">
+        <span class="admin-stat-label">Documents</span>
+        <strong class="admin-stat-value">{{ stats.document_total or 0 }}</strong>
+        <span class="admin-stat-meta">{{ overview_metrics.generated_document_count or 0 }} created in system &middot; documents on record</span>
+      </article>
+      <article class="admin-stat-card admin-stat-card-context">
+        <span class="admin-stat-label">Tracked views</span>
+        <strong class="admin-stat-value">{{ stats.total_views or 0 }}</strong>
+        <span class="admin-stat-meta">{{ stats.featured_count or 0 }} featured listings live</span>
+      </article>
+    </div>
+  </section>
+
+  <section class="section shell section-tight">
+      <div class="dashboard-section-head admin-section-head">
+        <div>
+          <p class="dashboard-section-kicker">Admin modules</p>
+          <h2>Move into the right queue quickly.</h2>
+        </div>
+      </div>
+
+    <div class="admin-domain-grid">
+      <a href="{{ url_for('admin_listings') }}" class="admin-domain-card">
+        <span class="admin-domain-label">Listings</span>
+        <strong>{{ stats.total }}</strong>
+        <p>{{ inventory_overview.under_offer_count or 0 }} under offer &middot; {{ inventory_overview.off_market_count or 0 }} off market &middot; {{ inventory_overview.verified_count or 0 }} vetted</p>
+      </a>
+      <a href="{{ url_for('admin_enquiries') }}" class="admin-domain-card">
+        <span class="admin-domain-label">Leads</span>
+        <strong>{{ overview_metrics.lead_attention_count or 0 }}</strong>
+        <p>{{ overview_metrics.due_follow_up_count or 0 }} due now &middot; {{ overview_metrics.unassigned_leads_count or 0 }} still need ownership.</p>
+      </a>
+      <a href="{{ url_for('admin_maintenance') }}" class="admin-domain-card">
+        <span class="admin-domain-label">Operations</span>
+        <strong>{{ stats.maintenance_open or 0 }}</strong>
+        <p>{{ overview_metrics.emergency_ticket_count or 0 }} emergency &middot; {{ overview_metrics.vendor_gap_count or 0 }} without vendor cover.</p>
+      </a>
+      <a href="{{ url_for('admin_finance') }}" class="admin-domain-card">
+        <span class="admin-domain-label">Finance</span>
+        <strong>{{ stats.financial_due_count or 0 }}</strong>
+        <p>{{ overview_metrics.overdue_finance_count or 0 }} overdue &middot; {{ stats.financial_due_amount | naira }} still open.</p>
+      </a>
+      <a href="{{ url_for('admin_documents') }}" class="admin-domain-card">
+        <span class="admin-domain-label">Documents</span>
+        <strong>{{ stats.document_total or 0 }}</strong>
+        <p>{{ overview_metrics.generated_document_count or 0 }} ready-made agreements and receipts alongside uploaded files.</p>
+      </a>
+      <a href="{{ url_for('admin_settings') }}" class="admin-domain-card">
+        <span class="admin-domain-label">Settings</span>
+        <strong>Site controls</strong>
+        <p>Update public contact routes, office details, and footer messaging.</p>
+      </a>
+    </div>
+  </section>
+
+  <section class="section shell section-tight">
+    <div class="admin-workboard">
+      <div class="admin-workboard-main">
+        <article class="admin-panel">
+          <div class="admin-panel-head">
+            <div>
+              <p class="dashboard-section-kicker">Lead follow-up</p>
+              <h2>Leads needing action</h2>
+            </div>
+            <a href="{{ url_for('admin_enquiries') }}" class="text-link">Open leads</a>
+          </div>
+          {% if recent_enquiries %}
+            <div class="admin-list">
+              {% for enquiry in recent_enquiries %}
+                <article class="admin-mini-row">
+                  <div class="admin-mini-copy">
+                    <strong>{{ enquiry.name }}</strong>
+                    <p>{{ enquiry.listing_title or 'General enquiry' }}</p>
+                    <p class="admin-mini-support">{{ enquiry.triage_detail }}</p>
+                  </div>
+                  <div class="admin-mini-meta">
+                    <span class="dashboard-badge dashboard-badge-accent">{{ enquiry.triage_label }}</span>
+                    <span>{{ enquiry.status }}</span>
+                    <span>{{ enquiry.created_at[:10] }}</span>
+                  </div>
+                </article>
+              {% endfor %}
+            </div>
+          {% else %}
+            <div class="empty-state admin-empty-state"><p>No enquiries yet.</p></div>
+          {% endif %}
+        </article>
+
+        <article class="admin-panel">
+          <div class="admin-panel-head">
+            <div>
+              <p class="dashboard-section-kicker">Operational queue</p>
+              <h2>Maintenance needing intervention</h2>
+            </div>
+            <a href="{{ url_for('admin_maintenance') }}" class="text-link">Open operations</a>
+          </div>
+          {% if recent_maintenance %}
+            <div class="admin-list">
+              {% for ticket in recent_maintenance %}
+                <article class="admin-mini-row">
+                  <div class="admin-mini-copy">
+                    <strong>{{ ticket.unit_reference }}</strong>
+                    <p>{{ ticket.issue_category }} &middot; {{ ticket.resident_name }}</p>
+                    <p class="admin-mini-support">{{ ticket.triage_detail }}</p>
+                  </div>
+                  <div class="admin-mini-meta">
+                    <span class="dashboard-badge {% if ticket.triage_label == 'Emergency' %}dashboard-badge-accent{% endif %}">{{ ticket.triage_label }}</span>
+                    <span>{{ ticket.status }}</span>
+                    <span>{{ ticket.priority }}</span>
+                  </div>
+                </article>
+              {% endfor %}
+            </div>
+          {% else %}
+            <div class="empty-state admin-empty-state"><p>No maintenance tickets yet.</p></div>
+          {% endif %}
+        </article>
+
+        <article class="admin-panel">
+          <div class="admin-panel-head">
+            <div>
+              <p class="dashboard-section-kicker">Inventory pulse</p>
+              <h2>Inventory changes</h2>
+            </div>
+            <a href="{{ url_for('admin_listings') }}" class="text-link">Open listings</a>
+          </div>
+          {% if recent_listings %}
+            <div class="admin-list">
+              {% for listing in recent_listings %}
+                <article class="admin-mini-row">
+                  <div class="admin-mini-copy">
+                    <strong>{{ listing.title }}</strong>
+                    <p>{{ listing.district }} &middot; {{ listing.price | naira }}{{ listing.price_suffix }}</p>
+                    <p class="admin-mini-support">{{ listing.property_type }} &middot; {{ listing.view_count or 0 }} views</p>
+                  </div>
+                  <div class="admin-mini-meta">
+                    <span class="dashboard-badge">{{ listing.status }}</span>
+                    <span>{{ listing.availability }}</span>
+                  </div>
+                </article>
+              {% endfor %}
+            </div>
+          {% else %}
+            <div class="empty-state admin-empty-state"><p>No listings yet.</p></div>
+          {% endif %}
+        </article>
+      </div>
+
+      <aside class="admin-workboard-side">
+        <article class="admin-panel admin-panel-subtle">
+          <div class="admin-panel-head">
+            <div>
+              <p class="dashboard-section-kicker">Finance watch</p>
+              <h2>Charges needing follow-up</h2>
+            </div>
+            <a href="{{ url_for('admin_finance') }}" class="text-link">Open finance</a>
+          </div>
+          {% if upcoming_finance %}
+            <div class="admin-list">
+              {% for record in upcoming_finance %}
+                <article class="admin-mini-row">
+                  <div class="admin-mini-copy">
+                    <strong>{{ record.unit_reference }}</strong>
+                    <p>{{ record.charge_type }} &middot; {{ record.amount | naira }}</p>
+                    <p class="admin-mini-support">{{ record.triage_detail }}</p>
+                  </div>
+                  <div class="admin-mini-meta">
+                    <span class="dashboard-badge {% if record.triage_label == 'Overdue' %}dashboard-badge-accent{% endif %}">{{ record.triage_label }}</span>
+                    <span>{{ record.status }}</span>
+                    <span>{{ record.due_date }}</span>
+                  </div>
+                </article>
+              {% endfor %}
+            </div>
+          {% else %}
+            <div class="empty-state admin-empty-state"><p>No finance records yet.</p></div>
+          {% endif %}
+        </article>
+
+        <article class="admin-panel admin-panel-subtle">
+          <div class="admin-panel-head">
+            <div>
+              <p class="dashboard-section-kicker">Documents</p>
+              <h2>Recent files</h2>
+            </div>
+            <a href="{{ url_for('admin_documents') }}" class="text-link">Open documents</a>
+          </div>
+          {% if recent_documents %}
+            <div class="admin-list">
+              {% for document in recent_documents %}
+                <article class="admin-mini-row">
+                  <div class="admin-mini-copy">
+                    <strong>{{ document.title }}</strong>
+                    <p>{{ document.document_type }} &middot; {{ document.unit_reference }}</p>
+                    <p class="admin-mini-support">{{ document.triage_detail }}</p>
+                  </div>
+                  <div class="admin-mini-meta">
+                    <span class="dashboard-badge dashboard-badge-muted">{{ document.triage_label }}</span>
+                    <span>{{ document.created_at[:10] }}</span>
+                  </div>
+                </article>
+              {% endfor %}
+            </div>
+          {% else %}
+            <div class="empty-state admin-empty-state"><p>No documents yet.</p></div>
+          {% endif %}
+        </article>
+
+        <article class="admin-panel admin-panel-subtle">
+          <div class="admin-panel-head">
+            <div>
+              <p class="dashboard-section-kicker">Activity</p>
+              <h2>Recent admin actions</h2>
+            </div>
+          </div>
+          {% if activity %}
+            <div class="admin-timeline">
+              {% for entry in activity %}
+                <article class="admin-timeline-item">
+                  <span class="admin-timeline-time">{{ entry.created_at[:16].replace('T', ' ') }}</span>
+                  <strong>{{ entry.actor_label }}</strong>
+                  <p>{{ entry.summary }}</p>
+                </article>
+              {% endfor %}
+            </div>
+          {% else %}
+            <div class="empty-state admin-empty-state"><p>No recent activity yet.</p></div>
+          {% endif %}
+        </article>
+      </aside>
+    </div>
+  </section>
+{% endblock %}

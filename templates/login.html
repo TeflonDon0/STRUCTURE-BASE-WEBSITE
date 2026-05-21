@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Login | {{ site_settings.site_name }}{% endblock %}
+{% block robots %}noindex,nofollow{% endblock %}
+{% block body_class %}login-page{% endblock %}
+
+{% block content %}
+  <section class="page-hero" data-reveal>
+    <div class="shell detail-shell">
+      <div class="detail-media-card detail-media-card-promo">
+        <img src="{{ url_for('static', filename='images/login-promo-lagos.webp') }}" alt="Prime residential district at sunset" class="detail-image">
+      </div>
+
+      <div class="detail-copy">
+        <p class="eyebrow">Admin Sign In</p>
+        <h1>Sign in to the admin workspace.</h1>
+        <p class="page-intro">
+          Use the admin workspace to update inventory, follow up leads, review tenant issues, and keep site information current.
+        </p>
+
+        <form method="post" class="contact-form login-form">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input type="hidden" name="next" value="{{ next_url }}">
+
+          <div class="form-group">
+            <label for="username">Username</label>
+            <input
+              type="text"
+              id="username"
+              name="username"
+              value="{{ admin_username }}"
+              autocomplete="username"
+              {% if login_error %}aria-invalid="true" aria-describedby="login-feedback"{% endif %}
+              autofocus
+              required
+            >
+          </div>
+
+          <div class="form-group{% if login_error %} has-error{% endif %}">
+            <label for="password">Password</label>
+            <div class="password-field">
+              <input
+                type="password"
+                id="password"
+                name="password"
+                autocomplete="current-password"
+                {% if login_error %}aria-invalid="true" aria-describedby="login-feedback"{% endif %}
+                required
+              >
+              <button
+                type="button"
+                class="password-toggle"
+                data-password-toggle
+                aria-controls="password"
+                aria-label="Show password"
+                aria-pressed="false"
+              >
+                Show
+              </button>
+            </div>
+          </div>
+
+          {% if login_error %}
+            <p class="login-feedback" id="login-feedback" role="alert">{{ login_error }}</p>
+          {% endif %}
+
+          <div class="form-actions">
+            <button type="submit" class="cta" data-loading-label="Signing in...">Sign in</button>
+            <a href="{{ url_for('home') }}" class="text-link">View public site</a>
+          </div>
+
+          {% if using_default_credentials %}
+            <details class="credential-hint" role="note">
+              <summary class="credential-summary">
+                <span class="credential-title">{{ "Local demo sign-in" if show_local_default_credentials else "Default credentials detected" }}</span>
+                <span class="credential-summary-copy">{{ "Shown only on localhost." if show_local_default_credentials else "Update the environment before public deployment." }}</span>
+              </summary>
+
+              <div class="credential-detail">
+                {% if show_local_default_credentials %}
+                  <p class="credential-line"><strong>Username:</strong> <code>{{ default_admin_username }}</code></p>
+                  <p class="credential-line"><strong>Password:</strong> <code>{{ default_admin_password }}</code></p>
+                {% endif %}
+
+                <p class="form-note">
+                  Visible on localhost for setup. Replace them in <code>.env</code> or your environment with <code>STRUCTUREBASE_ADMIN_USERNAME</code> and <code>STRUCTUREBASE_ADMIN_PASSWORD</code> before public deployment.
+                </p>
+              </div>
+            </details>
+          {% endif %}
+        </form>
+      </div>
+    </div>
+  </section>
+{% endblock %}

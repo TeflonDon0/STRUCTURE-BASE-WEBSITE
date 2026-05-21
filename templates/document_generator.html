@@ -1,0 +1,333 @@
+{% extends "base.html" %}
+
+{% block title %}{{ page_title }} | {{ site_settings.site_name }}{% endblock %}
+{% block robots %}noindex,nofollow{% endblock %}
+{% block body_class %}dashboard-page admin-module-page document-generator-page{% endblock %}
+
+{% block content %}
+  <section class="page-hero admin-module-hero">
+    <div class="shell admin-module-hero-shell">
+      <div>
+        <p class="eyebrow">PDF generator</p>
+        <h1>Generate branded PDFs for billing, receipts, inspections, work orders, notices, agreements, proposals, checklists, and formal letterhead.</h1>
+        <p class="page-intro">
+          Create branded PDFs for billing, receipts, inspections, work orders, notices, agreements, proposals, checklists, and formal letters.
+        </p>
+      </div>
+      <div class="admin-module-actions">
+        <a href="{{ url_for('document_generator_spec') }}" class="cta cta-outline">Open template guide</a>
+        <a href="{{ back_url }}" class="text-link">Back to documents</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="section shell section-tight">
+    <div class="admin-chip-grid">
+      <article class="admin-chip-link admin-chip-static">
+        <span>Build flow</span>
+        <strong>{{ generator_spec.render_pipeline|length }} stages</strong>
+      </article>
+      <article class="admin-chip-link admin-chip-static">
+        <span>Template checks</span>
+        <strong>{{ generator_spec.validation_rules|length }} shared checks</strong>
+      </article>
+      <article class="admin-chip-link admin-chip-static">
+        <span>Quality checks</span>
+        <strong>{{ generator_spec.acceptance_criteria|length }} release checks</strong>
+      </article>
+      <article class="admin-chip-link admin-chip-static">
+        <span>Current release</span>
+        <strong>{{ generator_spec.version }}</strong>
+      </article>
+    </div>
+  </section>
+
+  <section class="section shell section-tight">
+    <div class="document-generator-layout">
+      <form method="post" class="contact-form listing-form document-generator-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <section class="form-section">
+          <div class="form-section-head">
+            <div>
+              <p class="form-section-kicker">Document setup</p>
+              <h2>Template and file details</h2>
+            </div>
+            <p class="form-note">Choose the template first, then complete the main business fields. The advanced editor stays available when you need tighter control.</p>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="template_key">Template</label>
+              <select
+                id="template_key"
+                name="template_key"
+                data-template-select-url="{{ url_for('generate_document_pdf') }}"
+              >
+                {% for value, label in template_choices %}
+                  <option value="{{ value }}" {% if form_data.template_key == value %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="title">File title</label>
+              <input type="text" id="title" name="title" value="{{ form_data.title }}" required>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="resident_name">Client or record owner</label>
+              <input type="text" id="resident_name" name="resident_name" value="{{ form_data.resident_name }}" required>
+            </div>
+            <div class="form-group">
+              <label for="unit_reference">Reference</label>
+              <input type="text" id="unit_reference" name="unit_reference" value="{{ form_data.unit_reference }}" required>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="property_title">Property or project title</label>
+            <input type="text" id="property_title" name="property_title" value="{{ form_data.property_title }}">
+          </div>
+
+          <div class="form-group">
+            <label for="note">Internal note</label>
+            <textarea id="note" name="note" rows="3">{{ form_data.note }}</textarea>
+          </div>
+        </section>
+
+        {% if guided_template %}
+          <section class="form-section">
+            <div class="form-section-head">
+              <div>
+                <p class="form-section-kicker">Guided editor</p>
+                <h2>{{ guided_template.label }}</h2>
+              </div>
+              <p class="form-note">{{ guided_template.description }}</p>
+            </div>
+
+            {% for section in guided_template.sections %}
+              <section class="document-guided-group">
+                <div class="document-guided-head">
+                  <div>
+                    <p class="form-section-kicker">{{ section.kicker }}</p>
+                    <h3>{{ section.title }}</h3>
+                  </div>
+                </div>
+
+                <div class="admin-form-grid{% if section.get('layout') == 'compact' %} admin-form-grid-compact{% endif %}">
+                  {% for field in section.fields %}
+                    <div class="form-group{% if field.kind == 'textarea' %} document-guided-span{% endif %}">
+                      <label for="guided_{{ field.name }}">{{ field.label }}</label>
+                      {% if field.kind == "textarea" %}
+                        <textarea
+                          id="guided_{{ field.name }}"
+                          name="guided_{{ field.name }}"
+                          rows="{{ field.get('rows', 4) }}"
+                          placeholder="{{ field.get('placeholder', '') }}"
+                        >{{ guided_form_data.get(field.name, "") }}</textarea>
+                      {% else %}
+                        <input
+                          type="{{ field.kind }}"
+                          id="guided_{{ field.name }}"
+                          name="guided_{{ field.name }}"
+                          value="{{ guided_form_data.get(field.name, '') }}"
+                          placeholder="{{ field.get('placeholder', '') }}"
+                        >
+                      {% endif %}
+                      {% if field.get("help") %}
+                        <p class="form-note">{{ field.help }}</p>
+                      {% endif %}
+                    </div>
+                  {% endfor %}
+                </div>
+              </section>
+            {% endfor %}
+          </section>
+        {% else %}
+          <section class="form-section document-generator-guidance">
+            <div class="form-section-head">
+              <div>
+                <p class="form-section-kicker">Advanced setup</p>
+                <h2>This template currently uses the advanced editor</h2>
+              </div>
+              <p class="form-note">Use the advanced editor below for this template. The same document checks still apply.</p>
+            </div>
+            <input type="hidden" name="use_advanced_payload" value="1">
+          </section>
+        {% endif %}
+
+        <details class="form-section document-advanced-panel" {% if show_advanced_payload %}open{% endif %}>
+          <summary class="document-advanced-summary">
+            <span>
+              <span class="form-section-kicker">Advanced</span>
+              <strong>Advanced editor</strong>
+            </span>
+            <span class="document-advanced-summary-copy">Open only if you need direct control over sections, schedules, or signatories.</span>
+          </summary>
+
+          <div class="document-advanced-content">
+            <div class="form-section-head">
+              <div>
+                <p class="form-section-kicker">Advanced data</p>
+                <h2>Direct template data</h2>
+              </div>
+              <p class="form-note">This editor controls the data saved with the finished PDF. Use the guided form above for normal day-to-day input.</p>
+            </div>
+
+            {% if guided_template %}
+              <label class="checkbox-option document-advanced-toggle">
+                <input
+                  type="checkbox"
+                  id="use_advanced_payload"
+                  name="use_advanced_payload"
+                  value="1"
+                  {% if form_data.use_advanced_payload %}checked{% endif %}
+                  data-advanced-payload-toggle="payload_json"
+                  data-advanced-helper-id="payload_json_helper"
+                >
+                <span>Use the advanced editor for this document</span>
+              </label>
+              <p class="form-note" id="payload_json_helper">
+                Leave this off for normal use. When it stays off, the guided fields above fill the document data automatically.
+              </p>
+            {% endif %}
+
+            <div class="form-group">
+              <label for="payload_json">Advanced data</label>
+              <textarea
+                id="payload_json"
+                name="payload_json"
+                rows="24"
+                class="document-code-input"
+                spellcheck="false"
+                {% if guided_template and not form_data.use_advanced_payload %}readonly{% endif %}
+              >{{ form_data.payload_json }}</textarea>
+            </div>
+          </div>
+        </details>
+
+        <div class="form-actions">
+          <button type="submit" class="cta" data-loading-label="Creating PDF...">Create PDF and save it</button>
+          <a href="{{ url_for('generate_document_pdf', template_key=selected_template) }}" class="cta cta-outline">Reset template defaults</a>
+          <a href="{{ back_url }}" class="text-link">Back</a>
+        </div>
+      </form>
+
+      <aside class="document-generator-sidebar">
+        <article class="admin-panel">
+          <div class="admin-panel-head">
+            <div>
+              <p class="dashboard-section-kicker">Selected template</p>
+              <h2>{{ active_template.label }}</h2>
+            </div>
+          </div>
+          <p class="page-intro document-generator-copy">{{ active_template.description }}</p>
+        </article>
+
+        <article class="admin-panel admin-panel-subtle">
+          <div class="admin-panel-head">
+            <div>
+              <p class="dashboard-section-kicker">Document outline</p>
+              <h2>Sections</h2>
+            </div>
+          </div>
+          <ul class="document-plan-list">
+            {% for item in active_template.template_structure %}
+              <li>{{ item }}</li>
+            {% endfor %}
+          </ul>
+        </article>
+
+        <article class="admin-panel admin-panel-subtle">
+          <div class="admin-panel-head">
+            <div>
+              <p class="dashboard-section-kicker">Shared sections</p>
+              <h2>What this template includes</h2>
+            </div>
+          </div>
+          <ul class="document-plan-list">
+            {% for item in active_template.reusable_components %}
+              <li>{{ item }}</li>
+            {% endfor %}
+          </ul>
+        </article>
+
+        <article class="admin-panel admin-panel-subtle">
+          <div class="admin-panel-head">
+            <div>
+              <p class="dashboard-section-kicker">Template fields</p>
+              <h2>Field reference</h2>
+            </div>
+          </div>
+          <div class="document-schema-table">
+            <table>
+              <thead>
+                <tr>
+                  <th>Field</th>
+                  <th>Type</th>
+                  <th>Required</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for field in active_template.field_schema %}
+                  <tr>
+                    <td><code>{{ field.path }}</code></td>
+                    <td>{{ field.type }}</td>
+                    <td>{{ "Yes" if field.required else "No" }}</td>
+                  </tr>
+                  <tr class="document-schema-desc">
+                    <td colspan="3">{{ field.description }}</td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </article>
+
+        <article class="admin-panel admin-panel-subtle">
+          <div class="admin-panel-head">
+            <div>
+              <p class="dashboard-section-kicker">Checks</p>
+              <h2>What must be present</h2>
+            </div>
+          </div>
+          <ul class="document-plan-list">
+            {% for item in active_template.validation_rules %}
+              <li>{{ item }}</li>
+            {% endfor %}
+          </ul>
+        </article>
+
+        <article class="admin-panel admin-panel-subtle">
+          <div class="admin-panel-head">
+            <div>
+              <p class="dashboard-section-kicker">Ready when</p>
+              <h2>Quality checks</h2>
+            </div>
+          </div>
+          <ul class="document-plan-list">
+            {% for item in active_template.acceptance_criteria %}
+              <li>{{ item }}</li>
+            {% endfor %}
+          </ul>
+        </article>
+
+        <article class="admin-panel admin-panel-subtle">
+          <div class="admin-panel-head">
+            <div>
+              <p class="dashboard-section-kicker">Build flow</p>
+              <h2>How the document is assembled</h2>
+            </div>
+          </div>
+          <ol class="document-plan-list document-plan-list-numbered">
+            {% for item in generator_spec.render_pipeline %}
+              <li>{{ item }}</li>
+            {% endfor %}
+          </ol>
+        </article>
+      </aside>
+    </div>
+  </section>
+{% endblock %}

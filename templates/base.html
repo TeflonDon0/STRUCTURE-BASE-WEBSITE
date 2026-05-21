@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}{{ site_settings.site_name }}{% endblock %}</title>
+  <meta name="description"
+    content="{% block meta_description %}{{ site_settings.site_name }} handles property listings, enquiries, and operations support from Lagos across key markets in Nigeria.{% endblock %}">
+  <meta name="robots" content="{% block robots %}index,follow{% endblock %}">
+  <meta name="theme-color" content="#171717">
+  <link rel="canonical" href="{% block canonical_url %}{{ request.base_url }}{% endblock %}">
+  <meta property="og:title" content="{% block og_title %}{{ self.title() | striptags | trim }}{% endblock %}">
+  <meta property="og:description"
+    content="{% block og_description %}{{ self.meta_description() | striptags | trim }}{% endblock %}">
+  <meta property="og:type" content="{% block og_type %}website{% endblock %}">
+  <meta property="og:url" content="{{ request.base_url }}">
+  <meta property="og:image"
+    content="{% block meta_image %}{{ absolute_asset_url('images/structurbhero2.png') }}{% endblock %}">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="{{ self.title() | striptags | trim }}">
+  <meta name="twitter:description" content="{{ self.meta_description() | striptags | trim }}">
+  <meta name="twitter:image" content="{{ self.meta_image() | trim }}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  {% if storage_backend == 'cloudinary' %}
+  <link rel="preconnect" href="https://res.cloudinary.com" crossorigin>
+  {% endif %}
+  <link
+    href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet">
+  <link rel="manifest" href="{{ static_asset_url('manifest.webmanifest') }}">
+  <link rel="icon" type="image/png" sizes="192x192" href="{{ static_asset_url('images/icon-192.png') }}">
+  <link rel="shortcut icon" href="{{ static_asset_url('images/icon-192.png') }}">
+  <link rel="apple-touch-icon" href="{{ static_asset_url('images/apple-touch-icon.png') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=1.2">
+  {% block head_extras %}{% endblock %}
+  <script src="{{ static_asset_url('site.js') }}" defer></script>
+  {% block structured_data %}{% endblock %}
+</head>
+
+<body class="{% block body_class %}{% endblock %}">
+  <a href="#main" class="skip-link">Skip to main content</a>
+  {% set admin_shell = is_authenticated and request.path.startswith('/dashboard') %}
+  {% set auth_shell = request.endpoint == 'login' and not is_authenticated %}
+  {% set public_nav_items = [
+  {
+  'label': 'Home',
+  'endpoint': 'home',
+  'active_endpoints': ['home']
+  },
+  {
+  'label': 'Listings',
+  'endpoint': 'properties',
+  'active_endpoints': ['properties', 'property_detail']
+  },
+  {
+  'label': 'Tenant Services',
+  'endpoint': 'tenant_services',
+  'active_endpoints': ['tenant_services']
+  },
+  {
+  'label': 'About',
+  'endpoint': 'about',
+  'active_endpoints': ['about']
+  }
+  ] %}
+
+  <header class="site-header{% if admin_shell %} site-header-admin{% elif auth_shell %} site-header-auth{% endif %}">
+    <div class="shell header-shell{% if auth_shell %} header-shell-auth{% endif %}">
+      <a href="{{ url_for('dashboard' if admin_shell else 'home') }}" class="brand"
+        aria-label="{{ site_settings.site_name }} home">
+        <img src="{{ static_asset_url('images/LOGO2.svg') }}" alt="{{ site_settings.site_name }} logo" width="39"
+          height="56">
+        <span class="brand-copy">
+          <span class="brand-name">{{ site_settings.site_name }}</span>
+          <span class="brand-tag">{{ "Admin workspace" if admin_shell or auth_shell else "Based in Lagos, active across
+            Nigeria" }}</span>
+        </span>
+      </a>
+
+      {% if not auth_shell %}
+      <button class="hamburger" id="nav-toggle" type="button" aria-label="Open navigation" aria-expanded="false"
+        aria-controls="main-nav">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+      {% endif %}
+
+      {% if not auth_shell %}
+      <nav id="main-nav" class="nav" aria-label="Primary navigation">
+        {% if admin_shell %}
+        <ul class="nav-list nav-list-admin">
+          <li><a href="{{ url_for('dashboard') }}" {% if request.endpoint=='dashboard' %}aria-current="page" {% endif
+              %}>Overview</a></li>
+          <li><a href="{{ url_for('admin_listings') }}" {% if request.endpoint in ['admin_listings', 'create_listing'
+              , 'edit_listing' ] %}aria-current="page" {% endif %}>Listings</a></li>
+          <li><a href="{{ url_for('admin_enquiries') }}" {% if request.endpoint=='admin_enquiries' %}aria-current="page"
+              {% endif %}>Leads</a></li>
+          <li><a href="{{ url_for('admin_maintenance') }}" {% if request.endpoint=='admin_maintenance'
+              %}aria-current="page" {% endif %}>Operations</a></li>
+          <li><a href="{{ url_for('admin_finance') }}" {% if request.endpoint in
+              ['admin_finance', 'create_finance_record' ] %}aria-current="page" {% endif %}>Finance</a></li>
+          <li><a href="{{ url_for('admin_documents') }}" {% if request.endpoint in ['admin_documents', 'create_document'
+              , 'generate_document_pdf' ] %}aria-current="page" {% endif %}>Documents</a></li>
+          <li><a href="{{ url_for('admin_settings') }}" {% if request.endpoint in
+              ['admin_settings', 'communication_preview' , 'communication_preview_frame' ] %}aria-current="page" {%
+              endif %}>Settings</a></li>
+        </ul>
+
+        <div class="nav-mobile-utility stack-mobile">
+          <a href="{{ url_for('home') }}" class="text-link">View site</a>
+          <a href="{{ url_for('create_listing', next=request.full_path.rstrip('?')) }}" class="cta cta-small">New
+            listing</a>
+          <form method="post" action="{{ url_for('logout') }}" class="nav-mobile-form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="cta cta-small cta-outline" data-loading-label="Signing out...">Logout</button>
+          </form>
+        </div>
+        {% else %}
+        <ul class="nav-list">
+          {% for item in public_nav_items %}
+          <li>
+            <a href="{{ url_for(item.endpoint) }}" {% if request.endpoint in item.active_endpoints %}aria-current="page"
+              {% endif %}>{{ item.label }}</a>
+          </li>
+          {% endfor %}
+        </ul>
+
+        <div class="nav-mobile-utility stack-mobile">
+          {% if is_authenticated %}
+          <a href="{{ url_for('dashboard') }}" class="cta cta-small">Dashboard</a>
+          <form method="post" action="{{ url_for('logout') }}" class="nav-mobile-form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="cta cta-small cta-outline" data-loading-label="Signing out...">Logout</button>
+          </form>
+          {% endif %}
+        </div>
+        {% endif %}
+      </nav>
+      {% endif %}
+
+      {% if auth_shell %}
+      <div class="header-auth header-auth-quiet">
+        <a href="{{ url_for('home') }}" class="text-link">View public site</a>
+      </div>
+      {% elif admin_shell %}
+      <div class="header-auth">
+        <a href="{{ url_for('home') }}" class="text-link">View site</a>
+        <a href="{{ url_for('create_listing', next=request.full_path.rstrip('?')) }}"
+          class="cta cta-small header-cta">New listing</a>
+        <form method="post" action="{{ url_for('logout') }}" class="header-logout">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit" class="cta cta-small cta-outline" data-loading-label="Signing out...">Logout</button>
+        </form>
+      </div>
+      {% elif not is_authenticated %}
+      <div class="header-auth header-auth-home">
+        <a href="{{ general_whatsapp_url }}" class="cta cta-small header-cta home-header-cta" target="_blank"
+          rel="noreferrer">Talk to an advisor</a>
+      </div>
+      {% elif is_authenticated %}
+      <div class="header-auth">
+        <a href="{{ url_for('dashboard') }}" class="cta cta-small header-cta">Dashboard</a>
+        <form method="post" action="{{ url_for('logout') }}" class="header-logout">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit" class="cta cta-small cta-outline" data-loading-label="Signing out...">Logout</button>
+        </form>
+      </div>
+      {% endif %}
+    </div>
+  </header>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+  <section class="flash-wrap{% if auth_shell %} flash-wrap-auth{% endif %}" aria-label="Notifications"
+    aria-live="polite" aria-atomic="true">
+    <div class="shell flash-stack">
+      {% for category, message in messages %}
+      <div class="flash flash-{{ category }}" data-flash-category="{{ category }}">
+        <div class="flash-message">{{ message }}</div>
+        <button type="button" class="flash-close" aria-label="Dismiss notification">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+  {% endwith %}
+
+  <main id="main">
+    {% block content %}{% endblock %}
+  </main>
+
+  {% if admin_shell %}
+  <footer class="site-footer site-footer-admin">
+    <div class="shell footer-bottom footer-bottom-admin">
+      <span>{{ site_settings.site_name }} admin workspace</span>
+      <div class="footer-legal">
+        <a href="{{ url_for('home') }}">View site</a>
+        <a href="{{ url_for('export_dashboard_data') }}">Export backup</a>
+      </div>
+    </div>
+  </footer>
+  {% elif auth_shell %}
+  <footer class="site-footer site-footer-auth">
+    <div class="shell footer-bottom footer-bottom-auth">
+      <span>Authorized staff access only.</span>
+      <div class="footer-legal">
+        <a href="{{ url_for('home') }}">Public site</a>
+        <a href="{{ url_for('privacy') }}">Privacy</a>
+        <a href="{{ url_for('terms') }}">Terms</a>
+      </div>
+    </div>
+  </footer>
+  {% else %}
+  <footer class="site-footer">
+    <div class="shell footer-shell">
+      <div class="footer-brand">
+        <a href="{{ url_for('home') }}" class="brand brand-footer" aria-label="{{ site_settings.site_name }} home">
+          <img src="{{ static_asset_url('images/LOGO2.svg') }}" alt="{{ site_settings.site_name }} logo" width="35"
+            height="50">
+          <span class="brand-copy">
+            <span class="brand-name">{{ site_settings.site_name }}</span>
+            <span class="brand-tag">Property sales, rentals, and support across Nigeria</span>
+          </span>
+        </a>
+        <p class="footer-summary">
+          {{ site_settings.footer_summary }}
+        </p>
+      </div>
+
+      <nav class="footer-nav" aria-label="Footer navigation">
+        <p class="footer-heading">Navigate</p>
+        <ul>
+          <li><a href="{{ url_for('home') }}">Home</a></li>
+          <li><a href="{{ url_for('properties') }}">Listings</a></li>
+          <li><a href="{{ url_for('tenant_services') }}">Tenant services</a></li>
+          <li><a href="{{ url_for('about') }}">About</a></li>
+          {% if is_authenticated %}
+          <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+          {% endif %}
+        </ul>
+      </nav>
+
+      <div class="footer-contact" id="site-contact">
+        <p class="footer-heading">Contact</p>
+        <ul class="contact-list">
+          <li><strong>Email:</strong> <a href="mailto:{{ site_settings.contact_email }}">{{ site_settings.contact_email
+              }}</a></li>
+          <li><strong>Phone:</strong> <a href="tel:{{ site_settings.contact_phone_raw }}">{{
+              site_settings.contact_phone_display }}</a></li>
+          <li><strong>WhatsApp:</strong> <a href="{{ general_whatsapp_url }}" target="_blank" rel="noreferrer">Chat with
+              sales desk</a></li>
+          <li><strong>Coverage:</strong> {{ site_settings.coverage_area }}</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="shell footer-bottom">
+      <span>&copy; {{ current_year }} {{ site_settings.site_name }}. All rights reserved.</span>
+      <div class="footer-legal">
+        <a href="{{ url_for('privacy') }}">Privacy</a>
+        <a href="{{ url_for('terms') }}">Terms</a>
+      </div>
+    </div>
+  </footer>
+  {% if request.endpoint not in ['login', 'privacy', 'terms', 'offline', 'tenant_services'] %}
+  <a href="{% if listing is defined %}{{ listing_whatsapp_url(listing) }}{% else %}{{ general_whatsapp_url }}{% endif %}"
+    class="floating-whatsapp" target="_blank" rel="noreferrer" aria-label="Open WhatsApp enquiry">
+    Enquire on WhatsApp
+  </a>
+  {% endif %}
+  {% endif %}
+  {% if is_production %}
+  <script nonce="{{ csp_nonce() }}">
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("{{ service_worker_url|safe }}", { updateViaCache: "none" }).catch(() => { });
+      });
+    }
+  </script>
+  {% else %}
+  <script nonce="{{ csp_nonce() }}">
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.getRegistrations()
+          .then((registrations) => Promise.all(registrations.map((registration) => registration.unregister())))
+          .then(() => caches.keys())
+          .then((keys) => Promise.all(keys.map((key) => caches.delete(key))))
+          .catch(() => { });
+      });
+    }
+  </script>
+  {% endif %}
+  {% block page_scripts %}{% endblock %}
+</body>
+
+</html>

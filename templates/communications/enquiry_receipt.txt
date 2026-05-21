@@ -1,0 +1,29 @@
+{{ subject }}
+
+{% if payload.greeting_line -%}
+{{ payload.greeting_line }}
+
+{% endif -%}
+Reference: {{ payload.reference }}
+Listing: {{ payload.listing_title }}
+Price: {{ payload.listing_price }}
+Follow-up route: {{ payload.preferred_contact }}{% if payload.reply_line %} via {{ payload.reply_line }}{% endif %}
+
+{{ payload.response_window }}
+
+{% if payload.message_excerpt -%}
+Your message:
+{{ payload.message_excerpt }}
+
+{% endif -%}
+{% if payload.cta_url -%}
+{{ payload.cta_label }}: {{ payload.cta_url }}
+
+{% endif -%}
+Need to add more detail? Reply to this email and keep reference {{ payload.reference }} handy.
+
+You are receiving this email because an enquiry was submitted on Structurebase.
+
+{{ site_name }}
+{{ coverage_area }}
+{{ contact_email }}{% if contact_phone_display %} | {{ contact_phone_display }}{% endif %}

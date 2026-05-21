@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+
+{% block title %}{{ page_title }} | {{ site_settings.site_name }}{% endblock %}
+{% block robots %}noindex,nofollow{% endblock %}
+{% block body_class %}form-page{% endblock %}
+
+{% block content %}
+  <section class="page-hero">
+    <div class="shell page-hero-shell">
+      <div>
+        <p class="eyebrow">Finance Tracker</p>
+        <h1>{{ page_title }}</h1>
+        <p class="page-intro">
+          Track rent due dates, estate service charges, utility obligations, and prepaid meter activity from one record flow.
+        </p>
+      </div>
+
+      <aside class="page-hero-card">
+        <p class="eyebrow">Charge types</p>
+        <ul class="hero-proof hero-proof-compact">
+          <li>Rent, service charge, utilities, diesel, prepaid meter tokens</li>
+          <li>Status tracking for due, part paid, paid, and overdue</li>
+          <li>Unit-specific records for cleaner follow-up</li>
+        </ul>
+      </aside>
+    </div>
+  </section>
+
+  <section class="section shell section-tight">
+    <form method="post" class="contact-form listing-form">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="next" value="{{ back_url }}">
+
+      <section class="form-section">
+        <div class="form-section-head">
+          <div>
+            <p class="form-section-kicker">Reference</p>
+            <h2>Payer and unit context</h2>
+          </div>
+          <p class="form-note">These details keep finance records aligned with the right resident and unit.</p>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="resident_name">Resident or payer name</label>
+            <input type="text" id="resident_name" name="resident_name" value="{{ form_data.resident_name }}" required>
+          </div>
+          <div class="form-group">
+            <label for="unit_reference">Unit reference</label>
+            <input type="text" id="unit_reference" name="unit_reference" value="{{ form_data.unit_reference }}" required>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="property_title">Property or estate name</label>
+            <input type="text" id="property_title" name="property_title" value="{{ form_data.property_title }}">
+          </div>
+          <div class="form-group">
+            <label for="charge_type">Charge type</label>
+            <select id="charge_type" name="charge_type" required>
+              {% for option in financial_charge_options %}
+                <option value="{{ option }}" {% if form_data.charge_type == option %}selected{% endif %}>{{ option }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+      </section>
+
+      <section class="form-section">
+        <div class="form-section-head">
+          <div>
+            <p class="form-section-kicker">Charge details</p>
+            <h2>Amount, due date, and current status</h2>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="amount">Amount</label>
+            <input type="number" id="amount" name="amount" min="1" value="{{ form_data.amount }}" required>
+          </div>
+          <div class="form-group">
+            <label for="due_date">Due date</label>
+            <input type="date" id="due_date" name="due_date" value="{{ form_data.due_date }}" required>
+          </div>
+          <div class="form-group">
+            <label for="status">Status</label>
+            <select id="status" name="status" required>
+              {% for option in financial_status_options %}
+                <option value="{{ option }}" {% if form_data.status == option %}selected{% endif %}>{{ option }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="assigned_to">Owner</label>
+            <input type="text" id="assigned_to" name="assigned_to" value="{{ form_data.assigned_to }}">
+          </div>
+        </div>
+      </section>
+
+      <section class="form-section">
+        <div class="form-section-head">
+          <div>
+            <p class="form-section-kicker">Notes</p>
+            <h2>Operational context</h2>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="note">Notes</label>
+          <textarea id="note" name="note" rows="4">{{ form_data.note }}</textarea>
+        </div>
+      </section>
+
+      <div class="form-actions">
+        <button type="submit" class="cta" data-loading-label="Saving...">{{ submit_label }}</button>
+        <a href="{{ back_url }}" class="text-link">Back</a>
+      </div>
+    </form>
+  </section>
+{% endblock %}

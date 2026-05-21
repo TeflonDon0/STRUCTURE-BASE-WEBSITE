@@ -1,0 +1,180 @@
+{% extends "base.html" %}
+
+{% block title %}Settings Admin | {{ site_settings.site_name }}{% endblock %}
+{% block robots %}noindex,nofollow{% endblock %}
+{% block body_class %}dashboard-page admin-module-page form-page{% endblock %}
+
+{% block content %}
+  <section class="page-hero admin-module-hero">
+    <div class="shell admin-module-hero-shell">
+      <div>
+        <p class="eyebrow">Settings</p>
+        <h1>Control the public business details from admin.</h1>
+        <p class="page-intro">
+          Update the contact routes and public site details that staff should be able to manage without editing environment files.
+        </p>
+      </div>
+      <div class="admin-module-actions">
+        <a href="{{ url_for('communication_preview') }}" class="cta cta-outline">Review communications</a>
+        <a href="{{ url_for('dashboard') }}" class="text-link">Back to overview</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="section shell section-tight">
+    <form method="post" class="contact-form listing-form admin-settings-form">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+      <section class="form-section">
+        <div class="form-section-head">
+          <div>
+            <p class="form-section-kicker">Brand and contact</p>
+            <h2>Public business identity</h2>
+          </div>
+          <p class="form-note">These values flow into the header, footer, PDFs, WhatsApp links, and communication templates across the product.</p>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="site_name">Site name</label>
+            <input type="text" id="site_name" name="site_name" value="{{ form_data.site_name }}" required>
+          </div>
+          <div class="form-group">
+            <label for="contact_email">Contact email</label>
+            <input type="email" id="contact_email" name="contact_email" value="{{ form_data.contact_email }}" required>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="contact_phone_display">Phone display</label>
+            <input type="text" id="contact_phone_display" name="contact_phone_display" value="{{ form_data.contact_phone_display }}" required>
+          </div>
+          <div class="form-group">
+            <label for="contact_phone_raw">Phone dial value</label>
+            <input type="text" id="contact_phone_raw" name="contact_phone_raw" value="{{ form_data.contact_phone_raw }}" required>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="whatsapp_phone">WhatsApp number</label>
+            <input type="text" id="whatsapp_phone" name="whatsapp_phone" value="{{ form_data.whatsapp_phone }}" required>
+          </div>
+          <div class="form-group">
+            <label for="office_address">Office address</label>
+            <input type="text" id="office_address" name="office_address" value="{{ form_data.office_address }}">
+          </div>
+        </div>
+      </section>
+
+      <section class="form-section">
+        <div class="form-section-head">
+          <div>
+            <p class="form-section-kicker">Public footer</p>
+            <h2>Coverage and summary</h2>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="coverage_area">Coverage area</label>
+          <textarea id="coverage_area" name="coverage_area" rows="3" required>{{ form_data.coverage_area }}</textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="footer_summary">Footer summary</label>
+          <textarea id="footer_summary" name="footer_summary" rows="4" required>{{ form_data.footer_summary }}</textarea>
+        </div>
+      </section>
+
+      <section class="form-section">
+        <div class="form-section-head">
+          <div>
+            <p class="form-section-kicker">Homepage conversion</p>
+            <h2>Hero message and primary actions</h2>
+          </div>
+          <p class="form-note">These fields control the first impression on the public homepage without editing templates.</p>
+        </div>
+
+        <div class="form-group">
+          <label for="homepage_hero_heading">Hero heading</label>
+          <textarea id="homepage_hero_heading" name="homepage_hero_heading" rows="3" required>{{ form_data.homepage_hero_heading }}</textarea>
+          <p class="form-note">Use short sentence fragments. Each sentence becomes a separate hero line.</p>
+        </div>
+
+        <div class="form-group">
+          <label for="homepage_hero_intro">Hero intro</label>
+          <textarea id="homepage_hero_intro" name="homepage_hero_intro" rows="3" required>{{ form_data.homepage_hero_intro }}</textarea>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="homepage_primary_cta">Primary CTA label</label>
+            <input type="text" id="homepage_primary_cta" name="homepage_primary_cta" value="{{ form_data.homepage_primary_cta }}" required>
+          </div>
+          <div class="form-group">
+            <label for="homepage_secondary_cta">Secondary CTA label</label>
+            <input type="text" id="homepage_secondary_cta" name="homepage_secondary_cta" value="{{ form_data.homepage_secondary_cta }}" required>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="homepage_trust_signal_1">Trust signal 1</label>
+            <input type="text" id="homepage_trust_signal_1" name="homepage_trust_signal_1" value="{{ form_data.homepage_trust_signal_1 }}">
+          </div>
+          <div class="form-group">
+            <label for="homepage_trust_signal_2">Trust signal 2</label>
+            <input type="text" id="homepage_trust_signal_2" name="homepage_trust_signal_2" value="{{ form_data.homepage_trust_signal_2 }}">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="homepage_trust_signal_3">Trust signal 3</label>
+          <input type="text" id="homepage_trust_signal_3" name="homepage_trust_signal_3" value="{{ form_data.homepage_trust_signal_3 }}">
+        </div>
+      </section>
+
+      <section class="form-section">
+        <div class="form-section-head">
+          <div>
+            <p class="form-section-kicker">Email brand</p>
+            <h2>Mailer identity</h2>
+          </div>
+          <p class="form-note">Use email-only lines here when the website footer and communication header should not say the same thing.</p>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="email_sender_name">Sender display name</label>
+            <input type="text" id="email_sender_name" name="email_sender_name" value="{{ form_data.email_sender_name }}" placeholder="{{ form_data.site_name }}">
+          </div>
+          <div class="form-group">
+            <label for="email_brand_tagline">Email tagline</label>
+            <input type="text" id="email_brand_tagline" name="email_brand_tagline" value="{{ form_data.email_brand_tagline }}">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="email_brand_market_line">Email market line</label>
+          <input type="text" id="email_brand_market_line" name="email_brand_market_line" value="{{ form_data.email_brand_market_line }}">
+        </div>
+
+        <div class="form-group">
+          <label for="email_footer_note">Email footer note</label>
+          <textarea id="email_footer_note" name="email_footer_note" rows="3">{{ form_data.email_footer_note }}</textarea>
+        </div>
+      </section>
+
+      {% if site_settings.using_default_credentials %}
+        <div class="admin-settings-note">
+          <strong>Security note:</strong> local default admin credentials are still active. Replace them before public deployment.
+        </div>
+      {% endif %}
+
+      <div class="form-actions">
+        <button type="submit" class="cta" data-loading-label="Saving...">Save site settings</button>
+      </div>
+    </form>
+  </section>
+{% endblock %}

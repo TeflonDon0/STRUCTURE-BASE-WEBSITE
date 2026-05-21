@@ -1,0 +1,275 @@
+{% extends "base.html" %}
+
+{% block title %}{{ listing.title }} | {{ site_settings.site_name }}{% endblock %}
+{% block meta_description %}{{ listing.summary }} Browse price, location details, and direct enquiry options for this {{ listing.property_type | lower }} in {{ listing.district }}.{% endblock %}
+{% block og_type %}product{% endblock %}
+{% block meta_image %}{{ absolute_asset_url(listing_image_path(listing)) }}{% endblock %}
+{% block structured_data %}
+  <script type="application/ld+json" nonce="{{ csp_nonce() }}">{{ structured_data | tojson }}</script>
+{% endblock %}
+{% block body_class %}detail-page{% endblock %}
+
+{% block content %}
+  <section class="page-hero" data-reveal>
+    <div class="shell detail-shell">
+      {% set gallery = listing_media_gallery(listing) %}
+      <div class="detail-media-column">
+      <div class="detail-media-card">
+        <img src="{{ asset_url(gallery[0] if gallery else listing_image_path(listing)) }}" alt="{{ listing.title }}" class="detail-image" id="detail-main-image">
+        <div class="detail-media-overlay">
+          <span>{{ gallery|length if gallery else 1 }} photo{% if (gallery|length if gallery else 1) != 1 %}s{% endif %}</span>
+          {% if not listing_has_uploaded_image(listing) %}
+            <span>Representative image</span>
+          {% endif %}
+        </div>
+        {% if not listing_has_uploaded_image(listing) %}
+          <span class="property-badge property-badge-secondary {% if listing.availability != 'Available' %}property-badge-stacked{% endif %}" title="Representative image. Ask for current photos before final decisions.">Representative image</span>
+        {% endif %}
+      </div>
+
+      {% if gallery|length > 1 %}
+        <div class="detail-gallery-strip" aria-label="Property gallery">
+          {% for image_path in gallery %}
+            <button
+              type="button"
+              class="gallery-thumb{% if loop.first %} is-active{% endif %}"
+              data-gallery-target="{{ asset_url(image_path) }}"
+              aria-label="Show gallery image {{ loop.index }}"
+            >
+              <img src="{{ asset_url(image_path) }}" alt="{{ listing.title }} image {{ loop.index }}">
+            </button>
+          {% endfor %}
+        </div>
+      {% endif %}
+
+      <aside class="detail-media-support" aria-label="Listing viewing checklist">
+        <p class="eyebrow">Viewing checklist</p>
+        <ul>
+          <li>Confirm current availability before travel.</li>
+          <li>Ask for total move-in costs and service charges.</li>
+          <li>Request exact access timing and required documents.</li>
+        </ul>
+      </aside>
+      </div>
+
+      <div class="detail-copy">
+        <div class="detail-heading-meta">
+          <p class="eyebrow">{{ listing.status }}</p>
+          {% if listing.verified_property %}
+            <span class="dashboard-badge dashboard-badge-accent">Verified property</span>
+          {% endif %}
+          {% if listing.verified_landlord %}
+            <span class="dashboard-badge dashboard-badge-accent">Verified landlord</span>
+          {% endif %}
+          {% if listing.availability != 'Available' %}
+            <span class="dashboard-badge dashboard-badge-muted">{{ listing.availability }}</span>
+          {% endif %}
+        </div>
+        <h1>{{ listing.title }}</h1>
+        <p class="page-intro">{{ listing.summary }}</p>
+
+        <section class="detail-decision-card" aria-label="Listing summary">
+          <div>
+            <p class="detail-decision-label">Asking price</p>
+            <div class="detail-price">{{ listing.price | naira }}{{ listing.price_suffix }}</div>
+            <p class="page-hero-note detail-price-note">
+              Confirm agency fees, service charges, payment terms, and negotiation room with the advisor before booking a viewing.
+            </p>
+          </div>
+          <div class="detail-decision-actions">
+            <a href="#property-enquiry" class="cta cta-accent">Send direct enquiry</a>
+            <div class="detail-contact-links">
+              <a href="{{ listing_whatsapp_url(listing) }}" class="text-link text-link-strong" target="_blank" rel="noreferrer">Chat on WhatsApp</a>
+              <a href="tel:{{ site_settings.contact_phone_raw }}" class="text-link">Call sales desk</a>
+              <a href="mailto:{{ site_settings.contact_email }}?subject=Enquiry about {{ listing.title | urlencode }}" class="text-link">Enquire by email</a>
+            </div>
+          </div>
+        </section>
+
+        <ul class="property-meta property-meta-large">
+          <li>{{ listing.property_type }}</li>
+          <li>{{ listing.district }}</li>
+          {% if listing.bedrooms %}<li>{{ listing.bedrooms }} bedrooms</li>{% endif %}
+          {% if listing.bathrooms %}<li>{{ listing.bathrooms }} bathrooms</li>{% endif %}
+          {% if listing.area_sqm %}<li>{{ listing.area_sqm }} sqm</li>{% endif %}
+          {% if listing.view_count %}<li>{{ listing.view_count }} verified page views</li>{% endif %}
+        </ul>
+
+        {% set feature_labels = listing_feature_labels(listing) %}
+        {% if feature_labels %}
+          <div class="feature-chip-row feature-chip-row-large">
+            {% for label in feature_labels %}
+              <span class="feature-chip">{{ label }}</span>
+            {% endfor %}
+          </div>
+        {% endif %}
+
+        <div class="detail-panels">
+          <article class="info-card detail-info-card detail-location-card">
+            <div class="info-card-head">
+              <h2>Location</h2>
+              {% if listing.map_location_mode != 'missing' %}
+                <a
+                  href="{{ url_for('properties', focus=listing.id) }}#map"
+                  class="text-link text-link-strong"
+                >
+                  {{ "View location on map" if listing.map_location_mode == 'exact' else "View area on map" }}
+                </a>
+              {% endif %}
+            </div>
+            <p>{{ listing.address }}</p>
+            {% if listing.map_location_mode == 'approximate' %}
+              <p class="property-note">Map view uses a district-centre marker until exact coordinates are added.</p>
+            {% endif %}
+          </article>
+          <article class="info-card detail-info-card detail-description-card">
+            <h2>Description</h2>
+            <p>{{ listing.description }}</p>
+          </article>
+        </div>
+
+        <section class="objection-strip objection-strip-detail detail-trust-panel" aria-label="Before enquiry reassurance">
+          <div>
+            <p class="eyebrow">Trust and viewing notes</p>
+            <h2>Start with the right questions.</h2>
+          </div>
+          <article>
+            <strong>Verified signals</strong>
+            <p>Badges mean availability, price, landlord, or listing details have been reviewed before follow-up.</p>
+          </article>
+          <article>
+            <strong>Before you visit</strong>
+            <p>Ask for current availability, access timing, and any required documents or fees.</p>
+          </article>
+          <article>
+            <strong>Not ready yet?</strong>
+            <p>You can ask clarifying questions first; a viewing is not required to start the conversation.</p>
+          </article>
+        </section>
+
+        {% if listing.virtual_tour_url %}
+          <div class="detail-contact-links detail-tour-link-row">
+            <a href="{{ listing.virtual_tour_url }}" class="text-link text-link-strong" target="_blank" rel="noreferrer">Open 360 tour</a>
+          </div>
+        {% endif %}
+
+        {% if listing.virtual_tour_url %}
+          <article class="info-card detail-tour-card">
+            <div class="detail-tour-head">
+              <div>
+                <p class="eyebrow">Virtual tour</p>
+                <h2>Preview the space remotely.</h2>
+              </div>
+              <a href="{{ listing.virtual_tour_url }}" class="text-link text-link-strong" target="_blank" rel="noreferrer">Open full tour</a>
+            </div>
+            <div class="detail-tour-frame">
+              <iframe src="{{ listing.virtual_tour_url }}" title="Virtual tour for {{ listing.title }}" loading="lazy" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+            </div>
+          </article>
+        {% endif %}
+
+      </div>
+    </div>
+  </section>
+
+  <section class="section shell section-tight detail-enquiry-section" id="property-enquiry" data-reveal>
+    <div class="detail-enquiry-surface contact-form">
+      <div class="detail-enquiry-head">
+        <div>
+          <p class="eyebrow">Direct enquiry</p>
+          <h2>Ask about viewing times, pricing, or terms.</h2>
+        </div>
+        <p class="form-note">Your enquiry reaches the team with the correct listing details attached. Your contact details are used to respond to this enquiry.</p>
+      </div>
+
+      <form method="post" action="{{ url_for('submit_enquiry') }}" class="detail-enquiry-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="listing_id" value="{{ listing.id }}">
+        <input type="hidden" name="listing_title" value="{{ listing.title }}">
+        <input type="hidden" name="source_path" value="{{ request.path }}">
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="name">Your name</label>
+            <input type="text" id="name" name="name" autocomplete="name" required>
+          </div>
+          <div class="form-group">
+            <label for="preferred_contact">Best contact method</label>
+            <select id="preferred_contact" name="preferred_contact">
+              {% for option in enquiry_contact_options %}
+                <option value="{{ option }}">{{ option }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="email">Email</label>
+            <input type="email" id="email" name="email" autocomplete="email">
+          </div>
+          <div class="form-group">
+            <label for="phone">Phone or WhatsApp</label>
+            <input type="tel" id="phone" name="phone" autocomplete="tel">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="message">What do you need?</label>
+          <textarea id="message" name="message" rows="4" required>I would like more details about {{ listing.title }} in {{ listing.district }}, including pricing confirmation and viewing availability.</textarea>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="cta" data-loading-label="Sending...">Send enquiry</button>
+          <span class="form-note">Replies will use the contact method you choose above. Ask about availability, fees, terms, or viewing windows.</span>
+        </div>
+      </form>
+    </div>
+  </section>
+
+  {% if related %}
+    <section class="section shell" data-reveal>
+      <div class="section-heading">
+        <p class="eyebrow">More In {{ listing.district }}</p>
+        <h2>Related listings in the same district.</h2>
+      </div>
+
+      <div class="property-grid-list">
+        {% for item in related %}
+          <article class="property-card">
+            <a href="{{ url_for('property_detail', listing_id=item.id) }}" class="property-media-link" aria-label="View {{ item.title }}">
+              <div class="property-media">
+                <img src="{{ asset_url(listing_image_path(item)) }}" alt="{{ item.title }}" loading="lazy" decoding="async">
+                <span class="property-badge">{{ item.status }}</span>
+                {% if item.verified_property %}
+                  <span class="property-badge property-badge-verified" title="Availability, price, and basic listing details reviewed before publishing.">Verified</span>
+                {% endif %}
+                {% if item.availability != 'Available' %}
+                  <span class="property-badge property-badge-secondary">{{ item.availability }}</span>
+                {% endif %}
+                {% if not listing_has_uploaded_image(item) %}
+                  <span class="property-badge property-badge-secondary {% if item.availability != 'Available' %}property-badge-stacked{% endif %}" title="Representative image. Ask for current photos before final decisions.">Representative image</span>
+                {% endif %}
+              </div>
+            </a>
+            <div class="property-body">
+              <div class="property-copy">
+                <p class="property-location">{{ item.district }}</p>
+                <h3>{{ item.title }}</h3>
+                <p class="property-price property-price-card">{{ item.price | naira }}{{ item.price_suffix }}</p>
+                <p class="property-summary">{{ item.summary }}</p>
+              </div>
+              <div class="property-footer">
+                <p class="property-note">{{ item.address }}</p>
+                <div class="property-actions">
+                  <a href="{{ url_for('property_detail', listing_id=item.id) }}" class="cta cta-small">View details</a>
+                  <a href="{{ listing_whatsapp_url(item) }}" class="text-link text-link-strong" target="_blank" rel="noreferrer">Chat on WhatsApp</a>
+                </div>
+              </div>
+            </div>
+          </article>
+        {% endfor %}
+      </div>
+    </section>
+  {% endif %}
+{% endblock %}

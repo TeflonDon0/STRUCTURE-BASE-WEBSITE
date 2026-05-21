@@ -1,0 +1,181 @@
+{% extends "base.html" %}
+
+{% block title %}Finance Admin | {{ site_settings.site_name }}{% endblock %}
+{% block robots %}noindex,nofollow{% endblock %}
+{% block body_class %}dashboard-page admin-module-page{% endblock %}
+
+{% block content %}
+  {% set next_url = request.full_path.rstrip('?') %}
+  <section class="page-hero admin-module-hero">
+    <div class="shell admin-module-hero-shell">
+      <div>
+        <p class="eyebrow">Finance</p>
+        <h1>Track dues, payments, and charge ownership.</h1>
+        <p class="page-intro">
+          Keep finance records current with clear due dates, assignment, and follow-up notes.
+        </p>
+      </div>
+      <div class="admin-module-actions">
+        <a href="{{ url_for('create_finance_record', next=next_url) }}" class="cta">New financial record</a>
+        <a href="{{ url_for('dashboard') }}" class="text-link">Back to overview</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="section shell section-tight">
+    <div class="admin-insight-strip admin-insight-strip-finance" aria-label="Finance management summary">
+      <article>
+        <span>Open balance</span>
+        <strong>{{ finance_summary.open_amount | naira }}</strong>
+        <p>{{ finance_summary.open_count }} active charge{{ '' if finance_summary.open_count == 1 else 's' }}.</p>
+      </article>
+      <article>
+        <span>Overdue</span>
+        <strong>{{ finance_summary.overdue_amount | naira }}</strong>
+        <p>{{ finance_summary.overdue_count }} record{{ '' if finance_summary.overdue_count == 1 else 's' }} need escalation.</p>
+      </article>
+      <article>
+        <span>Owner gaps</span>
+        <strong>{{ finance_summary.owner_gap_count }}</strong>
+        <p>Open charges without follow-up ownership.</p>
+      </article>
+      <article>
+        <span>Paid records</span>
+        <strong>{{ finance_summary.paid_count }}</strong>
+        <p>{{ finance_summary.paid_amount | naira }} marked paid.</p>
+      </article>
+    </div>
+  </section>
+
+  <section class="section shell section-tight">
+    <form method="get" action="{{ url_for('admin_finance') }}" class="dashboard-filter-bar admin-filter-bar" aria-label="Filter financial records">
+      <div class="dashboard-filter-grid admin-toolbar-grid">
+        <div class="form-group dashboard-filter-search">
+          <label for="finance-q">Search</label>
+          <input type="search" id="finance-q" name="q" value="{{ finance_filters.q }}" placeholder="Resident, unit, property, note">
+        </div>
+        <div class="form-group">
+          <label for="finance-status">Status</label>
+          <select id="finance-status" name="status">
+            <option value="">All statuses</option>
+            {% for option in financial_status_options %}
+              <option value="{{ option }}" {% if finance_filters.status == option %}selected{% endif %}>{{ option }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="finance-charge">Charge type</label>
+          <select id="finance-charge" name="charge_type">
+            <option value="">All types</option>
+            {% for option in financial_charge_options %}
+              <option value="{{ option }}" {% if finance_filters.charge_type == option %}selected{% endif %}>{{ option }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="finance-owner">Owner</label>
+          <select id="finance-owner" name="assigned_to">
+            <option value="">All owners</option>
+            {% for option in finance_assignees %}
+              <option value="{{ option }}" {% if finance_filters.assigned_to == option %}selected{% endif %}>{{ option }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="finance-sort">Sort</label>
+          <select id="finance-sort" name="sort">
+            {% for value, label in financial_sort_options %}
+              <option value="{{ value }}" {% if finance_filters.sort == value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+      <div class="dashboard-filter-actions filter-actions">
+        <button type="submit" class="cta cta-small">Apply</button>
+        <a href="{{ url_for('admin_finance') }}" class="text-link">Reset</a>
+      </div>
+    </form>
+
+    {% if active_filter_labels %}
+      <div class="dashboard-active-filters" aria-label="Active financial filters">
+        {% for label in active_filter_labels %}
+          <span class="dashboard-filter-pill">{{ label }}</span>
+        {% endfor %}
+      </div>
+    {% endif %}
+  </section>
+
+  <section class="section shell section-tight">
+    <div class="dashboard-section-head admin-section-head">
+      <div>
+        <p class="dashboard-section-kicker">Queue</p>
+        <h2>{{ financial_records|length }} record{{ '' if financial_records|length == 1 else 's' }} shown</h2>
+      </div>
+      <div class="dashboard-section-meta">
+        <span class="dashboard-badge dashboard-badge-muted">{{ finance_total }} total</span>
+      </div>
+    </div>
+
+    {% if financial_records %}
+      <div class="admin-record-grid">
+        {% for record in financial_records %}
+          <article class="admin-record-card">
+            <div class="admin-record-head">
+              <div>
+                <p class="property-location">{{ record.property_title or 'Property not linked yet' }}</p>
+                <h3>{{ record.unit_reference }}</h3>
+              </div>
+              <div class="status-cluster">
+                <span class="dashboard-badge">{{ record.status }}</span>
+                <span class="dashboard-badge dashboard-badge-muted">{{ record.charge_type }}</span>
+              </div>
+            </div>
+
+            <div class="admin-record-meta">
+              <span>{{ record.resident_name }}</span>
+              <span>{{ record.amount | naira }}</span>
+              <span>Due {{ record.due_date }}</span>
+              {% if record.related_listing_edit_url %}
+                <span><a href="{{ record.related_listing_edit_url }}">Find in inventory</a></span>
+              {% endif %}
+            </div>
+
+            {% if record.note %}
+              <p class="admin-record-message">{{ record.note }}</p>
+            {% endif %}
+
+            <form method="post" action="{{ url_for('update_finance', record_id=record.id) }}" class="admin-inline-form">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <input type="hidden" name="next" value="{{ next_url }}">
+              <div class="admin-form-grid admin-form-grid-compact">
+                <div class="form-group">
+                  <label for="finance-status-{{ record.id }}">Status</label>
+                  <select id="finance-status-{{ record.id }}" name="status">
+                    {% for option in financial_status_options %}
+                      <option value="{{ option }}" {% if record.status == option %}selected{% endif %}>{{ option }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="finance-owner-{{ record.id }}">Owner</label>
+                  <input type="text" id="finance-owner-{{ record.id }}" name="assigned_to" value="{{ record.assigned_to }}">
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="finance-note-{{ record.id }}">Internal note</label>
+                <textarea id="finance-note-{{ record.id }}" name="note" rows="3">{{ record.note }}</textarea>
+              </div>
+              <div class="admin-inline-actions">
+                <button type="submit" class="cta cta-small" data-loading-label="Saving...">Save update</button>
+              </div>
+            </form>
+          </article>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="empty-state dashboard-empty-state">
+        <p>No finance records match the current filters.</p>
+      </div>
+    {% endif %}
+  </section>
+{% endblock %}

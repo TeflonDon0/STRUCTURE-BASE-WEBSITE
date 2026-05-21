@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light only">
+  <meta name="supported-color-schemes" content="light only">
+  <title>{{ subject }}</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background: {{ brand.background }};
+      color: {{ brand.text }};
+      font-family: "Helvetica Neue", Arial, Helvetica, sans-serif;
+    }
+    table {
+      border-collapse: collapse;
+      border-spacing: 0;
+    }
+    img {
+      border: 0;
+      display: block;
+      max-width: 100%;
+      height: auto;
+    }
+    .preheader {
+      display: none;
+      max-height: 0;
+      overflow: hidden;
+      opacity: 0;
+      color: transparent;
+    }
+    .page-shell {
+      width: 100%;
+      background: {{ brand.background }};
+    }
+    .email-card {
+      width: 100%;
+      max-width: 640px;
+      background: {{ brand.surface }};
+      border: 1px solid {{ brand.line }};
+      border-radius: 18px;
+      overflow: hidden;
+    }
+    .email-header {
+      padding: 24px 30px 20px;
+      border-bottom: 1px solid #ece3d7;
+      background: linear-gradient(180deg, #fffdf9 0%, #f8f1e8 100%);
+    }
+    .brand-header-table td {
+      vertical-align: top;
+    }
+    .brand-logo-cell {
+      width: 60px;
+      padding-right: 12px;
+    }
+    .brand-copy-cell {
+      text-align: left;
+    }
+    .brand-name {
+      margin: 0 0 4px;
+      color: {{ brand.text }};
+      font-family: "Helvetica Neue", Arial, Helvetica, sans-serif;
+      font-size: 24px;
+      line-height: 1.1;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+    .brand-tagline {
+      margin: 0 0 4px;
+      color: {{ brand.text }};
+      font-size: 13px;
+      line-height: 1.45;
+      font-weight: 600;
+    }
+    .brand-meta {
+      margin: 0;
+      color: {{ brand.muted }};
+      font-size: 12px;
+      line-height: 1.5;
+    }
+    a {
+      color: {{ brand.primary }};
+    }
+    .content-shell {
+      padding: 28px 30px;
+    }
+    .eyebrow {
+      margin: 0 0 10px;
+      color: {{ brand.primary }};
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    h1 {
+      margin: 0 0 14px;
+      color: {{ brand.text }};
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 30px;
+      line-height: 1.18;
+      font-weight: 700;
+    }
+    h2 {
+      margin: 0 0 10px;
+      color: {{ brand.text }};
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 20px;
+      line-height: 1.24;
+      font-weight: 700;
+    }
+    p {
+      margin: 0 0 14px;
+      color: {{ brand.text }};
+      font-size: 15px;
+      line-height: 1.65;
+    }
+    .lead {
+      color: {{ brand.muted }};
+      font-size: 15px;
+    }
+    .summary-card,
+    .callout-card,
+    .footer-card {
+      border: 1px solid {{ brand.line }};
+      border-radius: 16px;
+      background: #fffdf9;
+    }
+    .summary-card td,
+    .callout-card td,
+    .footer-card td {
+      padding: 16px 18px;
+    }
+    .summary-grid td {
+      width: 50%;
+      vertical-align: top;
+      padding: 0 12px 12px 0;
+    }
+    .summary-label {
+      margin: 0 0 4px;
+      color: {{ brand.muted }};
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+    .summary-value {
+      margin: 0;
+      color: {{ brand.text }};
+      font-size: 15px;
+      line-height: 1.5;
+      font-weight: 600;
+    }
+    .button-wrap {
+      padding-top: 8px;
+      padding-bottom: 2px;
+    }
+    .button {
+      display: inline-block;
+      padding: 14px 22px;
+      border-radius: 999px;
+      background: {{ brand.primary }};
+      color: #ffffff !important;
+      font-size: 14px;
+      font-weight: 700;
+      line-height: 1;
+      text-decoration: none;
+    }
+    .button-note {
+      margin: 10px 0 0;
+      color: {{ brand.muted }};
+      font-size: 12px;
+      line-height: 1.55;
+    }
+    .divider {
+      height: 1px;
+      background: #ece3d7;
+      line-height: 1px;
+      font-size: 1px;
+    }
+    .contact-band {
+      padding: 18px 30px 18px;
+      background: rgba(244, 238, 230, 0.38);
+    }
+    .contact-band p {
+      margin-bottom: 0;
+      color: {{ brand.text }};
+      font-size: 13px;
+      line-height: 1.6;
+    }
+    .contact-band a,
+    .footer-meta a {
+      color: {{ brand.primary }};
+      text-decoration: underline;
+    }
+    .footer-meta {
+      padding: 18px 30px 28px;
+      color: {{ brand.muted }};
+      font-size: 12px;
+      line-height: 1.65;
+    }
+    .footer-meta p {
+      margin: 0 0 8px;
+      color: {{ brand.muted }};
+      font-size: 12px;
+      line-height: 1.65;
+    }
+    .footer-reason {
+      color: {{ brand.text }} !important;
+      font-weight: 600;
+    }
+    .pill {
+      display: inline-block;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(123, 51, 39, 0.08);
+      color: {{ brand.primary }};
+      font-size: 12px;
+      font-weight: 700;
+      line-height: 1;
+    }
+    .pill-warning {
+      background: rgba(143, 91, 31, 0.12);
+      color: {{ brand.warning }};
+    }
+    @media only screen and (max-width: 680px) {
+      .email-header,
+      .content-shell,
+      .contact-band,
+      .footer-meta {
+        padding-left: 20px !important;
+        padding-right: 20px !important;
+      }
+      .brand-logo-cell,
+      .brand-copy-cell {
+        display: block !important;
+        width: 100% !important;
+      }
+      .brand-logo-cell {
+        padding-right: 0 !important;
+        padding-bottom: 10px !important;
+      }
+      .brand-name {
+        font-size: 22px !important;
+      }
+      h1 {
+        font-size: 27px !important;
+      }
+      .summary-grid td {
+        display: block;
+        width: 100% !important;
+        padding-right: 0 !important;
+      }
+      .button {
+        display: block !important;
+        text-align: center !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="preheader">{{ preheader }}</div>
+  <table role="presentation" width="100%" class="page-shell">
+    <tr>
+      <td align="center" style="padding: 24px 16px;">
+        <table role="presentation" width="100%" class="email-card">
+          <tr>
+            <td class="email-header">
+              <table role="presentation" width="100%" class="brand-header-table">
+                <tr>
+                  <td class="brand-logo-cell">
+                    {% if logo_cid %}
+                      <img src="cid:{{ logo_cid }}" alt="{{ site_name }} logo" width="48">
+                    {% elif logo_url %}
+                      <img src="{{ logo_url }}" alt="{{ site_name }} logo" width="48">
+                    {% else %}
+                      <div class="brand-name">{{ site_name }}</div>
+                    {% endif %}
+                  </td>
+                  <td class="brand-copy-cell">
+                    <p class="brand-name">{{ site_name }}</p>
+                    <p class="brand-tagline">{{ brand_tagline }}</p>
+                    <p class="brand-meta">{{ brand_market_line }}</p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          {{ body_html | safe }}
+          <tr><td class="divider"></td></tr>
+          <tr>
+            <td class="contact-band">
+              <p>
+                {{ support_intro or "Need help?" }}
+                <a href="mailto:{{ contact_email }}">{{ contact_email }}</a>
+                {% if contact_phone_display %}
+                  or <a href="tel:{{ site_settings.contact_phone_raw }}">{{ contact_phone_display }}</a>
+                {% endif %}
+                .
+              </p>
+            </td>
+          </tr>
+          <tr>
+            <td class="footer-meta">
+              {% if recipient_reason %}
+                <p class="footer-reason">{{ recipient_reason }}</p>
+              {% endif %}
+              <p>{{ email_footer_note }}</p>
+              <p>{{ site_name }} &middot; {{ office_address }}</p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

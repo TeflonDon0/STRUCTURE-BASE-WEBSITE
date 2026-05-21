@@ -1,0 +1,173 @@
+{% extends "base.html" %}
+
+{% block title %}About | {{ site_settings.site_name }}{% endblock %}
+{% block meta_description %}Learn how {{ site_settings.site_name }} supports property sales, rent, lease, and tenant service coordination from Lagos across key markets in Nigeria.{% endblock %}
+{% block body_class %}about-page{% endblock %}
+
+{% block content %}
+  <section class="page-hero" data-reveal>
+    <div class="shell page-hero-shell about-hero-shell">
+      <div class="about-hero-copy">
+        <p class="eyebrow">About {{ site_settings.site_name }}</p>
+        <h1>Property support from Lagos.</h1>
+        <p class="page-intro">
+          {{ site_settings.site_name }} helps buyers, renters, landlords, and operators review options clearly, reach the right team quickly, and keep tenant requests moving across Nigeria.
+        </p>
+        <div class="masthead-signal-row" aria-label="{{ site_settings.site_name }} service signals">
+          <span>For buyers, renters, landlords, and operators</span>
+          <span>{{ stats.total }} published listing{% if stats.total != 1 %}s{% endif %}</span>
+          <span>Based in {{ site_settings.office_address }}</span>
+        </div>
+        <div class="hero-actions masthead-actions">
+          <a href="{{ url_for('properties') }}" class="cta">Browse listings</a>
+          <a href="{{ general_whatsapp_url }}" class="cta cta-secondary" target="_blank" rel="noreferrer">Talk to an advisor</a>
+        </div>
+      </div>
+
+      <aside class="about-hero-card" aria-label="{{ site_settings.site_name }} advisory team">
+        <img src="{{ static_asset_url('images/team-corporate-nigeria.webp') }}" alt="Structurebase advisors reviewing property options with clients" loading="eager" decoding="async">
+        <div class="about-hero-card-panel">
+          <p>Local advisory, live inventory, and direct follow-up in one workflow.</p>
+          <div class="about-hero-stat-row">
+            <span><strong>{{ stats.total }}</strong> listings</span>
+            <span><strong>{{ stats.district_count or 0 }}</strong> districts</span>
+            <span><strong>{{ stats.verified_count or 0 }}</strong> vetted</span>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <section class="section shell section-tight" data-reveal>
+    <div class="inner-summary-strip about-summary-strip" aria-label="{{ site_settings.site_name }} at a glance">
+      <div>
+        <p class="eyebrow">At a glance</p>
+        <p>Based in {{ site_settings.office_address }}. Supporting {{ site_settings.coverage_area }}.</p>
+      </div>
+      <div class="inner-stat-row">
+        <article>
+          <strong>{{ stats.total }}</strong>
+          <span>Published listings</span>
+        </article>
+        <article>
+          <strong>{{ stats.district_count or 0 }}</strong>
+          <span>Active districts</span>
+        </article>
+        <article>
+          <strong>{{ stats.verified_count or 0 }}</strong>
+          <span>Vetted listings</span>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="section shell about-story-section" data-reveal>
+    <div class="about-story-media">
+      <img src="{{ static_asset_url('images/team-handshake.webp') }}" alt="Structurebase team discussing property next steps around a table" loading="eager" decoding="async">
+    </div>
+    <div class="about-story-copy">
+      <p class="eyebrow">What The Team Handles</p>
+      <h2>Support that keeps property decisions and operations moving.</h2>
+      <p>Clients get clear listing details, direct enquiry routes, and maintenance handoffs that are easy for the team to act on.</p>
+      <div class="about-check-list" aria-label="Structurebase support priorities">
+        <span>Current availability checks</span>
+        <span>Advisor-led shortlist support</span>
+        <span>Tenant issue routing</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="section shell section-tight" data-reveal>
+    <div class="about-pillar-grid">
+      <article class="info-card">
+        <h2>Sales, rent, and lease</h2>
+        <p>Review live options with clear pricing, availability, and next steps for sale, rent, or lease enquiries.</p>
+      </article>
+      <article class="info-card">
+        <h2>Listing reliability</h2>
+        <p>Availability, pricing, and status are kept current so serious clients do not waste time on stale options.</p>
+      </article>
+      <article class="info-card">
+        <h2>Tenant and facility support</h2>
+        <p>Residents can send maintenance details, urgency, and photos so the operations desk can respond with context.</p>
+      </article>
+    </div>
+  </section>
+
+  <section class="section shell about-proof-section" data-reveal>
+    <div>
+      <p class="eyebrow">Why It Holds Up</p>
+      <h2>Clear signals, direct contact routes, and less second-guessing.</h2>
+      <p>The experience is designed to help serious clients and staff move from interest to action with fewer loose ends.</p>
+    </div>
+
+    <div class="about-proof-list">
+      <article>
+        <span>01</span>
+        <div>
+          <h3>Grounded proof</h3>
+          <p>The public snapshot uses live published inventory, so the market view feels current and accountable.</p>
+        </div>
+      </article>
+      <article>
+        <span>02</span>
+        <div>
+          <h3>Direct response routes</h3>
+          <p>Enquiries, tenant requests, and listing actions route toward the right workflow instead of a generic queue.</p>
+        </div>
+      </article>
+      <article>
+        <span>03</span>
+        <div>
+          <h3>Coverage that is easy to read</h3>
+          <p>District, pricing, availability, and vetted signals are placed where they matter so pages scan quickly.</p>
+        </div>
+      </article>
+      <article>
+        <span>04</span>
+        <div>
+          <h3>Built for ongoing use</h3>
+          <p>The same system supports public browsing and internal operations, so updates are easier to keep current.</p>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <section class="section shell" data-reveal>
+    <div class="section-heading">
+      <p class="eyebrow">How Confidence Is Built</p>
+      <h2>Simple checks before a client spends time on the wrong option.</h2>
+      <p>The team focuses on the details that usually decide whether a property is worth a visit, a call, or a shortlist.</p>
+    </div>
+
+    <div class="about-check-grid">
+      <article class="info-card">
+        <h2>Availability and price</h2>
+        <p>Published options are reviewed for current status and price context, then confirmed again during advisor follow-up.</p>
+      </article>
+      <article class="info-card">
+        <h2>Fees and terms</h2>
+        <p>Clients are encouraged to ask about agency fees, service charges, payment terms, and negotiation room before viewing.</p>
+      </article>
+      <article class="info-card">
+        <h2>Photos and access</h2>
+        <p>Representative media is marked clearly, and current photos or viewing access can be requested before committing travel time.</p>
+      </article>
+    </div>
+  </section>
+
+  <section class="section shell" data-reveal>
+    <div class="cta-banner">
+      <div>
+        <p class="eyebrow">Next Step</p>
+        <h2>Need help with a property, a listing, or tenant support?</h2>
+        <p>Start with the live catalogue, speak with an advisor to confirm fit, or route a maintenance request through tenant services.</p>
+      </div>
+      <div class="cta-banner-actions">
+        <a href="{{ url_for('properties') }}" class="cta">Browse listings</a>
+        <a href="{{ general_whatsapp_url }}" class="cta cta-card-secondary" target="_blank" rel="noreferrer">Talk to an advisor</a>
+        <a href="{{ url_for('tenant_services') }}" class="cta cta-card-secondary">Tenant services</a>
+      </div>
+    </div>
+  </section>
+{% endblock %}

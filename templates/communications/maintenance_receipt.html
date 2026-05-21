@@ -1,0 +1,68 @@
+<tr>
+  <td class="content-shell">
+    <p class="eyebrow">Maintenance receipt</p>
+    <h1>We received your maintenance request {{ payload.ticket_reference }}.</h1>
+    <p class="lead">
+      {% if payload.recipient_name %}Hello {{ payload.recipient_name }},{% endif %}
+      {{ payload.response_window }}
+    </p>
+
+    <table role="presentation" width="100%" class="summary-card" style="margin: 18px 0 20px;">
+      <tr>
+        <td>
+          <table role="presentation" width="100%" class="summary-grid">
+            <tr>
+              <td>
+                <p class="summary-label">Issue</p>
+                <p class="summary-value">{{ payload.issue_category }}</p>
+              </td>
+              <td>
+                <p class="summary-label">Priority</p>
+                <p class="summary-value">
+                  <span class="pill{% if payload.is_emergency %} pill-warning{% endif %}">{{ payload.priority }}</span>
+                </p>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <p class="summary-label">Property</p>
+                <p class="summary-value">{{ payload.property_title }}</p>
+              </td>
+              <td>
+                <p class="summary-label">Unit</p>
+                <p class="summary-value">{{ payload.unit_reference }}</p>
+              </td>
+            </tr>
+            <tr>
+              <td colspan="2">
+                <p class="summary-label">Follow-up contact</p>
+                <p class="summary-value">{{ payload.contact_line }}</p>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+
+    {% if payload.is_emergency %}
+      <table role="presentation" width="100%" class="callout-card" style="margin: 0 0 20px;">
+        <tr>
+          <td>
+            <p class="summary-label">Urgent escalation</p>
+            <p style="margin-bottom: 0;">
+              The request is logged. If there is active risk to safety, access, power, water, or security,
+              contact the operations desk immediately.
+            </p>
+          </td>
+        </tr>
+      </table>
+    {% endif %}
+
+    {% if payload.cta_url and payload.cta_label %}
+      <div class="button-wrap">
+        <a href="{{ payload.cta_url }}" class="button">{{ payload.cta_label }}</a>
+        <p class="button-note">Use your request reference if you need to share access updates or new evidence.</p>
+      </div>
+    {% endif %}
+  </td>
+</tr>

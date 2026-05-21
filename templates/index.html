@@ -1,0 +1,372 @@
+{% extends "base.html" %}
+
+{% block title %}{{ site_settings.site_name }} | Property Listings And Advisory{% endblock %}
+{% block meta_description %}Browse the current {{ site_settings.site_name }} catalogue with clear pricing, strong photography, and direct response routes from a team based in Lagos and active across Nigeria.{% endblock %}
+{% block body_class %}home-page{% endblock %}
+
+{% block content %}
+  {% set spotlight = featured[0] if featured else None %}
+  {% set editorial = featured[:2] %}
+
+  <section class="hero-section hero-section-cinematic" data-reveal>
+    <div class="hero-atmosphere" aria-hidden="true"></div>
+    <div class="shell hero-shell hero-shell-home">
+      <div class="hero-copy">
+        {% set hero_heading_parts = site_settings.homepage_hero_heading.split('. ') %}
+        <h1>
+          {% for part in hero_heading_parts %}
+            {% set cleaned_part = part.strip() %}
+            {% if cleaned_part %}
+              <span class="{% if loop.last %}hero-gold-text{% endif %}">{{ cleaned_part }}{% if not cleaned_part.endswith('.') %}.{% endif %}</span>
+            {% endif %}
+          {% endfor %}
+        </h1>
+        <p class="hero-intro">
+          {{ site_settings.homepage_hero_intro }}
+        </p>
+
+        <ul class="hero-trust-list" aria-label="Structurebase trust signals">
+          {% for signal in site_settings.homepage_trust_signals %}
+            <li>{{ signal }}</li>
+          {% endfor %}
+        </ul>
+
+        <div class="hero-actions stack-mobile">
+          <a href="{{ url_for('properties') }}" class="cta">
+            {{ site_settings.homepage_primary_cta }}
+          </a>
+          <a href="{{ general_whatsapp_url }}" class="cta cta-secondary" target="_blank" rel="noreferrer">
+            {{ site_settings.homepage_secondary_cta }}
+          </a>
+        </div>
+      </div>
+
+      <aside class="hero-panel hero-panel-home" aria-label="Live listing preview">
+        <div class="hero-card-stack hero-card-stack-back" aria-hidden="true"></div>
+        <div class="hero-card-stack hero-card-stack-mid" aria-hidden="true"></div>
+        <article class="hero-listing-card">
+          <div class="hero-listing-media">
+            <img src="{{ static_asset_url('images/ikoyi-penthouse-sample.webp') }}" alt="Ikoyi apartment tower with balconies and palm trees" loading="eager" decoding="async">
+          </div>
+          <div class="hero-listing-body">
+            <div class="hero-listing-head">
+              <div>
+                <h2>Ikoyi Skyline Penthouse</h2>
+                <p class="hero-listing-location">
+                  <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                    <path d="M12 22s7-6.23 7-12a7 7 0 1 0-14 0c0 5.77 7 12 7 12Zm0-9.3a2.7 2.7 0 1 1 0-5.4 2.7 2.7 0 0 1 0 5.4Z"/>
+                  </svg>
+                  Ikoyi, Lagos
+                </p>
+              </div>
+              <div class="hero-listing-price">
+                <strong>&#8358;850,000,000</strong>
+                <span>For Sale</span>
+              </div>
+            </div>
+            <dl class="hero-listing-meta">
+              <div>
+                <dt>
+                  <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 5h11v2H7v10h10v-5h2v7H5V5Zm13 0h1v1h-1V5Zm-3 3h6v2h-6V8Z"/></svg>
+                  <span>215</span>
+                </dt>
+                <dd>SQM</dd>
+              </div>
+              <div>
+                <dt>
+                  <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 12V7h2v3h12V7h2v11h-2v-3H6v3H4v-6Zm4-3a2 2 0 1 1 4 0v1H8V9Z"/></svg>
+                  <span>3</span>
+                </dt>
+                <dd>Bedrooms</dd>
+              </div>
+              <div>
+                <dt>
+                  <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M7 10V6a3 3 0 0 1 6 0v1h-2V6a1 1 0 0 0-2 0v4h10v3a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5v-3h3Z"/></svg>
+                  <span>3.5</span>
+                </dt>
+                <dd>Bathrooms</dd>
+              </div>
+              <div>
+                <dt>
+                  <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m6 8 1.2-3h9.6L18 8l2 2v7h-2v2h-2v-2H8v2H6v-2H4v-7l2-2Zm2.6-1-1 2h8.8l-1-2H8.6ZM7 14h3v-2H7v2Zm7 0h3v-2h-3v2Z"/></svg>
+                  <span>2</span>
+                </dt>
+                <dd>Parking</dd>
+              </div>
+            </dl>
+          </div>
+        </article>
+      </aside>
+    </div>
+  </section>
+
+  {% if editorial %}
+    <section class="section shell" data-reveal>
+      <div class="section-heading section-heading-inline">
+        <div>
+          <p class="eyebrow">Featured properties</p>
+          <h2>Start with verified homes and investment-ready spaces.</h2>
+        </div>
+        <a href="{{ url_for('properties') }}" class="text-link text-link-strong">View the full selection</a>
+      </div>
+
+      <div class="home-editorial-grid">
+        {% for listing in editorial %}
+          <article class="editorial-card">
+            <a href="{{ url_for('property_detail', listing_id=listing.id) }}" class="editorial-media-link" style="--media-bg: url('{{ asset_url(listing_image_path(listing)) }}')" aria-label="View {{ listing.title }}">
+              <img src="{{ asset_url(listing_image_path(listing)) }}" alt="{{ listing.title }}" class="editorial-image" loading="eager" decoding="async">
+            </a>
+            <div class="editorial-copy">
+              <p class="editorial-kicker">{{ listing.district }} &middot; {{ listing.property_type }}</p>
+              <h3>{{ listing.title }}</h3>
+              <p class="editorial-price">{{ listing.price | naira }}{{ listing.price_suffix }}</p>
+              <p class="editorial-summary">{{ listing.summary }}</p>
+              <div class="editorial-actions stack-mobile">
+                <a href="{{ url_for('property_detail', listing_id=listing.id) }}" class="cta cta-small">View details</a>
+                <a href="{{ listing_whatsapp_url(listing) }}" class="text-link" target="_blank" rel="noreferrer">Chat about this property</a>
+              </div>
+            </div>
+          </article>
+        {% endfor %}
+      </div>
+    </section>
+  {% endif %}
+
+  <section class="section shell section-tight" data-reveal>
+    <div class="section-heading section-heading-inline">
+      <div>
+        <p class="eyebrow">Current Availability</p>
+        <h2>Browse homes and spaces with the essentials in the right order.</h2>
+      </div>
+      <a href="{{ url_for('properties') }}" class="text-link text-link-strong">Browse full catalogue</a>
+    </div>
+
+    <div class="property-grid-list">
+      {% for listing in featured %}
+        <article class="property-card">
+          <a href="{{ url_for('property_detail', listing_id=listing.id) }}" class="property-media-link" aria-label="View {{ listing.title }}">
+            <div class="property-media" style="--media-bg: url('{{ asset_url(listing_image_path(listing)) }}')">
+              <img src="{{ asset_url(listing_image_path(listing)) }}" alt="{{ listing.title }}" loading="{% if loop.index <= 3 %}eager{% else %}lazy{% endif %}" decoding="async">
+              <span class="property-badge">{{ listing.status }}</span>
+              {% if listing.verified_property %}
+                <span class="property-badge property-badge-verified">Verified</span>
+              {% endif %}
+              {% if listing.availability != 'Available' %}
+                <span class="property-badge property-badge-secondary">{{ listing.availability }}</span>
+              {% endif %}
+              {% if not listing_has_uploaded_image(listing) %}
+                <span class="property-badge property-badge-secondary {% if listing.availability != 'Available' %}property-badge-stacked{% endif %}">Representative image</span>
+              {% endif %}
+            </div>
+          </a>
+            <div class="property-body">
+              <div class="property-copy">
+                <div class="property-card-topline">
+                  <p class="property-location">{{ listing.district }}</p>
+                  <p class="property-availability">{{ listing.availability }}</p>
+                </div>
+                <p class="property-price property-price-card">{{ listing.price | naira }}{{ listing.price_suffix }}</p>
+                <h3>{{ listing.title }}</h3>
+                <p class="property-summary">{{ listing.summary }}</p>
+              </div>
+            <ul class="property-meta">
+              <li>{{ listing.property_type }}</li>
+              {% if listing.bedrooms %}<li>{{ listing.bedrooms }} beds</li>{% endif %}
+              {% if listing.bathrooms %}<li>{{ listing.bathrooms }} baths</li>{% endif %}
+              {% if listing.area_sqm %}<li>{{ listing.area_sqm }} sqm</li>{% endif %}
+            </ul>
+            {% set feature_labels = listing_feature_labels(listing) %}
+            {% if feature_labels %}
+              <div class="feature-chip-row">
+                {% for label in feature_labels[:3] %}
+                  <span class="feature-chip">{{ label }}</span>
+                {% endfor %}
+              </div>
+            {% endif %}
+            <div class="property-footer">
+              <p class="property-note">{{ listing.address }}</p>
+              <div class="property-actions">
+                <a href="{{ url_for('property_detail', listing_id=listing.id) }}" class="cta cta-small">View details</a>
+                <a href="{{ listing_whatsapp_url(listing) }}" class="cta cta-small cta-card-secondary" target="_blank" rel="noreferrer">Ask to view</a>
+              </div>
+            </div>
+          </div>
+        </article>
+      {% endfor %}
+    </div>
+  </section>
+
+  <section class="section shell" data-reveal>
+    <div class="section-heading section-heading-centered">
+      <p class="eyebrow">Guided with care</p>
+      <h2>Property decisions feel easier when the signals are clear.</h2>
+      <p>Verified context, strong imagery, and direct next steps help buyers, renters, and investors compare with confidence.</p>
+    </div>
+
+    <div class="home-values-grid">
+      <article class="home-value-card">
+        <span class="home-value-index">01</span>
+        <h3>Photos, price, and location first</h3>
+        <p>Each listing leads with the information clients need before they commit to a viewing or enquiry.</p>
+      </article>
+      <article class="home-value-card">
+        <span class="home-value-index">02</span>
+        <h3>Direct routes to an advisor</h3>
+        <p>Enquiries move through WhatsApp, phone, or form routes with the property details already attached.</p>
+      </article>
+      <article class="home-value-card">
+        <span class="home-value-index">03</span>
+        <h3>Grounded in local markets</h3>
+        <p>Districts, maps, and listing context make the catalogue feel like a guided search, not a raw database.</p>
+      </article>
+    </div>
+  </section>
+
+  <section class="section shell section-tight" data-reveal>
+    <div class="section-heading section-heading-inline">
+      <div>
+        <p class="eyebrow">Choose Your Route</p>
+        <h2>Start from the need you actually have today.</h2>
+      </div>
+      <a href="{{ general_whatsapp_url }}" class="text-link text-link-strong" target="_blank" rel="noreferrer">Ask where to start</a>
+    </div>
+
+    <div class="card-grid route-grid">
+      <article class="info-card">
+        <h2>Buying</h2>
+        <p>Confirm price, title context, viewing windows, and fit before committing time to an inspection.</p>
+        <a href="{{ url_for('properties', status='For Sale') }}" class="text-link text-link-strong">Browse sale listings</a>
+      </article>
+      <article class="info-card">
+        <h2>Renting</h2>
+        <p>Compare districts, rent status, access timing, and likely terms before shortlisting homes.</p>
+        <a href="{{ url_for('properties', status='For Rent') }}" class="text-link text-link-strong">Browse rentals</a>
+      </article>
+      <article class="info-card">
+        <h2>Listing support</h2>
+        <p>Landlords and operators can route interest through direct enquiry paths with listing context attached.</p>
+        <a href="{{ general_whatsapp_url }}" class="text-link text-link-strong" target="_blank" rel="noreferrer">Talk to an advisor</a>
+      </article>
+      <article class="info-card">
+        <h2>Tenant maintenance</h2>
+        <p>Residents can log issues with contact details, priority, and photos so the team can triage faster.</p>
+        <a href="{{ url_for('tenant_services') }}" class="text-link text-link-strong">Open tenant services</a>
+      </article>
+    </div>
+  </section>
+
+  <section class="section shell" data-reveal>
+    <div class="section-heading section-heading-inline">
+      <div>
+        <p class="eyebrow">Search By District</p>
+        <h2>Explore areas with very different rhythms, budgets, and daily patterns.</h2>
+      </div>
+      <a href="{{ url_for('properties') }}" class="text-link text-link-strong">Browse all districts</a>
+    </div>
+
+    <div class="district-grid district-grid-curated">
+      {% for area in districts[:4] %}
+        <article class="district-card district-card-curated">
+          <p class="district-card-kicker">Active now</p>
+          <h3>{{ area.district }}</h3>
+          <p>{{ area.count }} live listing{% if area.count != 1 %}s{% endif %} currently available to review.</p>
+          <a href="{{ url_for('properties', district=area.district) }}" class="district-card-action">Browse {{ area.district }}</a>
+        </article>
+      {% endfor %}
+    </div>
+  </section>
+
+  <section class="section shell" data-reveal>
+    <div class="home-story-grid">
+      <article class="home-story-card home-story-card-image" style="--media-bg: url('{{ static_asset_url('images/team-corporate-nigeria.webp') }}')">
+        <img src="{{ static_asset_url('images/team-corporate-nigeria.webp') }}" alt="Structurebase advisors reviewing property options with clients in a Lagos office" loading="eager" decoding="async">
+      </article>
+      <article class="home-story-card home-story-card-copy">
+        <p class="eyebrow">How The Team Works</p>
+        <h2>Clear guidance before viewing. Cleaner follow-up after enquiry.</h2>
+        <div class="home-story-list">
+          <div>
+            <strong>Shortlist first</strong>
+            <p>Clients can compare live options, open the map, and move from photo to price to essentials before booking a viewing.</p>
+          </div>
+          <div>
+            <strong>Direct response routes</strong>
+            <p>WhatsApp, enquiry forms, and tenant support all feed into the right workflow with property or request details attached.</p>
+          </div>
+          <div>
+            <strong>Clarify before travel</strong>
+            <p>The team can confirm availability, fees to ask about, access timing, and next steps before you spend time on a visit.</p>
+          </div>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <section class="section shell" data-reveal>
+    <div class="home-faq-grid">
+      <article class="home-faq-media" style="--media-bg: url('{{ static_asset_url('images/lekki-villa-sample.webp') }}')">
+        <img src="{{ static_asset_url('images/lekki-villa-sample.webp') }}" alt="Modern residential home exterior" loading="eager" decoding="async">
+      </article>
+      <article class="home-faq-copy">
+        <p class="eyebrow">Common Questions</p>
+        <h2>What clients usually want to confirm before they book a viewing.</h2>
+        <div class="faq-stack">
+          <article class="faq-item">
+            <h3>Are prices and availability current?</h3>
+            <p>The catalogue is maintained for current price, sale or rent status, and availability. Confirm agency fees, service charges, payment terms, and negotiation room before viewing.</p>
+          </article>
+          <article class="faq-item">
+            <h3>Can I ask questions before I visit?</h3>
+            <p>Yes. Share your budget, preferred district, and timing. The advisor can help confirm fit, viewing windows, and next steps before you travel.</p>
+          </article>
+          <article class="faq-item">
+            <h3>What does verified mean?</h3>
+            <p>Verified signals mean the team has reviewed availability, price, and basic listing details before publishing or follow-up.</p>
+          </article>
+          <article class="faq-item">
+            <h3>What if a photo is representative?</h3>
+            <p>Representative images are marked clearly. Ask for current photos or viewing confirmation before making a final decision.</p>
+          </article>
+          <article class="faq-item">
+            <h3>How will my details be used?</h3>
+            <p>Your contact details are used to respond to your enquiry or service request, not to make the page public.</p>
+          </article>
+          <article class="faq-item">
+            <h3>Do you only cover Lagos?</h3>
+            <p>No. The team is based in Lagos, but support extends to Abuja, Port Harcourt, and selected markets across Nigeria.</p>
+          </article>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  {% if is_authenticated %}
+    <section class="section shell" data-reveal>
+      <div class="cta-banner">
+        <div>
+          <p class="eyebrow">Management Workflow</p>
+          <h2>Need to update inventory quickly?</h2>
+          <p>The dashboard lets you publish, feature, edit, or hide listings without rebuilding pages.</p>
+        </div>
+        <div class="cta-banner-actions">
+          <a href="{{ url_for('dashboard') }}" class="cta">Open dashboard</a>
+        </div>
+      </div>
+    </section>
+  {% else %}
+    <section class="section shell" data-reveal>
+      <div class="home-final-banner">
+        <div class="home-final-banner-copy">
+          <p class="eyebrow">Find your next property</p>
+          <h2>Move from browsing to a confident shortlist.</h2>
+          <p>Browse live listings, open the map, or speak with the team directly if you want help narrowing the right fit.</p>
+          <div class="hero-actions stack-mobile">
+            <a href="{{ url_for('properties') }}" class="cta">Browse listings</a>
+            <a href="{{ general_whatsapp_url }}" class="cta cta-secondary" target="_blank" rel="noreferrer">Talk to an advisor</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  {% endif %}
+{% endblock %}
+

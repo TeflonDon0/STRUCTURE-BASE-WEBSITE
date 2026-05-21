@@ -1,0 +1,338 @@
+{% extends "base.html" %}
+
+{% block title %}Tenant Services | {{ site_settings.site_name }}{% endblock %}
+{% block meta_description %}Log maintenance issues, attach photos, and route tenant facility requests directly to the {{ site_settings.site_name }} operations team.{% endblock %}
+{% block body_class %}tenant-services-page{% endblock %}
+
+{% block content %}
+  {% set contact_error = "" %}
+  {% if field_errors.email %}
+    {% set contact_error = field_errors.email[0] %}
+  {% elif field_errors.phone %}
+    {% set contact_error = field_errors.phone[0] %}
+  {% endif %}
+
+  <section class="page-hero" data-reveal>
+    <div class="shell page-hero-shell">
+      <div>
+        <p class="eyebrow">Tenant Services</p>
+        <h1>Log maintenance requests.</h1>
+        <p class="page-intro">
+          Submit the unit reference, one reliable contact method, and a clear description so the operations team can route the request quickly.
+        </p>
+        <div class="masthead-signal-row" aria-label="Tenant service signals">
+          <span>For residents and on-site contacts</span>
+          <span>Routes to operations triage</span>
+          <span>One photo optional</span>
+        </div>
+        <div class="hero-actions tenant-hero-actions">
+          <a href="#maintenance-request" class="cta">Start request</a>
+          <a href="{{ general_whatsapp_url }}" class="text-link text-link-strong" target="_blank" rel="noreferrer">Emergency WhatsApp</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section shell section-tight" data-reveal>
+    <div class="inner-summary-strip tenant-summary-strip" aria-label="Before sending a maintenance request">
+      <div>
+        <p class="eyebrow">Before you send</p>
+        <p>Choose the closest issue type, add one reliable contact method, and reserve Emergency for active safety, access, power, water, or security risk.</p>
+      </div>
+      <a href="#maintenance-request" class="text-link text-link-strong">Go to request form</a>
+    </div>
+  </section>
+
+  <section class="section shell section-tight tenant-emergency-section" data-reveal>
+    <div class="tenant-emergency-strip" role="note" aria-label="Emergency contact guidance">
+      <div>
+        <p class="eyebrow">Active risk?</p>
+        <h2>Call or WhatsApp now for safety, access, power, water, or security emergencies.</h2>
+      </div>
+      <a href="{{ general_whatsapp_url }}" class="cta cta-small" target="_blank" rel="noreferrer">Open WhatsApp</a>
+    </div>
+  </section>
+
+  <section class="section shell section-tight" data-reveal>
+    <div class="objection-strip" aria-label="Tenant service reassurance">
+      <article>
+        <strong>What happens next</strong>
+        <p>You receive a request reference and follow-up window after submission.</p>
+      </article>
+      <article>
+        <strong>What to include</strong>
+        <p>Unit, contact method, priority, and one clear photo are enough for first triage.</p>
+      </article>
+      <article>
+        <strong>Privacy</strong>
+        <p>Your contact and issue details are used to route this request to the operations team.</p>
+      </article>
+    </div>
+  </section>
+
+  {% if submission_receipt %}
+    <section class="section shell section-tight" data-reveal>
+      <article class="service-receipt">
+        <div class="service-receipt-head">
+          <div>
+            <p class="eyebrow">Request received</p>
+            <h2>{{ submission_receipt.ticket_reference }}</h2>
+            <p class="page-intro">The operations desk can now triage your request and assign the next action.</p>
+          </div>
+          <span class="dashboard-badge">{{ submission_receipt.priority }}</span>
+        </div>
+
+        <div class="service-receipt-grid">
+          <div class="service-receipt-item">
+            <span>Issue</span>
+            <strong>{{ submission_receipt.issue_category }}</strong>
+          </div>
+          <div class="service-receipt-item">
+            <span>Unit</span>
+            <strong>{{ submission_receipt.unit_reference }}</strong>
+          </div>
+          <div class="service-receipt-item">
+            <span>Property</span>
+            <strong>{{ submission_receipt.property_title or "Not provided" }}</strong>
+          </div>
+          <div class="service-receipt-item">
+            <span>Follow-up</span>
+            <strong>{{ submission_receipt.contact_line or "No contact recorded" }}</strong>
+          </div>
+        </div>
+
+        <p class="service-receipt-note">{{ submission_receipt.response_window }}</p>
+
+        {% if submission_receipt.is_emergency %}
+          <div class="service-emergency-note is-visible">
+            <p class="service-emergency-title">Escalate immediately if the risk is active.</p>
+            <p class="form-note">
+              Your request is logged. If people, access, power, water, or security are currently at risk, contact the operations desk on
+              <a href="{{ general_whatsapp_url }}" target="_blank" rel="noreferrer">WhatsApp now</a>.
+            </p>
+          </div>
+        {% endif %}
+      </article>
+    </section>
+  {% endif %}
+
+  <section class="section shell section-tight" id="maintenance-request" data-reveal>
+    <form method="post" enctype="multipart/form-data" class="contact-form listing-form service-form">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+      <div class="service-form-summary" aria-label="Maintenance request checklist">
+        <div>
+          <p class="eyebrow">Request checklist</p>
+          <h2>Takes about 2-3 minutes.</h2>
+        </div>
+        <ul>
+          <li>Required: resident name and unit reference.</li>
+          <li>Required: email or phone/WhatsApp.</li>
+          <li>Required: issue category, priority, and description.</li>
+          <li>Optional: one clear photo.</li>
+        </ul>
+      </div>
+
+      <section class="form-section service-step-section">
+        <div class="form-section-head">
+          <div>
+            <p class="form-section-kicker"><span class="service-step-number">1</span> Resident details</p>
+            <h2>Who should the team follow up with?</h2>
+          </div>
+          <p class="form-note">Use the resident or on-site contact who can confirm access, timing, or recent history.</p>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group{% if field_errors.resident_name %} has-error{% endif %}">
+            <label for="resident_name">Resident name</label>
+            <input
+              type="text"
+              id="resident_name"
+              name="resident_name"
+              value="{{ form_data.resident_name }}"
+              autocomplete="name"
+              required
+              {% if field_errors.resident_name %}aria-invalid="true" aria-describedby="resident_name-error"{% endif %}
+            >
+            {% if field_errors.resident_name %}<p id="resident_name-error" class="form-error">{{ field_errors.resident_name[0] }}</p>{% endif %}
+          </div>
+          <div class="form-group{% if field_errors.unit_reference %} has-error{% endif %}">
+            <label for="unit_reference">Unit reference</label>
+            <input
+              type="text"
+              id="unit_reference"
+              name="unit_reference"
+              value="{{ form_data.unit_reference }}"
+              placeholder="Flat B2, Block 4"
+              required
+              {% if field_errors.unit_reference %}aria-invalid="true" aria-describedby="unit_reference-error"{% endif %}
+            >
+            {% if field_errors.unit_reference %}<p id="unit_reference-error" class="form-error">{{ field_errors.unit_reference[0] }}</p>{% endif %}
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="property_title">Property or estate name</label>
+          <input
+            type="text"
+            id="property_title"
+            name="property_title"
+            value="{{ form_data.property_title }}"
+            placeholder="Lekki Phase 1 Detached Villa"
+          >
+        </div>
+      </section>
+
+      <section class="form-section service-step-section">
+        <div class="form-section-head">
+          <div>
+            <p class="form-section-kicker"><span class="service-step-number">2</span> Follow-up contact</p>
+            <h2>Add at least one contact method</h2>
+          </div>
+          <p class="form-note">Phone or WhatsApp is best when the team may need quick access confirmation.</p>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group{% if field_errors.email %} has-error{% endif %}">
+            <label for="email">Email</label>
+            <input
+              type="email"
+              id="email"
+              name="email"
+              value="{{ form_data.email }}"
+              autocomplete="email"
+              {% if field_errors.email or contact_error %}aria-invalid="true"{% endif %}
+              {% if contact_error %}aria-describedby="contact-help"{% endif %}
+            >
+          </div>
+          <div class="form-group{% if field_errors.phone %} has-error{% endif %}">
+            <label for="phone">Phone or WhatsApp</label>
+            <input
+              type="tel"
+              id="phone"
+              name="phone"
+              value="{{ form_data.phone }}"
+              autocomplete="tel"
+              {% if field_errors.phone or contact_error %}aria-invalid="true"{% endif %}
+              {% if contact_error %}aria-describedby="contact-help"{% endif %}
+            >
+          </div>
+        </div>
+        <p id="contact-help" class="{% if contact_error %}form-error{% else %}form-hint{% endif %}">
+          {{ contact_error or "Add either email or phone. Phone or WhatsApp gives the fastest route for access-sensitive issues." }}
+        </p>
+      </section>
+
+      <section class="form-section service-step-section">
+        <div class="form-section-head">
+          <div>
+            <p class="form-section-kicker"><span class="service-step-number">3</span> Issue details</p>
+            <h2>Describe what needs attention</h2>
+          </div>
+          <p class="form-note">Choose the closest category and set priority honestly so the queue stays useful for the operations desk.</p>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group{% if field_errors.issue_category %} has-error{% endif %}">
+            <label for="issue_category">Issue category</label>
+            <select
+              id="issue_category"
+              name="issue_category"
+              required
+              {% if field_errors.issue_category %}aria-invalid="true" aria-describedby="issue_category-error"{% endif %}
+            >
+              <option value="" disabled {% if not form_data.issue_category %}selected{% endif %}>Select issue type</option>
+              {% for option in maintenance_category_options %}
+                <option value="{{ option }}" {% if form_data.issue_category == option %}selected{% endif %}>{{ option }}</option>
+              {% endfor %}
+            </select>
+            {% if field_errors.issue_category %}<p id="issue_category-error" class="form-error">{{ field_errors.issue_category[0] }}</p>{% endif %}
+          </div>
+          <div class="form-group{% if field_errors.priority %} has-error{% endif %}">
+            <label for="priority">Priority</label>
+            <select
+              id="priority"
+              name="priority"
+              required
+              {% if field_errors.priority %}aria-invalid="true" aria-describedby="priority-error"{% endif %}
+            >
+              {% for option in maintenance_priority_options %}
+                <option value="{{ option }}" {% if form_data.priority == option %}selected{% endif %}>{{ option }}</option>
+              {% endfor %}
+            </select>
+            {% if field_errors.priority %}<p id="priority-error" class="form-error">{{ field_errors.priority[0] }}</p>{% endif %}
+          </div>
+        </div>
+
+        <div
+          id="emergency-note"
+          class="service-emergency-note{% if form_data.priority == 'Emergency' %} is-visible{% endif %}"
+          {% if form_data.priority != 'Emergency' %}hidden{% endif %}
+        >
+          <p class="service-emergency-title">Emergency priority is for active risk.</p>
+          <p class="form-note">
+            Use it for live safety, access, security, power, or water issues. Submit the request first, then escalate on
+            <a href="{{ general_whatsapp_url }}" target="_blank" rel="noreferrer">WhatsApp</a> if the situation is still active.
+          </p>
+        </div>
+
+        <div class="form-group{% if field_errors.description %} has-error{% endif %}">
+          <label for="description">Issue description</label>
+          <textarea
+            id="description"
+            name="description"
+            rows="5"
+            required
+            placeholder="Describe the issue, how long it has been happening, and whether it affects daily use or safety."
+            {% if field_errors.description %}aria-invalid="true" aria-describedby="description-error"{% endif %}
+          >{{ form_data.description }}</textarea>
+          {% if field_errors.description %}
+            <p id="description-error" class="form-error">{{ field_errors.description[0] }}</p>
+          {% else %}
+            <p class="form-hint">Include when it started, what has already been tried, and whether access is currently blocked.</p>
+          {% endif %}
+        </div>
+      </section>
+
+      <section class="form-section service-step-section">
+        <div class="form-section-head">
+          <div>
+            <p class="form-section-kicker"><span class="service-step-number">4</span> Evidence</p>
+            <h2>Add one clear photo if it helps</h2>
+          </div>
+          <p class="form-note">Optional. One image is enough for the first report. JPG, PNG, and WebP are supported.</p>
+        </div>
+
+        <div class="form-group{% if field_errors.issue_image %} has-error{% endif %}">
+          <label for="issue_image">Photo of the issue</label>
+          <input
+            type="file"
+            id="issue_image"
+            name="issue_image"
+            accept=".jpg,.jpeg,.png,.webp"
+            {% if field_errors.issue_image %}aria-invalid="true" aria-describedby="issue_image-error"{% else %}aria-describedby="issue_image-help"{% endif %}
+          >
+          {% if field_errors.issue_image %}
+            <p id="issue_image-error" class="form-error">{{ field_errors.issue_image[0] }}</p>
+          {% else %}
+            <p id="issue_image-help" class="form-hint">Show the fault clearly. One current image is better than multiple unclear photos.</p>
+          {% endif %}
+        </div>
+
+        <div class="upload-empty-state" id="issue-preview-empty">
+          <strong>No photo selected yet.</strong>
+          <span>Attach one clear image only if it helps explain the issue.</span>
+        </div>
+        <div class="upload-preview" id="issue-preview-wrap" hidden>
+          <p class="form-note-heading">Selected photo</p>
+          <img id="issue-image-preview" class="preview-image" alt="Issue photo preview">
+        </div>
+      </section>
+
+      <div class="form-actions">
+        <button type="submit" class="cta" data-loading-label="Submitting...">Submit maintenance request</button>
+        <p class="service-form-note">You will see a request reference and follow-up window after submission. Your details are used only to respond to this service request.</p>
+      </div>
+    </form>
+  </section>
+{% endblock %}
