@@ -8343,6 +8343,47 @@ body {
   align-content: center;
 }
 
+/* Final admin contrast guard: public hero rules use light text, but admin pages
+   sit on light operational surfaces and must stay readable. */
+.admin-workspace-page .page-hero,
+.dashboard-page .page-hero,
+.form-page .page-hero,
+.login-page .page-hero {
+  color: var(--text);
+}
+
+.admin-workspace-page .page-hero .eyebrow,
+.dashboard-page .page-hero .eyebrow,
+.form-page .page-hero .eyebrow,
+.login-page .page-hero .eyebrow,
+.admin-workspace-page .dashboard-section-kicker,
+.dashboard-page .dashboard-section-kicker,
+.form-page .dashboard-section-kicker {
+  color: var(--readable-gold-strong);
+}
+
+.admin-workspace-page .page-hero .page-intro,
+.dashboard-page .page-hero .page-intro,
+.form-page .page-hero .page-intro,
+.login-page .page-hero .page-intro,
+.admin-workspace-page .admin-stat-meta,
+.admin-workspace-page .admin-domain-card p,
+.admin-workspace-page .admin-mini-row p,
+.admin-workspace-page .admin-timeline-item p,
+.admin-workspace-page .dashboard-section-note,
+.admin-workspace-page .empty-state p {
+  color: var(--muted-on-light);
+}
+
+.admin-workspace-page .admin-panel h2,
+.admin-workspace-page .admin-domain-card strong,
+.admin-workspace-page .admin-mini-row strong,
+.admin-workspace-page .admin-timeline-item strong,
+.admin-workspace-page .admin-stat-value,
+.admin-workspace-page .dashboard-section-head h2 {
+  color: var(--text);
+}
+
 .empty-state .cta,
 .dashboard-empty-actions .cta {
   margin-top: 0.2rem;
