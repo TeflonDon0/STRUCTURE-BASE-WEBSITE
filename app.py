@@ -23,6 +23,11 @@ from functools import wraps
 from pathlib import Path
 from urllib.parse import quote, urlsplit
 
+# Prevent Cloudinary import failure if CLOUDINARY_URL is set but invalid.
+_cloudinary_url_env = os.environ.get("CLOUDINARY_URL", "").strip()
+if _cloudinary_url_env and not _cloudinary_url_env.startswith("cloudinary://"):
+    os.environ.pop("CLOUDINARY_URL", None)
+
 import cloudinary
 import cloudinary.uploader
 from communication_templates import (
