@@ -45,6 +45,14 @@ from flask import (
 )
 from cloudinary.exceptions import Error as CloudinaryError
 from cloudinary.utils import cloudinary_url
+
+# Prevent Cloudinary initialization errors on startup if CLOUDINARY_URL is missing
+# by temporarily clearing it during module import, then configuring it properly later
+_cloudinary_url_env = os.environ.get("CLOUDINARY_URL", "").strip()
+if not _cloudinary_url_env or not _cloudinary_url_env.startswith("cloudinary://"):
+    # Remove invalid CLOUDINARY_URL from environment to prevent import-time errors
+    os.environ.pop("CLOUDINARY_URL", None)
+    cloudinary.reset_config()
 from document_generation import (
     DOCUMENT_TEMPLATE_VERSION,
     document_generator_catalog,
