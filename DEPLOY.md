@@ -7,6 +7,17 @@ This document describes recommended steps to deploy `Structurebase` to a staging
 - Create two services: `structurebase-staging` and `structurebase-prod`.
 - Use separate environment variables for each service. Do NOT commit secrets to the repo.
 
+## Recommended client-testing path
+Use Render for the first client staging link.
+
+Why:
+- The repo has a checked-in `render.yaml` Blueprint.
+- Secrets marked `sync: false` are clearly prompted in the dashboard.
+- The Flask app runs as a normal Python web service instead of a static/serverless app.
+- `/healthz` is already configured as the health check.
+
+Use Railway only after the service passes the live smoke check. If Railway returns `502`, treat the service as unhealthy and inspect deploy logs before testing login.
+
 ## Required environment variables (minimum)
 - `STRUCTUREBASE_ENV=production`
 - `STRUCTUREBASE_SECRET` (long random)
@@ -48,6 +59,23 @@ This document describes recommended steps to deploy `Structurebase` to a staging
 - Create a test admin user and share credentials with the client.
 - Ask the client to test the critical flows: login, create listing, upload image, generate document, submit enquiry.
 - Keep production separate from staging. Do not give clients the production URL until staging passes smoke checks and critical-flow testing.
+
+## Pre-client release gate
+Do not share a staging link until all of these pass:
+
+```bash
+python -m py_compile app.py wsgi.py scripts/deploy_smoke_check.py
+python scripts/deploy_smoke_check.py --env-file .env --connections
+python scripts/deploy_smoke_check.py --skip-env --url https://your-staging-url.example
+```
+
+Expected live result:
+
+```txt
+[PASS] url_health: https://your-staging-url.example/healthz returned status=ok.
+```
+
+If the live check returns `502`, the app is not running. Check host deploy logs for MongoDB auth/IP allowlist errors, invalid environment variables, or failed startup checks.
 
 ## Rollback and runbook
 - Keep a simple rollback process: redeploy previous commit from Render UI or Git tag.

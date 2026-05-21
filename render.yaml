@@ -23,7 +23,7 @@ services:
       - key: STRUCTUREBASE_STORAGE_BACKEND
         value: auto
       - key: STRUCTUREBASE_MONGODB_URI
-        sync: true
+        sync: false
       - key: STRUCTUREBASE_MONGODB_DB_NAME
         value: structurebase
       - key: STRUCTUREBASE_MONGODB_COLLECTION
@@ -33,7 +33,7 @@ services:
       - key: STRUCTUREBASE_MONGODB_ACTIVITY_COLLECTION
         value: activity_log
       - key: CLOUDINARY_URL
-        sync: true
+        sync: false
       - key: STRUCTUREBASE_CLOUDINARY_FOLDER
         value: structurebase/listings
       - key: STRUCTUREBASE_CLOUDINARY_CLOUD_NAME
@@ -43,9 +43,9 @@ services:
       - key: STRUCTUREBASE_CLOUDINARY_API_SECRET
         sync: false
       - key: STRUCTUREBASE_ADMIN_USERNAME
-        sync: true
+        sync: false
       - key: STRUCTUREBASE_ADMIN_PASSWORD
-        sync: true
+        sync: false
       - key: STRUCTUREBASE_SESSION_COOKIE_SECURE
         value: "1"
       - key: STRUCTUREBASE_SESSION_HOURS
@@ -55,9 +55,9 @@ services:
       - key: STRUCTUREBASE_LOGIN_WINDOW_MINUTES
         value: "15"
       - key: STRUCTUREBASE_CONTACT_EMAIL
-        sync: true
+        sync: false
       - key: STRUCTUREBASE_CONTACT_PHONE
-        sync: true
+        sync: false
       - key: STRUCTUREBASE_CONTACT_PHONE_RAW
         sync: false
       - key: STRUCTUREBASE_WHATSAPP_PHONE
