@@ -11190,3 +11190,311 @@ body.about-page .about-proof-list article {
     grid-template-columns: 1fr;
   }
 }
+
+/* Final admin override layer. Keep after page-specific polish so the private workspace stays utilitarian. */
+body.admin-workspace-page,
+body.dashboard-page.admin-workspace-page,
+body.form-page.admin-workspace-page {
+  --admin-bg: #f5f6f7;
+  --admin-surface: #ffffff;
+  --admin-ink: #111827;
+  --admin-muted: #4b5563;
+  --admin-subtle: #6b7280;
+  --admin-label: #374151;
+  --admin-line: #d9dee7;
+  --admin-line-strong: #c4cad5;
+  --admin-accent: #1f4d5a;
+  --admin-accent-strong: #173b45;
+  --admin-danger: #b42318;
+  --admin-warning: #9a5b00;
+  --admin-success: #17633a;
+  --radius-sm: 0.5rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.5rem;
+  background: var(--admin-bg);
+  color: var(--admin-ink);
+}
+
+body.admin-workspace-page h1,
+body.admin-workspace-page h2,
+body.admin-workspace-page h3,
+body.form-page.admin-workspace-page h1,
+body.form-page.admin-workspace-page h2,
+body.form-page.admin-workspace-page h3,
+body.admin-workspace-page .admin-mini-row strong,
+body.admin-workspace-page .admin-timeline-item strong,
+body.admin-workspace-page .admin-record-head h3 {
+  font-family: "Plus Jakarta Sans", "Segoe UI", sans-serif;
+  letter-spacing: 0;
+  color: var(--admin-ink);
+}
+
+body.admin-workspace-page .site-header-admin,
+body.admin-workspace-page .site-header,
+body.admin-workspace-page .page-hero,
+body.form-page.admin-workspace-page .page-hero {
+  background: var(--admin-surface);
+  border-color: var(--admin-line);
+  box-shadow: none;
+}
+
+body.admin-workspace-page .header-shell {
+  min-height: 4.25rem;
+  padding: 0.55rem 0;
+}
+
+body.admin-workspace-page .brand img {
+  height: 2.65rem;
+}
+
+body.admin-workspace-page .nav-list-admin {
+  gap: 0.2rem;
+  padding: 0.18rem;
+  border: 1px solid var(--admin-line);
+  border-radius: 0.6rem;
+  background: #f3f5f7;
+}
+
+body.admin-workspace-page .nav-list-admin a {
+  min-height: 2.2rem;
+  padding: 0.35rem 0.65rem;
+  border-radius: 0.4rem;
+  color: var(--admin-muted);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0;
+}
+
+body.admin-workspace-page .nav-list-admin a:hover,
+body.admin-workspace-page .nav-list-admin a:focus-visible,
+body.admin-workspace-page .nav-list-admin a[aria-current="page"] {
+  background: #ffffff;
+  color: var(--admin-ink);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
+}
+
+body.admin-workspace-page .page-hero,
+body.form-page.admin-workspace-page .page-hero {
+  padding: 1.15rem 0;
+}
+
+body.admin-workspace-page .page-hero::before,
+body.form-page.admin-workspace-page .page-hero::before,
+body.form-page.admin-workspace-page .page-hero-card {
+  display: none;
+}
+
+body.admin-workspace-page .admin-overview-shell,
+body.admin-workspace-page .admin-module-hero-shell,
+body.form-page.admin-workspace-page .page-hero-shell {
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 1rem;
+  align-items: center;
+}
+
+body.admin-workspace-page .page-hero h1,
+body.form-page.admin-workspace-page .page-hero h1 {
+  max-width: none;
+  font-size: 1.45rem;
+  line-height: 1.16;
+}
+
+body.admin-workspace-page .page-hero .page-intro,
+body.form-page.admin-workspace-page .page-hero .page-intro {
+  max-width: 54rem;
+  color: var(--admin-muted);
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+
+body.admin-workspace-page .section {
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+}
+
+body.admin-workspace-page .section-tight + .section-tight {
+  padding-top: 0.35rem;
+}
+
+body.admin-workspace-page .admin-command-center,
+body.admin-workspace-page .admin-pipeline-panel,
+body.admin-workspace-page .admin-panel,
+body.admin-workspace-page .admin-stat-card,
+body.admin-workspace-page .admin-domain-card,
+body.admin-workspace-page .admin-record-card,
+body.admin-workspace-page .admin-bulk-bar,
+body.admin-workspace-page .admin-insight-strip article,
+body.admin-workspace-page .admin-pipeline-step,
+body.form-page.admin-workspace-page .form-section {
+  border: 1px solid var(--admin-line);
+  border-radius: 0.5rem;
+  background: #ffffff;
+  box-shadow: none;
+}
+
+body.admin-workspace-page .cta,
+body.form-page.admin-workspace-page .cta {
+  min-height: 2.4rem;
+  padding: 0.55rem 0.85rem;
+  border-radius: 0.5rem;
+  background: var(--admin-accent);
+  color: #ffffff;
+  box-shadow: none;
+  font-size: 0.82rem;
+  font-weight: 850;
+  letter-spacing: 0;
+}
+
+body.admin-workspace-page .cta-outline,
+body.form-page.admin-workspace-page .cta-outline {
+  border-color: var(--admin-line-strong);
+  background: #ffffff;
+  color: var(--admin-ink);
+}
+
+body.admin-workspace-page .cta-danger,
+body.form-page.admin-workspace-page .cta-danger {
+  background: #fff1f0;
+  border-color: #ffccc7;
+  color: var(--admin-danger);
+}
+
+body.admin-workspace-page .admin-stat-grid {
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 0.65rem;
+}
+
+body.admin-workspace-page .admin-stat-card {
+  padding: 0.8rem;
+  gap: 0.2rem;
+}
+
+body.admin-workspace-page .admin-stat-value {
+  font-size: 1.55rem;
+  font-weight: 900;
+  letter-spacing: 0;
+}
+
+body.admin-workspace-page .dashboard-filter-bar {
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+  padding: 0.85rem;
+  border: 1px solid var(--admin-line);
+  border-radius: 0.5rem;
+  background: #ffffff;
+  box-shadow: none;
+}
+
+body.admin-workspace-page input,
+body.admin-workspace-page select,
+body.admin-workspace-page textarea,
+body.form-page.admin-workspace-page input,
+body.form-page.admin-workspace-page select,
+body.form-page.admin-workspace-page textarea {
+  min-height: 2.55rem;
+  border: 1px solid var(--admin-line-strong);
+  border-radius: 0.45rem;
+  background: #ffffff;
+  color: var(--admin-ink);
+  font-size: 0.88rem;
+  line-height: 1.35;
+}
+
+body.admin-workspace-page .dashboard-badge,
+body.admin-workspace-page .dashboard-filter-pill {
+  min-height: 1.65rem;
+  padding: 0.25rem 0.5rem;
+  border: 1px solid var(--admin-line);
+  border-radius: 999px;
+  background: #f7f9fb;
+  color: var(--admin-ink);
+  font-size: 0.68rem;
+  font-weight: 850;
+}
+
+body.admin-workspace-page .dashboard-badge-muted {
+  background: #eef1f5;
+  color: var(--admin-muted);
+}
+
+body.admin-workspace-page .dashboard-badge-accent,
+body.admin-workspace-page .dashboard-badge-warning {
+  border-color: #f0c36a;
+  background: #fff7e6;
+  color: var(--admin-warning);
+}
+
+body.admin-workspace-page .dashboard-badge-success {
+  border-color: #a7d7ba;
+  background: #edf9f1;
+  color: var(--admin-success);
+}
+
+body.admin-workspace-page .admin-record-card-listing {
+  grid-template-columns: auto 6.75rem minmax(0, 1fr) auto;
+  gap: 0.85rem;
+}
+
+body.admin-workspace-page .admin-record-card {
+  gap: 0.8rem;
+  padding: 0.9rem;
+}
+
+body.form-page.admin-workspace-page .contact-form {
+  max-width: none;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+body.form-page.admin-workspace-page .form-section {
+  padding: 1rem;
+}
+
+body.form-page.admin-workspace-page .form-actions {
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
+  margin-top: 0.75rem;
+  padding: 0.75rem 0;
+  background: linear-gradient(180deg, rgba(245, 246, 247, 0), var(--admin-bg) 28%);
+}
+
+@media (max-width: 1180px) {
+  body.admin-workspace-page .admin-stat-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  body.admin-workspace-page .admin-record-card-listing {
+    grid-template-columns: auto 6rem minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 860px) {
+  body.admin-workspace-page .admin-overview-shell,
+  body.admin-workspace-page .admin-module-hero-shell,
+  body.form-page.admin-workspace-page .page-hero-shell,
+  body.admin-workspace-page .admin-stat-grid,
+  body.admin-workspace-page .admin-domain-grid,
+  body.admin-workspace-page .admin-action-grid,
+  body.admin-workspace-page .admin-insight-strip,
+  body.admin-workspace-page .admin-pipeline-grid,
+  body.admin-workspace-page .admin-workboard,
+  body.admin-workspace-page .admin-toolbar-grid,
+  body.admin-workspace-page .admin-form-grid,
+  body.admin-workspace-page .admin-form-grid-compact,
+  body.form-page.admin-workspace-page .form-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 560px) {
+  body.admin-workspace-page .page-hero h1,
+  body.form-page.admin-workspace-page .page-hero h1 {
+    font-size: 1.25rem;
+  }
+
+  body.admin-workspace-page .admin-record-card-listing {
+    grid-template-columns: 1fr;
+  }
+}
