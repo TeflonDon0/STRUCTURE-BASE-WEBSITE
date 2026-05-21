@@ -466,6 +466,40 @@ def is_valid_mongodb_uri(uri: str) -> bool:
     return uri.startswith("mongodb://") or uri.startswith("mongodb+srv://")
 
 
+def is_placeholder_mongodb_uri(uri: str) -> bool:
+    lowered = uri.strip().lower()
+    placeholder_tokens = (
+        "username:password",
+        "db_username",
+        "db_password",
+        "your-cluster.mongodb.net",
+        "cluster.mongodb.net",
+        "replace-with",
+        "<username>",
+        "<password>",
+    )
+    return any(token in lowered for token in placeholder_tokens)
+
+
+def is_placeholder_cloudinary_value(value: str) -> bool:
+    lowered = value.strip().lower()
+    placeholder_tokens = (
+        "api_key",
+        "api-secret",
+        "api_secret",
+        "cloud_name",
+        "cloud-name",
+        "cloudinary://api_key:",
+        "@cloud_name",
+        "@cloud-name",
+        "your-cloud-name",
+        "your-cloudinary-api-key",
+        "your-cloudinary-api-secret",
+        "replace-with",
+    )
+    return any(token in lowered for token in placeholder_tokens)
+
+
 def database_backend() -> str:
     configured = app.config["DATABASE_BACKEND"]
     if configured == "sqlite":
@@ -1554,10 +1588,29 @@ def startup_validation_issues() -> tuple[list[str], list[str]]:
         blocking_errors.append(
             "MongoDB backend is selected but STRUCTUREBASE_MONGODB_URI is not a valid MongoDB URI."
         )
+    elif app.config["DATABASE_BACKEND"] == "mongodb" and is_placeholder_mongodb_uri(app.config["MONGODB_URI"]):
+        blocking_errors.append(
+            "STRUCTUREBASE_MONGODB_URI still contains placeholder text. "
+            "Paste the real MongoDB Atlas connection string from Atlas > Connect > Drivers."
+        )
 
     if app.config["STORAGE_BACKEND"] in {"cloudinary", "r2"} and not cloudinary_is_configured():
         blocking_errors.append(
             "Cloud storage is selected but Cloudinary credentials are incomplete."
+        )
+    elif app.config["STORAGE_BACKEND"] in {"cloudinary", "r2"} and any(
+        is_placeholder_cloudinary_value(value)
+        for value in (
+            app.config["CLOUDINARY_URL"],
+            app.config["CLOUDINARY_CLOUD_NAME"],
+            app.config["CLOUDINARY_API_KEY"],
+            app.config["CLOUDINARY_API_SECRET"],
+        )
+        if value
+    ):
+        blocking_errors.append(
+            "Cloudinary configuration still contains placeholder text. "
+            "Paste real Cloudinary credentials or set STRUCTUREBASE_STORAGE_BACKEND=local."
         )
 
     smtp_values = [

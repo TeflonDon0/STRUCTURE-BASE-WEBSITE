@@ -34,7 +34,20 @@ def result(name: str, status: str, detail: str) -> CheckResult:
 
 def is_placeholder(value: str) -> bool:
     lowered = value.lower()
-    return not value or lowered.startswith("replace-with") or "your-" in lowered or "change-me" in lowered
+    placeholder_tokens = (
+        "replace-with",
+        "your-",
+        "change-me",
+        "username:password",
+        "db_username",
+        "db_password",
+        "your-cluster.mongodb.net",
+        "cluster.mongodb.net",
+        "api_key",
+        "api_secret",
+        "cloud_name",
+    )
+    return not value or any(token in lowered for token in placeholder_tokens)
 
 
 def check_required_env() -> list[CheckResult]:
@@ -89,6 +102,8 @@ def check_mongodb(connect: bool) -> list[CheckResult]:
         return [result("mongodb", "warn", f"Database backend is {backend or 'unset'}; MongoDB is not active.")]
     if not (uri.startswith("mongodb://") or uri.startswith("mongodb+srv://")):
         return [result("mongodb", "fail", "STRUCTUREBASE_MONGODB_URI must start with mongodb:// or mongodb+srv://.")]
+    if is_placeholder(uri):
+        return [result("mongodb", "fail", "STRUCTUREBASE_MONGODB_URI still contains placeholder text.")]
     if not connect:
         return [result("mongodb", "pass", "MongoDB URI shape is valid. Use --connections to ping Atlas.")]
     try:
@@ -112,6 +127,10 @@ def check_cloudinary(connect: bool) -> list[CheckResult]:
         return [result("cloudinary", "fail", "Set CLOUDINARY_URL or all explicit Cloudinary credentials.")]
     if cloudinary_url and not cloudinary_url.startswith("cloudinary://"):
         return [result("cloudinary", "fail", "CLOUDINARY_URL must start with cloudinary://.")]
+    if cloudinary_url and is_placeholder(cloudinary_url):
+        return [result("cloudinary", "fail", "CLOUDINARY_URL still contains placeholder text.")]
+    if not cloudinary_url and any(is_placeholder(value) for value in explicit):
+        return [result("cloudinary", "fail", "Explicit Cloudinary credentials still contain placeholder text.")]
     if not connect:
         return [result("cloudinary", "pass", "Cloudinary credential shape is valid. Use --connections to call API ping.")]
     if cloudinary_url:
