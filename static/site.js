@@ -11,13 +11,25 @@ const issuePreviewEmpty = document.getElementById("issue-preview-empty");
 const detailMainImage = document.getElementById("detail-main-image");
 const prioritySelect = document.getElementById("priority");
 const emergencyNote = document.getElementById("emergency-note");
+const backToTop = document.getElementById("back-to-top");
 
 const setScrollState = () => {
   body.classList.toggle("has-scrolled", window.scrollY > 16);
+  if (backToTop) {
+    const showBackToTop = window.scrollY > 520;
+    backToTop.classList.toggle("is-visible", showBackToTop);
+    backToTop.tabIndex = showBackToTop ? 0 : -1;
+  }
 };
 
 setScrollState();
 window.addEventListener("scroll", setScrollState, { passive: true });
+
+if (backToTop) {
+  backToTop.addEventListener("click", () => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  });
+}
 
 if (nav && toggle) {
   const syncToggleLabel = (open) => {
