@@ -9,14 +9,14 @@
     <div class="shell page-hero-shell about-hero-shell">
       <div class="about-hero-copy">
         <p class="eyebrow">About {{ site_settings.site_name }}</p>
-        <h1>Property support from Lagos.</h1>
+        <h1>Property advice built on straight talk.</h1>
         <p class="page-intro">
-          {{ site_settings.site_name }} helps buyers, renters, landlords, and operators review options clearly, reach the right team quickly, and keep tenant requests moving across Nigeria.
+          Led by CEO Emeke Ananenu, {{ site_settings.site_name }} brings more than three decades of property experience to buyers, renters, landlords, and operators who need clear options, honest guidance, and direct follow-through.
         </p>
         <div class="masthead-signal-row" aria-label="{{ site_settings.site_name }} service signals">
-          <span>For buyers, renters, landlords, and operators</span>
+          <span>More than three decades in property</span>
+          <span>Open, practical advisory</span>
           <span>{{ stats.total }} published listing{% if stats.total != 1 %}s{% endif %}</span>
-          <span>Based in {{ site_settings.office_address }}</span>
         </div>
         <div class="hero-actions masthead-actions">
           <a href="{{ url_for('properties') }}" class="cta">Browse listings</a>
@@ -24,12 +24,13 @@
         </div>
       </div>
 
-      <aside class="about-hero-card" aria-label="{{ site_settings.site_name }} advisory team">
-        <img src="{{ static_asset_url('images/team-corporate-nigeria.webp') }}" alt="Structurebase advisors reviewing property options with clients" loading="eager" decoding="async">
+      <aside class="about-hero-card about-ceo-card" aria-label="Emeke Ananenu, CEO of {{ site_settings.site_name }}">
+        <img src="{{ static_asset_url('images/emeke-ananenu-ceo.webp') }}" alt="Emeke Ananenu, CEO of Structurebase" loading="eager" decoding="async">
         <div class="about-hero-card-panel">
-          <p>Local advisory, live inventory, and direct follow-up in one workflow.</p>
+          <p class="about-ceo-name">Emeke Ananenu</p>
+          <p>CEO, {{ site_settings.site_name }}. Known for honest counsel, straightforward conversations, and an open-minded approach to each client's situation.</p>
           <div class="about-hero-stat-row">
-            <span><strong>{{ stats.total }}</strong> listings</span>
+            <span><strong>30+</strong> years</span>
             <span><strong>{{ stats.district_count or 0 }}</strong> districts</span>
             <span><strong>{{ stats.verified_count or 0 }}</strong> vetted</span>
           </div>
@@ -42,9 +43,13 @@
     <div class="inner-summary-strip about-summary-strip" aria-label="{{ site_settings.site_name }} at a glance">
       <div>
         <p class="eyebrow">At a glance</p>
-        <p>Based in {{ site_settings.office_address }}. Supporting {{ site_settings.coverage_area }}.</p>
+        <p>Based in {{ site_settings.office_address }}. Led with the calm, direct judgement that comes from decades in the market.</p>
       </div>
       <div class="inner-stat-row">
+        <article>
+          <strong>30+</strong>
+          <span>Years of experience</span>
+        </article>
         <article>
           <strong>{{ stats.total }}</strong>
           <span>Published listings</span>
@@ -63,33 +68,46 @@
 
   <section class="section shell about-story-section" data-reveal>
     <div class="about-story-media">
-      <img src="{{ static_asset_url('images/team-handshake.webp') }}" alt="Structurebase team discussing property next steps around a table" loading="eager" decoding="async">
+      <img src="{{ static_asset_url('images/team-handshake.webp') }}" alt="Property advisory discussion with Structurebase" loading="eager" decoding="async">
     </div>
     <div class="about-story-copy">
-      <p class="eyebrow">What The Team Handles</p>
-      <h2>Support that keeps property decisions and operations moving.</h2>
-      <p>Clients get clear listing details, direct enquiry routes, and maintenance handoffs that are easy for the team to act on.</p>
+      <p class="eyebrow">Leadership Standard</p>
+      <h2>Measured advice before anyone commits time or money.</h2>
+      <p>Emeke's standard is simple: say what is clear, flag what still needs checking, and help clients make decisions without pressure. That tone shapes how {{ site_settings.site_name }} handles listings, enquiries, and follow-up.</p>
       <div class="about-check-list" aria-label="Structurebase support priorities">
-        <span>Current availability checks</span>
-        <span>Advisor-led shortlist support</span>
-        <span>Tenant issue routing</span>
+        <span>Honest view of fit, price, and next steps</span>
+        <span>Straightforward conversations with buyers, tenants, and owners</span>
+        <span>Open-minded support for different budgets, timelines, and use cases</span>
       </div>
     </div>
   </section>
 
   <section class="section shell section-tight" data-reveal>
+    <article class="about-ceo-note">
+      <div>
+        <p class="eyebrow">From The CEO</p>
+        <h2>Experience matters most when the answer is not obvious.</h2>
+      </div>
+      <div class="about-ceo-note-copy">
+        <p>After more than three decades in the property business, Emeke Ananenu has seen the patterns that make a deal work and the details that can quietly create problems later.</p>
+        <p>{{ site_settings.site_name }} is built around that discipline: clear information, direct access to an advisor, and a willingness to tell clients when a property is not the right fit.</p>
+      </div>
+    </article>
+  </section>
+
+  <section class="section shell section-tight" data-reveal>
     <div class="about-pillar-grid">
       <article class="info-card">
-        <h2>Sales, rent, and lease</h2>
-        <p>Review live options with clear pricing, availability, and next steps for sale, rent, or lease enquiries.</p>
+        <h2>Clear property advice</h2>
+        <p>Review sale, rent, and lease options with practical guidance on fit, timing, access, and next steps.</p>
       </article>
       <article class="info-card">
-        <h2>Listing reliability</h2>
-        <p>Availability, pricing, and status are kept current so serious clients do not waste time on stale options.</p>
+        <h2>Honest listing context</h2>
+        <p>Availability, pricing, representative images, and status signals are treated as facts to confirm, not decoration.</p>
       </article>
       <article class="info-card">
-        <h2>Tenant and facility support</h2>
-        <p>Residents can send maintenance details, urgency, and photos so the operations desk can respond with context.</p>
+        <h2>Calm follow-through</h2>
+        <p>Enquiries and tenant requests move through clear routes so the team can respond with context instead of guesswork.</p>
       </article>
     </div>
   </section>
@@ -97,37 +115,37 @@
   <section class="section shell about-proof-section" data-reveal>
     <div>
       <p class="eyebrow">Why It Holds Up</p>
-      <h2>Clear signals, direct contact routes, and less second-guessing.</h2>
-      <p>The experience is designed to help serious clients and staff move from interest to action with fewer loose ends.</p>
+      <h2>A direct way to handle property decisions.</h2>
+      <p>The experience is designed for clients who value plain answers, current information, and a team that follows through.</p>
     </div>
 
     <div class="about-proof-list">
       <article>
         <span>01</span>
         <div>
-          <h3>Grounded proof</h3>
-          <p>The public snapshot uses live published inventory, so the market view feels current and accountable.</p>
+          <h3>Experienced judgement</h3>
+          <p>More than three decades in the business informs how options are reviewed, qualified, and discussed.</p>
         </div>
       </article>
       <article>
         <span>02</span>
         <div>
-          <h3>Direct response routes</h3>
-          <p>Enquiries, tenant requests, and listing actions route toward the right workflow instead of a generic queue.</p>
+          <h3>Straight answers</h3>
+          <p>Clients are encouraged to ask about fees, access, timing, title context, and the details that affect a decision.</p>
         </div>
       </article>
       <article>
         <span>03</span>
         <div>
-          <h3>Coverage that is easy to read</h3>
-          <p>District, pricing, availability, and vetted signals are placed where they matter so pages scan quickly.</p>
+          <h3>Open-minded advisory</h3>
+          <p>The team listens first, then helps shape a shortlist around the client's real constraints and priorities.</p>
         </div>
       </article>
       <article>
         <span>04</span>
         <div>
-          <h3>Built for ongoing use</h3>
-          <p>The same system supports public browsing and internal operations, so updates are easier to keep current.</p>
+          <h3>Accountable follow-up</h3>
+          <p>Public browsing, enquiry routing, and internal operations connect so information is easier to keep current.</p>
         </div>
       </article>
     </div>
@@ -137,7 +155,7 @@
     <div class="section-heading">
       <p class="eyebrow">How Confidence Is Built</p>
       <h2>Simple checks before a client spends time on the wrong option.</h2>
-      <p>The team focuses on the details that usually decide whether a property is worth a visit, a call, or a shortlist.</p>
+      <p>The team focuses on the details that usually decide whether a property deserves a visit, a call, or a place on the shortlist.</p>
     </div>
 
     <div class="about-check-grid">

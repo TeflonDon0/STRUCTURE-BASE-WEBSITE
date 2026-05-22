@@ -8539,6 +8539,13 @@ body {
 }
 
 /* Final About polish: keep page-specific standards above generic overrides. */
+body.about-page .about-hero-shell {
+  display: grid;
+  grid-template-columns: minmax(0, 0.95fr) minmax(20rem, 0.64fr);
+  align-items: center;
+  gap: clamp(1.5rem, 3.5vw, 3.25rem);
+}
+
 body.about-page .about-hero-copy .masthead-actions {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 11.5rem));
@@ -10741,6 +10748,10 @@ body.about-page .page-hero .text-link {
   object-fit: cover;
 }
 
+.about-ceo-card img {
+  object-position: center 22%;
+}
+
 .about-hero-card::after {
   content: "";
   position: absolute;
@@ -10769,6 +10780,13 @@ body.about-page .page-hero .text-link {
   line-height: 1.45;
 }
 
+.about-hero-card-panel .about-ceo-name {
+  color: #fffaf0;
+  font-size: 1.18rem;
+  font-weight: 900;
+  line-height: 1.1;
+}
+
 .about-hero-stat-row {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -10795,6 +10813,10 @@ body.about-page .page-hero .text-link {
 
 .about-summary-strip {
   align-items: center;
+}
+
+.about-summary-strip .inner-stat-row {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
 .about-story-section {
@@ -10855,6 +10877,35 @@ body.about-page .page-hero .text-link {
   border-radius: 999px;
   background: var(--trust);
   transform: translateY(-50%);
+}
+
+.about-ceo-note {
+  display: grid;
+  grid-template-columns: minmax(18rem, 0.78fr) minmax(0, 1fr);
+  gap: clamp(1.25rem, 3vw, 3rem);
+  align-items: start;
+  padding: clamp(1.35rem, 3vw, 2.25rem);
+  border: 1px solid rgba(110, 37, 50, 0.16);
+  border-radius: 1rem;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(255, 250, 244, 0.82)),
+    radial-gradient(circle at 100% 0%, rgba(31, 122, 79, 0.1), transparent 18rem);
+  box-shadow: 0 18px 44px rgba(34, 25, 16, 0.08);
+}
+
+.about-ceo-note h2 {
+  max-width: 12ch;
+  font-size: clamp(2rem, 1.5rem + 1.9vw, 3.45rem);
+  line-height: 0.98;
+}
+
+.about-ceo-note-copy {
+  display: grid;
+  gap: 0.85rem;
+  max-width: 43rem;
+  color: #3d372f;
+  font-size: clamp(1rem, 0.96rem + 0.18vw, 1.08rem);
+  line-height: 1.7;
 }
 
 .about-pillar-grid,
@@ -10956,13 +11007,18 @@ body.about-page .cta-banner-actions .cta {
 @media (max-width: 900px) {
   body.about-page .about-hero-shell,
   .about-story-section,
-  .about-proof-section {
+  .about-proof-section,
+  .about-ceo-note {
     grid-template-columns: 1fr;
   }
 
   .about-hero-card,
   .about-hero-card img {
     min-height: 24rem;
+  }
+
+  .about-summary-strip .inner-stat-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .about-pillar-grid,
@@ -10990,8 +11046,55 @@ body.about-page .cta-banner-actions .cta {
     min-height: 20rem;
   }
 
+  .about-ceo-card img {
+    object-position: center 18%;
+  }
+
+  body.about-page .about-ceo-card {
+    display: grid;
+    min-height: 0;
+  }
+
+  body.about-page .about-ceo-card::after {
+    display: none;
+  }
+
+  body.about-page .about-ceo-card img {
+    height: 22rem;
+    min-height: 22rem;
+  }
+
+  body.about-page .about-ceo-card .about-hero-card-panel {
+    position: relative;
+    inset: auto;
+    border-width: 1px 0 0;
+    border-radius: 0;
+    background: rgba(13, 12, 10, 0.96);
+  }
+
+  body.about-page .about-ceo-card .about-hero-stat-row {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  body.about-page .about-ceo-card .about-hero-stat-row span {
+    padding: 0.52rem;
+    font-size: 0.65rem;
+  }
+
+  body.about-page .about-ceo-card .about-hero-stat-row strong {
+    font-size: 1.18rem;
+  }
+
   .about-hero-stat-row {
     grid-template-columns: 1fr;
+  }
+
+  .about-summary-strip .inner-stat-row {
+    grid-template-columns: 1fr;
+  }
+
+  .about-ceo-note {
+    padding: 1rem;
   }
 
   .about-story-media img {
@@ -11209,6 +11312,14 @@ body.about-page .about-hero-copy .masthead-actions .cta-secondary {
   box-shadow: none;
 }
 
+body.about-page .about-hero-card {
+  min-height: clamp(27rem, 44vw, 35rem);
+}
+
+body.about-page .about-hero-card img {
+  min-height: clamp(27rem, 44vw, 35rem);
+}
+
 body.about-page .about-story-media {
   min-height: 24rem;
   background: url("images/team-handshake.webp") center / cover no-repeat;
@@ -11246,7 +11357,26 @@ body.about-page .about-proof-list article {
   border-color: rgba(255, 255, 255, 0.16);
 }
 
+body.about-page .about-hero-shell {
+  display: grid;
+  grid-template-columns: minmax(0, 0.95fr) minmax(20rem, 0.64fr);
+  align-items: center;
+  gap: clamp(1.5rem, 3.5vw, 3.25rem);
+}
+
+body.about-page .about-hero-card {
+  min-height: clamp(27rem, 44vw, 35rem);
+}
+
+body.about-page .about-hero-card img {
+  min-height: clamp(27rem, 44vw, 35rem);
+}
+
 @media (max-width: 560px) {
+  body.about-page .about-hero-shell {
+    grid-template-columns: 1fr;
+  }
+
   body.about-page .about-hero-copy .masthead-actions {
     grid-template-columns: 1fr;
   }
