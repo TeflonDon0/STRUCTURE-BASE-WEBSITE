@@ -1,3 +1,4 @@
+/* cspell:words structurbhero mapboxgl ikoyi workboard */
 :root {
   --bg: #f7f4ef;
   --surface: #ffffff;
@@ -122,7 +123,6 @@ h2,
 h3 {
   margin: 0;
   font-family: "Cormorant Garamond", Georgia, serif;
-  text-wrap: balance;
 }
 
 h1 {
@@ -144,7 +144,6 @@ p,
 ul,
 ol {
   margin: 0;
-  text-wrap: pretty;
 }
 
 ul,
@@ -189,6 +188,7 @@ ol {
   z-index: 30;
   background: rgba(255, 255, 255, 0.94);
   border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  -webkit-backdrop-filter: blur(22px);
   backdrop-filter: blur(22px);
   box-shadow: 0 10px 28px rgba(0, 0, 0, 0.05);
   transition:
@@ -790,6 +790,7 @@ body.has-scrolled .site-header {
   letter-spacing: 0.12em;
   line-height: 1;
   text-transform: uppercase;
+  -webkit-backdrop-filter: blur(12px);
   backdrop-filter: blur(12px);
 }
 
@@ -813,7 +814,6 @@ body.has-scrolled .site-header {
   font-weight: 600;
   line-height: 0.88;
   letter-spacing: 0;
-  text-wrap: balance;
   text-shadow: 0 24px 58px rgba(0, 0, 0, 0.48);
 }
 
@@ -876,7 +876,6 @@ body.detail-page {
   font-size: clamp(1.02rem, 0.95rem + 0.25vw, 1.18rem);
   font-weight: 400;
   line-height: 1.72;
-  text-wrap: normal;
 }
 
 .hero-actions {
@@ -893,7 +892,7 @@ body.detail-page {
 
 .hero-section .hero-actions .cta {
   min-width: 0;
-  min-height: auto;
+  min-height: 0;
   padding: 15px 28px;
   border: 1px solid rgba(255, 255, 255, 0.88);
   border-radius: 8px;
@@ -921,6 +920,7 @@ body.detail-page {
   border-color: rgba(255, 255, 255, 0.34);
   color: #fff;
   box-shadow: none;
+  -webkit-backdrop-filter: blur(12px);
   backdrop-filter: blur(12px);
 }
 
@@ -1275,6 +1275,7 @@ body.detail-page {
   letter-spacing: -0.02em;
   display: -webkit-box;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
@@ -1291,6 +1292,7 @@ body.detail-page {
   line-height: 1.5;
   display: -webkit-box;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
@@ -1362,6 +1364,7 @@ body.detail-page {
   box-shadow:
     0 34px 90px rgba(0, 0, 0, 0.38),
     inset 0 1px 0 rgba(255, 255, 255, 0.64);
+  -webkit-backdrop-filter: blur(18px);
   backdrop-filter: blur(18px);
 }
 
@@ -1384,7 +1387,6 @@ body.detail-page {
 .hero-panel-home .hero-panel-note {
   padding-top: 0;
   border-top: 0;
-  text-wrap: normal;
 }
 
 .metric-grid {
@@ -1493,6 +1495,7 @@ body.detail-page {
   border-radius: 1rem;
   background: rgba(255, 255, 255, 0.12);
   border: 1px solid rgba(255, 255, 255, 0.14);
+  -webkit-backdrop-filter: blur(10px);
   backdrop-filter: blur(10px);
 }
 
@@ -2079,6 +2082,7 @@ body.detail-page {
 .property-summary {
   display: -webkit-box;
   -webkit-line-clamp: 3;
+  line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
@@ -2086,6 +2090,7 @@ body.detail-page {
 .property-note {
   display: -webkit-box;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
@@ -2219,7 +2224,6 @@ body.detail-page {
 
 .about-page .page-hero h1 {
   max-width: 13.8ch;
-  text-wrap: balance;
 }
 
 .about-page .page-intro {
@@ -2232,7 +2236,6 @@ body.detail-page {
 
 .about-page .section-heading h2 {
   max-width: 23ch;
-  text-wrap: balance;
 }
 
 .about-page .section-heading p:last-child {
@@ -2245,7 +2248,6 @@ body.detail-page {
 }
 
 .about-page .info-card h2 {
-  text-wrap: balance;
 }
 
 .dashboard-section-head,
@@ -4001,7 +4003,7 @@ button[aria-busy="true"]::after {
   }
 
   .hero-section {
-    min-height: auto;
+    min-height: 0;
     background-position: center top;
   }
 
@@ -4014,7 +4016,7 @@ button[aria-busy="true"]::after {
   }
 
   .hero-shell-home {
-    min-height: auto;
+    min-height: 0;
     gap: clamp(1.8rem, 4vw, 3rem);
   }
 
@@ -4147,8 +4149,8 @@ button[aria-busy="true"]::after {
     pointer-events: auto;
     border-color: rgba(255, 255, 255, 0.1);
     box-shadow: 0 24px 64px rgba(0,0,0,0.4);
-    backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
   }
 
   .home-page .nav.open ul,
@@ -4238,6 +4240,7 @@ button[aria-busy="true"]::after {
   }
 
   .site-header {
+    -webkit-backdrop-filter: blur(14px);
     backdrop-filter: blur(14px);
   }
 
@@ -4389,14 +4392,12 @@ button[aria-busy="true"]::after {
     grid-auto-columns: minmax(6.5rem, 8rem);
     overflow-x: auto;
     padding-bottom: 0.2rem;
-    scrollbar-width: thin;
   }
 
   .hero-shell-home .hero-copy h1 {
     max-width: 10.5ch;
     font-size: clamp(3.1rem, 13vw, 4.95rem);
     line-height: 0.9;
-    text-wrap: normal;
   }
 
   .hero-shell-home .hero-copy {
@@ -4529,7 +4530,6 @@ button[aria-busy="true"]::after {
     overflow-x: auto;
     padding-bottom: 0.25rem;
     scroll-snap-type: x proximity;
-    -webkit-overflow-scrolling: touch;
   }
 
   .district-chip {
@@ -4805,7 +4805,6 @@ button[aria-busy="true"]::after {
   .hero-shell-home .hero-copy h1 {
     max-width: 10.2ch;
     font-size: clamp(2.75rem, 12.8vw, 3.5rem);
-    text-wrap: normal;
   }
 
   .hero-location-badge {
@@ -5008,6 +5007,7 @@ button[aria-busy="true"]::after {
   background: transparent;
   border-bottom-color: transparent;
   box-shadow: none;
+  -webkit-backdrop-filter: none;
   backdrop-filter: none;
 }
 
@@ -5288,6 +5288,7 @@ button[aria-busy="true"]::after {
   background: transparent;
   box-shadow: none;
   color: #f7f3ec;
+  -webkit-backdrop-filter: none;
   backdrop-filter: none;
 }
 
@@ -5373,6 +5374,7 @@ button[aria-busy="true"]::after {
   font-weight: 500;
   letter-spacing: 0.12em;
   text-transform: uppercase;
+  -webkit-backdrop-filter: blur(10px);
   backdrop-filter: blur(10px);
 }
 
@@ -5524,6 +5526,7 @@ button[aria-busy="true"]::after {
   .home-page .site-header,
   .home-page.has-scrolled .site-header {
     background: rgba(8, 9, 10, 0.88);
+    -webkit-backdrop-filter: blur(18px);
     backdrop-filter: blur(18px);
   }
 
@@ -5703,6 +5706,7 @@ body.offline-page .site-header {
   background: rgba(9, 11, 12, 0.9);
   border-bottom-color: rgba(216, 189, 131, 0.16);
   box-shadow: 0 14px 42px rgba(0, 0, 0, 0.18);
+  -webkit-backdrop-filter: blur(22px);
   backdrop-filter: blur(22px);
 }
 
@@ -6030,6 +6034,7 @@ button.cta:not(.cta-secondary):focus-visible {
 .site-header-admin {
   background: rgba(250, 247, 241, 0.92);
   border-bottom: 1px solid rgba(24, 32, 40, 0.08);
+  -webkit-backdrop-filter: blur(18px);
   backdrop-filter: blur(18px);
 }
 
@@ -8031,11 +8036,11 @@ button.cta:not(.cta-secondary):focus-visible {
 
 @media (max-width: 1180px) {
   .hero-section-cinematic {
-    min-height: auto;
+    min-height: 0;
   }
 
   .hero-shell-home {
-    min-height: auto;
+    min-height: 0;
   }
 }
 
@@ -8056,7 +8061,6 @@ body.properties-page .page-hero h1 {
   font-size: clamp(2.9rem, 3.75vw, 4.15rem);
   line-height: 0.96;
   letter-spacing: 0;
-  text-wrap: balance;
 }
 
 body.properties-page .page-intro {
@@ -9783,7 +9787,7 @@ body.detail-page .page-hero {
 }
 
 body.detail-page .detail-media-card {
-  min-height: auto;
+  min-height: 0;
   aspect-ratio: 4 / 3;
   border-radius: 1rem;
   border: 1px solid rgba(235, 212, 207, 0.28);
@@ -10742,7 +10746,7 @@ body.about-page .section-heading h2 {
   .masthead-actions .text-link,
   body.tenant-services-page .tenant-hero-actions .text-link {
     width: fit-content;
-    min-height: auto;
+    min-height: 0;
     justify-content: flex-start;
     padding: 0;
     border: 0;
@@ -10850,6 +10854,7 @@ body.about-page .page-hero .text-link {
   border-radius: 0.9rem;
   background: rgba(13, 12, 10, 0.76);
   color: #fffaf0;
+  -webkit-backdrop-filter: blur(14px);
   backdrop-filter: blur(14px);
 }
 
@@ -11254,6 +11259,7 @@ body.tenant-services-page .tenant-emergency-section {
       linear-gradient(90deg, rgba(14, 13, 13, 0.96), rgba(35, 15, 19, 0.96) 54%, rgba(14, 13, 13, 0.96));
     border-bottom-color: rgba(203, 159, 156, 0.2);
     box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18);
+    -webkit-backdrop-filter: blur(18px);
     backdrop-filter: blur(18px);
   }
 
@@ -11363,8 +11369,8 @@ body.tenant-services-page .tenant-emergency-section {
     border: 1px solid rgba(216, 189, 131, 0.16);
     background: rgba(10, 11, 12, 0.985);
     box-shadow: 0 22px 44px rgba(0, 0, 0, 0.34);
-    backdrop-filter: blur(14px);
     -webkit-backdrop-filter: blur(14px);
+    backdrop-filter: blur(14px);
   }
 
   body:not(.admin-workspace-page):not(.dashboard-page):not(.form-page):not(.login-page) .nav.open .nav-list a {
@@ -11506,6 +11512,7 @@ body.admin-workspace-page .site-header {
   border-color: rgba(148, 163, 184, 0.18);
   border-bottom: 1px solid rgba(148, 163, 184, 0.16);
   box-shadow: 0 18px 40px rgba(15, 23, 42, 0.06);
+  -webkit-backdrop-filter: blur(12px);
   backdrop-filter: blur(12px);
 }
 
@@ -12062,8 +12069,8 @@ body.form-page.admin-workspace-page .form-actions {
     pointer-events: auto;
     border-color: rgba(216, 189, 131, 0.16);
     box-shadow: 0 22px 44px rgba(0, 0, 0, 0.34);
-    backdrop-filter: blur(14px);
     -webkit-backdrop-filter: blur(14px);
+    backdrop-filter: blur(14px);
   }
 
   body:not(.admin-workspace-page):not(.dashboard-page):not(.form-page):not(.login-page) .nav-list li {
@@ -12241,8 +12248,8 @@ body.form-page.admin-workspace-page .form-actions {
     border-radius: 0;
     background: transparent;
     box-shadow: none;
-    backdrop-filter: none;
     -webkit-backdrop-filter: none;
+    backdrop-filter: none;
   }
 
   body.admin-workspace-page .nav-list-admin li,
