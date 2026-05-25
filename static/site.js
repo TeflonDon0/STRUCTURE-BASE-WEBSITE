@@ -32,10 +32,19 @@ if (backToTop) {
 }
 
 if (nav && toggle) {
+  const mobileNavQuery = window.matchMedia("(max-width: 860px)");
+
+  const syncNavAvailability = (open) => {
+    const shouldHideNav = mobileNavQuery.matches && !open;
+    nav.toggleAttribute("inert", shouldHideNav);
+    nav.setAttribute("aria-hidden", String(shouldHideNav));
+  };
+
   const syncToggleLabel = (open) => {
     body.classList.toggle("nav-open", open);
     toggle.setAttribute("aria-expanded", String(open));
     toggle.setAttribute("aria-label", open ? "Close navigation" : "Open navigation");
+    syncNavAvailability(open);
   };
 
   const closeNav = () => {
@@ -67,7 +76,14 @@ if (nav && toggle) {
   window.addEventListener("resize", () => {
     if (window.innerWidth > 860) {
       closeNav();
+      syncNavAvailability(true);
+      return;
     }
+    syncNavAvailability(nav.classList.contains("open"));
+  });
+
+  mobileNavQuery.addEventListener?.("change", () => {
+    syncNavAvailability(nav.classList.contains("open"));
   });
 
   syncToggleLabel(nav.classList.contains("open"));
@@ -238,6 +254,25 @@ document.querySelectorAll("[data-auto-submit-select]").forEach((select) => {
     }
     form.submit();
   });
+});
+
+document.querySelectorAll("[data-selection-scope]").forEach((scope) => {
+  const checkboxes = Array.from(scope.querySelectorAll("[data-selection-item]"));
+  const countLabel = scope.querySelector("[data-selection-count]");
+  if (!checkboxes.length || !countLabel) {
+    return;
+  }
+
+  const syncSelectionCount = () => {
+    const selected = checkboxes.filter((checkbox) => checkbox.checked).length;
+    countLabel.textContent = `${selected} selected`;
+    scope.classList.toggle("has-selection", selected > 0);
+  };
+
+  checkboxes.forEach((checkbox) => {
+    checkbox.addEventListener("change", syncSelectionCount);
+  });
+  syncSelectionCount();
 });
 
 document.querySelectorAll("[data-template-select-url]").forEach((select) => {

@@ -22,7 +22,7 @@
     </div>
   </section>
 
-  <section class="section shell section-tight">
+  <section class="section shell section-tight admin-inventory-overview">
     <div class="dashboard-section-head admin-section-head">
       <div>
         <p class="dashboard-section-kicker">Saved views</p>
@@ -41,9 +41,6 @@
         </a>
       {% endfor %}
     </div>
-  </section>
-
-  <section class="section shell section-tight">
     <div class="admin-insight-strip" aria-label="Inventory management summary">
       <article>
         <span>Published</span>
@@ -68,7 +65,7 @@
     </div>
   </section>
 
-  <section class="section shell section-tight">
+  <section class="section shell section-tight admin-workbench-controls">
     <form method="get" action="{{ url_for('admin_listings') }}" class="dashboard-filter-bar admin-filter-bar" aria-label="Filter listings">
       <input type="hidden" name="view" value="{{ listing_filters.view }}">
       <div class="dashboard-filter-grid">
@@ -164,13 +161,14 @@
 
   <section class="section shell section-tight">
     {% if listings %}
-      <form method="post" action="{{ url_for('bulk_update_listings') }}" class="admin-bulk-shell">
+      <form method="post" action="{{ url_for('bulk_update_listings') }}" class="admin-bulk-shell" data-selection-scope>
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <input type="hidden" name="next" value="{{ next_url }}">
         <div class="admin-bulk-bar">
           <div class="admin-bulk-copy">
             <p class="dashboard-section-kicker">Bulk actions</p>
             <h2>Apply one change across selected listings</h2>
+            <p class="admin-bulk-note"><strong data-selection-count>0 selected</strong> · choose one action, then apply.</p>
           </div>
           <div class="admin-bulk-controls">
             <select name="action" aria-label="Choose bulk action">
@@ -188,7 +186,7 @@
             <article class="admin-record-card admin-record-card-listing">
               <div class="admin-record-select">
                 <label class="checkbox">
-                  <input type="checkbox" name="listing_ids" value="{{ listing.id }}">
+                  <input type="checkbox" name="listing_ids" value="{{ listing.id }}" data-selection-item>
                   <span>Select</span>
                 </label>
               </div>

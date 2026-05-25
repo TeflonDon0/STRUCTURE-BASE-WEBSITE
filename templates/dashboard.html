@@ -19,9 +19,11 @@
       <div class="admin-hero-actions">
         <a href="{{ url_for('create_listing', next=url_for('admin_listings')) }}" class="cta">New listing</a>
         <a href="{{ url_for('admin_enquiries') }}" class="cta cta-outline">Review leads</a>
-        <a href="{{ url_for('admin_maintenance') }}" class="cta cta-outline">Review operations</a>
-        <a href="{{ url_for('admin_finance') }}" class="cta cta-outline">Review finance</a>
-        <a href="{{ url_for('admin_settings') }}" class="text-link">Site settings</a>
+        <div class="admin-hero-secondary-actions" aria-label="Secondary admin actions">
+          <a href="{{ url_for('admin_maintenance') }}" class="text-link">Operations</a>
+          <a href="{{ url_for('admin_finance') }}" class="text-link">Finance</a>
+          <a href="{{ url_for('admin_settings') }}" class="text-link">Settings</a>
+        </div>
       </div>
     </div>
   </section>

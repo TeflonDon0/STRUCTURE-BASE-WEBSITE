@@ -133,66 +133,16 @@
   {% endif %}
 
   <section class="section shell section-tight" data-reveal>
-    <div class="section-heading section-heading-inline">
+    <div class="home-catalogue-band">
       <div>
-        <p class="eyebrow">Current Availability</p>
-        <h2>Browse homes and spaces with the essentials in the right order.</h2>
+        <p class="eyebrow">Current availability</p>
+        <h2>Go straight to the live catalogue when you are ready to compare.</h2>
+        <p>Filter by district, sale or rental intent, availability, and verification signals without scrolling through repeated cards.</p>
       </div>
-      <a href="{{ url_for('properties') }}" class="text-link text-link-strong">Browse full catalogue</a>
-    </div>
-
-    <div class="property-grid-list">
-      {% for listing in featured %}
-        <article class="property-card">
-          <a href="{{ url_for('property_detail', listing_id=listing.id) }}" class="property-media-link" aria-label="View {{ listing.title }}">
-            <div class="property-media" style="--media-bg: url('{{ asset_url(listing_image_path(listing)) }}')">
-              <img src="{{ asset_url(listing_image_path(listing)) }}" alt="{{ listing.title }}" loading="{% if loop.index <= 3 %}eager{% else %}lazy{% endif %}" decoding="async">
-              <span class="property-badge">{{ listing.status }}</span>
-              {% if listing.verified_property %}
-                <span class="property-badge property-badge-verified">Verified</span>
-              {% endif %}
-              {% if listing.availability != 'Available' %}
-                <span class="property-badge property-badge-secondary">{{ listing.availability }}</span>
-              {% endif %}
-              {% if not listing_has_uploaded_image(listing) %}
-                <span class="property-badge property-badge-secondary {% if listing.availability != 'Available' %}property-badge-stacked{% endif %}">Representative image</span>
-              {% endif %}
-            </div>
-          </a>
-            <div class="property-body">
-              <div class="property-copy">
-                <div class="property-card-topline">
-                  <p class="property-location">{{ listing.district }}</p>
-                  <p class="property-availability">{{ listing.availability }}</p>
-                </div>
-                <p class="property-price property-price-card">{{ listing.price | naira }}{{ listing.price_suffix }}</p>
-                <h3>{{ listing.title }}</h3>
-                <p class="property-summary">{{ listing.summary }}</p>
-              </div>
-            <ul class="property-meta">
-              <li>{{ listing.property_type }}</li>
-              {% if listing.bedrooms %}<li>{{ listing.bedrooms }} beds</li>{% endif %}
-              {% if listing.bathrooms %}<li>{{ listing.bathrooms }} baths</li>{% endif %}
-              {% if listing.area_sqm %}<li>{{ listing.area_sqm }} sqm</li>{% endif %}
-            </ul>
-            {% set feature_labels = listing_feature_labels(listing) %}
-            {% if feature_labels %}
-              <div class="feature-chip-row">
-                {% for label in feature_labels[:3] %}
-                  <span class="feature-chip">{{ label }}</span>
-                {% endfor %}
-              </div>
-            {% endif %}
-            <div class="property-footer">
-              <p class="property-note">{{ listing.address }}</p>
-              <div class="property-actions">
-                <a href="{{ url_for('property_detail', listing_id=listing.id) }}" class="cta cta-small">View details</a>
-                <a href="{{ listing_whatsapp_url(listing) }}" class="cta cta-small cta-card-secondary" target="_blank" rel="noreferrer">Ask to view</a>
-              </div>
-            </div>
-          </div>
-        </article>
-      {% endfor %}
+      <div class="home-catalogue-actions">
+        <a href="{{ url_for('properties') }}" class="cta">Browse full catalogue</a>
+        <a href="{{ general_whatsapp_url }}" class="text-link text-link-strong" target="_blank" rel="noreferrer">Ask for a shortlist</a>
+      </div>
     </div>
   </section>
 

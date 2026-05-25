@@ -148,23 +148,17 @@
         </section>
 
         {% if listing.virtual_tour_url %}
-          <div class="detail-contact-links detail-tour-link-row">
-            <a href="{{ listing.virtual_tour_url }}" class="text-link text-link-strong" target="_blank" rel="noreferrer">Open 360 tour</a>
-          </div>
-        {% endif %}
-
-        {% if listing.virtual_tour_url %}
           <article class="info-card detail-tour-card">
             <div class="detail-tour-head">
               <div>
                 <p class="eyebrow">Virtual tour</p>
-                <h2>Preview the space remotely.</h2>
+                <h2>Open the hosted tour in a new tab.</h2>
               </div>
               <a href="{{ listing.virtual_tour_url }}" class="text-link text-link-strong" target="_blank" rel="noreferrer">Open full tour</a>
             </div>
-            <div class="detail-tour-frame">
-              <iframe src="{{ listing.virtual_tour_url }}" title="Virtual tour for {{ listing.title }}" loading="lazy" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
-            </div>
+            <p class="form-note">
+              Virtual tours are hosted externally so they keep their original controls and load state. Open the tour before booking if you want to preview the layout remotely.
+            </p>
           </article>
         {% endif %}
 
@@ -206,13 +200,16 @@
         <div class="form-row">
           <div class="form-group">
             <label for="email">Email</label>
-            <input type="email" id="email" name="email" autocomplete="email">
+            <input type="email" id="email" name="email" autocomplete="email" aria-describedby="enquiry-contact-help">
           </div>
           <div class="form-group">
             <label for="phone">Phone or WhatsApp</label>
-            <input type="tel" id="phone" name="phone" autocomplete="tel">
+            <input type="tel" id="phone" name="phone" autocomplete="tel" aria-describedby="enquiry-contact-help">
           </div>
         </div>
+        <p id="enquiry-contact-help" class="form-hint enquiry-contact-hint">
+          Add either email or phone. WhatsApp or phone is best for viewing times and same-day availability checks.
+        </p>
 
         <div class="form-group">
           <label for="message">What do you need?</label>

@@ -85,6 +85,7 @@ def _catalog(site_settings: dict[str, Any]) -> dict[str, dict[str, Any]]:
     contact_email = str(site_settings.get("contact_email") or "hello@example.com")
     contact_phone = str(site_settings.get("contact_phone_display") or "")
     office_address = str(site_settings.get("office_address") or "Lagos, Nigeria")
+    billing_contact = " or ".join(part for part in [contact_email, contact_phone] if part)
 
     return {
         "letterhead": {
@@ -219,7 +220,7 @@ def _catalog(site_settings: dict[str, Any]) -> dict[str, dict[str, Any]]:
                 "terms": "Amounts remain due in full on or before the stated due date unless a written payment arrangement is confirmed.",
                 "signatories": [{"name": "Finance Desk", "role": site_name}],
                 "legal_footer": {
-                    "text": f"For billing questions contact {contact_email} or {contact_phone}."
+                    "text": f"For billing questions contact {billing_contact}."
                 },
             },
             "field_schema": [
@@ -1102,7 +1103,7 @@ def generator_spec(site_settings: dict[str, Any]) -> dict[str, Any]:
     return {
         "version": DOCUMENT_TEMPLATE_VERSION,
         "render_pipeline": [
-            "Load admin settings and brand tokens",
+            "Load site settings and brand tokens",
             "Choose template and parse payload JSON",
             "Validate common and template-specific fields",
             "Build reusable story components with conditional sections",
@@ -1714,9 +1715,11 @@ class PremiumPdfBuilder:
             "primary": colors.HexColor(custom.get("primary_color", "#7b3327")),
             "accent": colors.HexColor(custom.get("accent_color", "#a16f36")),
             "text": colors.HexColor(custom.get("text_color", "#182028")),
-            "muted": colors.HexColor("#5b615d"),
+            "muted": colors.HexColor("#59615f"),
             "line": colors.HexColor("#d9ccbe"),
             "surface": colors.HexColor("#fffdf9"),
+            "panel": colors.HexColor("#f8f3ee"),
+            "row_alt": colors.HexColor("#fbf8f4"),
         }
 
     def _build_styles(self) -> dict[str, ParagraphStyle]:
@@ -1736,9 +1739,9 @@ class PremiumPdfBuilder:
                 parent=base["Heading1"],
                 fontName="Helvetica-Bold",
                 fontSize=22,
-                leading=25,
+                leading=26,
                 textColor=self.brand["text"],
-                spaceAfter=8,
+                spaceAfter=6,
             ),
             "subtitle": ParagraphStyle(
                 "subtitle",
@@ -1747,7 +1750,7 @@ class PremiumPdfBuilder:
                 fontSize=10,
                 leading=14,
                 textColor=self.brand["muted"],
-                spaceAfter=8,
+                spaceAfter=10,
             ),
             "section": ParagraphStyle(
                 "section",
@@ -1758,6 +1761,7 @@ class PremiumPdfBuilder:
                 textColor=self.brand["text"],
                 spaceBefore=10,
                 spaceAfter=6,
+                keepWithNext=True,
             ),
             "body": ParagraphStyle(
                 "body",
@@ -1767,6 +1771,19 @@ class PremiumPdfBuilder:
                 leading=14.2,
                 textColor=self.brand["text"],
                 spaceAfter=6,
+                allowWidows=0,
+                allowOrphans=0,
+            ),
+            "list_body": ParagraphStyle(
+                "list_body",
+                parent=base["BodyText"],
+                fontName="Helvetica",
+                fontSize=9.4,
+                leading=12.8,
+                textColor=self.brand["text"],
+                spaceAfter=2.5,
+                allowWidows=0,
+                allowOrphans=0,
             ),
             "small": ParagraphStyle(
                 "small",
@@ -1793,12 +1810,14 @@ class PremiumPdfBuilder:
                 fontSize=8.7,
                 leading=11.4,
                 textColor=self.brand["text"],
+                allowWidows=0,
+                allowOrphans=0,
             ),
             "meta_label": ParagraphStyle(
                 "meta_label",
                 parent=base["BodyText"],
                 fontName="Helvetica-Bold",
-                fontSize=7.8,
+                fontSize=7.6,
                 leading=10,
                 textColor=self.brand["muted"],
             ),
@@ -1837,7 +1856,7 @@ class PremiumPdfBuilder:
             leftMargin=18 * mm,
             rightMargin=18 * mm,
             topMargin=26 * mm,
-            bottomMargin=20 * mm,
+            bottomMargin=22 * mm,
             title=self.title,
         )
         frame = Frame(doc.leftMargin, doc.bottomMargin, doc.width, doc.height, id="body")
@@ -1933,16 +1952,21 @@ class PremiumPdfBuilder:
             data.append(
                 [
                     Paragraph(label, self.styles["meta_label"]),
-                    Paragraph(value or "—", self.styles["meta_value"]),
+                    Paragraph(str(value or "Not provided"), self.styles["meta_value"]),
                 ]
             )
-        table = Table(data, colWidths=[32 * mm, self.doc.width - (32 * mm)], hAlign="LEFT")
+        table = Table(data, colWidths=[36 * mm, self.doc.width - (36 * mm)], hAlign="LEFT")
         table.setStyle(
             TableStyle(
                 [
+                    ("BACKGROUND", (0, 0), (-1, -1), self.brand["panel"]),
+                    ("BOX", (0, 0), (-1, -1), 0.45, self.brand["line"]),
+                    ("LINEBELOW", (0, 0), (-1, -2), 0.3, self.brand["line"]),
                     ("VALIGN", (0, 0), (-1, -1), "TOP"),
+                    ("LEFTPADDING", (0, 0), (-1, -1), 7),
+                    ("RIGHTPADDING", (0, 0), (-1, -1), 7),
                     ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
-                    ("TOPPADDING", (0, 0), (-1, -1), 1),
+                    ("TOPPADDING", (0, 0), (-1, -1), 5),
                 ]
             )
         )
@@ -1951,13 +1975,13 @@ class PremiumPdfBuilder:
     def info_table(self, rows: list[list[Any]], col_widths: list[float], header: bool = True, align_right_cols: list[int] | None = None) -> Table:
         table = Table(rows, colWidths=col_widths, repeatRows=1 if header else 0, splitByRow=1, hAlign="LEFT")
         styles = [
-            ("GRID", (0, 0), (-1, -1), 0.4, self.brand["line"]),
+            ("INNERGRID", (0, 0), (-1, -1), 0.3, self.brand["line"]),
             ("BOX", (0, 0), (-1, -1), 0.6, self.brand["line"]),
             ("VALIGN", (0, 0), (-1, -1), "TOP"),
-            ("LEFTPADDING", (0, 0), (-1, -1), 6),
-            ("RIGHTPADDING", (0, 0), (-1, -1), 6),
-            ("TOPPADDING", (0, 0), (-1, -1), 6),
-            ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
+            ("LEFTPADDING", (0, 0), (-1, -1), 7),
+            ("RIGHTPADDING", (0, 0), (-1, -1), 7),
+            ("TOPPADDING", (0, 0), (-1, -1), 7),
+            ("BOTTOMPADDING", (0, 0), (-1, -1), 7),
             ("WORDWRAP", (0, 0), (-1, -1), "CJK"),
         ]
         if header:
@@ -1966,8 +1990,13 @@ class PremiumPdfBuilder:
                     ("BACKGROUND", (0, 0), (-1, 0), self.brand["primary"]),
                     ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
                     ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+                    ("BOTTOMPADDING", (0, 0), (-1, 0), 8),
                 ]
             )
+        body_start = 1 if header else 0
+        for row_index in range(body_start, len(rows)):
+            if (row_index - body_start) % 2 == 1:
+                styles.append(("BACKGROUND", (0, row_index), (-1, row_index), self.brand["row_alt"]))
         if align_right_cols:
             for column in align_right_cols:
                 styles.append(("ALIGN", (column, 0), (column, -1), "RIGHT"))
@@ -1976,10 +2005,15 @@ class PremiumPdfBuilder:
 
     def bullet_list(self, items: list[str]) -> ListFlowable:
         return ListFlowable(
-            [ListItem(self.paragraph(item, "body"), leftIndent=0) for item in items],
+            [ListItem(self.paragraph(item, "list_body"), leftIndent=0) for item in items],
             bulletType="bullet",
             start="circle",
-            leftIndent=14,
+            bulletFontName="Helvetica-Bold",
+            bulletFontSize=5,
+            bulletColor=self.brand["accent"],
+            bulletOffsetY=2,
+            leftIndent=10,
+            bulletDedent=5,
         )
 
     def signature_table(self, signatories: list[dict[str, str]]) -> Table:
@@ -1999,13 +2033,13 @@ class PremiumPdfBuilder:
 
 
 def _document_header(builder: PremiumPdfBuilder, payload: dict[str, Any], title: str, subtitle: str = "") -> list[Any]:
-    meta_rows = [("Document", payload.get("document_number") or "Internal issue"), ("Issue date", payload.get("issue_date") or "—")]
+    meta_rows = [("Reference", payload.get("document_number") or "Reference pending"), ("Issue date", payload.get("issue_date") or "Not provided")]
     if payload.get("due_date"):
         meta_rows.append(("Due date", payload["due_date"]))
     if payload.get("valid_until"):
         meta_rows.append(("Valid until", payload["valid_until"]))
     story: list[Any] = [
-        builder.paragraph("Document generator", "eyebrow"),
+        builder.paragraph("Prepared document", "eyebrow"),
         builder.paragraph(title, "title"),
     ]
     if subtitle:
@@ -2016,7 +2050,7 @@ def _document_header(builder: PremiumPdfBuilder, payload: dict[str, Any], title:
 
 def _contact_lines(block: dict[str, Any]) -> str:
     lines = [value for value in [block.get("name"), block.get("company"), *block.get("address_lines", [])] if value]
-    return "<br/>".join(lines) if lines else "—"
+    return "<br/>".join(lines) if lines else "Not provided"
 
 
 def _render_letterhead(builder: PremiumPdfBuilder, payload: dict[str, Any]) -> list[Any]:
@@ -2031,7 +2065,7 @@ def _render_letterhead(builder: PremiumPdfBuilder, payload: dict[str, Any]) -> l
     if payload.get("intro"):
         story.append(builder.paragraph(payload["intro"]))
     for section in payload.get("body_sections", []):
-        story.append(KeepTogether([builder.paragraph(section["heading"] or "Section", "section"), builder.paragraph(section["body"] or "—")]))
+        story.append(KeepTogether([builder.paragraph(section["heading"] or "Section", "section"), builder.paragraph(section["body"] or "Not provided")]))
     if payload.get("callouts"):
         story.extend([builder.paragraph("Key points", "section"), builder.bullet_list(payload["callouts"])])
     if payload.get("closing"):
@@ -2042,7 +2076,7 @@ def _render_letterhead(builder: PremiumPdfBuilder, payload: dict[str, Any]) -> l
 
 
 def _render_billing(builder: PremiumPdfBuilder, payload: dict[str, Any]) -> list[Any]:
-    story = _document_header(builder, payload, builder.title, "Billing document")
+    story = _document_header(builder, payload, builder.title, "Invoice summary")
     issuer_block = {
         "name": builder.site_settings.get("site_name"),
         "company": builder.site_settings.get("office_address"),
@@ -2236,10 +2270,10 @@ def _render_payment_receipt(builder: PremiumPdfBuilder, payload: dict[str, Any])
     story.append(
         builder.meta_table(
             [
-                ("Payment date", payload.get("payment_date") or "—"),
-                ("Method", payload.get("payment_method") or "—"),
-                ("Reference", payload.get("payment_reference") or "—"),
-                ("Received by", payload.get("received_by") or "—"),
+                ("Payment date", payload.get("payment_date") or "Not provided"),
+                ("Method", payload.get("payment_method") or "Not provided"),
+                ("Reference", payload.get("payment_reference") or "Not provided"),
+                ("Received by", payload.get("received_by") or "Not provided"),
             ]
         )
     )
@@ -2276,9 +2310,9 @@ def _render_inspection_report(builder: PremiumPdfBuilder, payload: dict[str, Any
     story.append(
         builder.meta_table(
             [
-                ("Property", payload.get("property_title") or "—"),
-                ("Address", payload.get("property_address") or "—"),
-                ("Inspection date", payload.get("inspection_date") or "—"),
+                ("Property", payload.get("property_title") or "Not provided"),
+                ("Address", payload.get("property_address") or "Not provided"),
+                ("Inspection date", payload.get("inspection_date") or "Not provided"),
                 ("Inspected by", _contact_lines(payload.get("inspected_by") or {})),
                 ("Inspected for", _contact_lines(payload.get("inspected_for") or {})),
             ]
@@ -2320,9 +2354,9 @@ def _render_maintenance_work_order(builder: PremiumPdfBuilder, payload: dict[str
     story.append(
         builder.meta_table(
             [
-                ("Reference", payload.get("request_reference") or "—"),
-                ("Property", payload.get("property_title") or "—"),
-                ("Unit / area", payload.get("unit_reference") or "—"),
+                ("Reference", payload.get("request_reference") or "Not provided"),
+                ("Property", payload.get("property_title") or "Not provided"),
+                ("Unit / area", payload.get("unit_reference") or "Not provided"),
                 ("Vendor", _contact_lines(payload.get("vendor") or {})),
                 ("Issued by", _contact_lines(payload.get("issued_by") or {})),
             ]
@@ -2366,11 +2400,11 @@ def _render_lease_notice(builder: PremiumPdfBuilder, payload: dict[str, Any]) ->
         builder.meta_table(
             [
                 ("Tenant", _contact_lines(payload.get("tenant") or {})),
-                ("Property", payload.get("property_title") or "—"),
-                ("Unit / area", payload.get("unit_reference") or "—"),
-                ("Current term end", payload.get("current_term_end") or "—"),
-                ("Proposed start", payload.get("proposed_start") or "—"),
-                ("Response deadline", payload.get("response_deadline") or "—"),
+                ("Property", payload.get("property_title") or "Not provided"),
+                ("Unit / area", payload.get("unit_reference") or "Not provided"),
+                ("Current term end", payload.get("current_term_end") or "Not provided"),
+                ("Proposed start", payload.get("proposed_start") or "Not provided"),
+                ("Response deadline", payload.get("response_deadline") or "Not provided"),
             ]
         )
     )
@@ -2385,9 +2419,9 @@ def _render_lease_notice(builder: PremiumPdfBuilder, payload: dict[str, Any]) ->
         builder.paragraph("Proposed terms", "section"),
         builder.meta_table(
             [
-                ("Current rent", payload.get("current_rent") or "—"),
-                ("Renewal / reviewed rent", payload.get("proposed_rent") or "—"),
-                ("Service charge note", payload.get("service_charge_note") or "—"),
+                ("Current rent", payload.get("current_rent") or "Not provided"),
+                ("Renewal / reviewed rent", payload.get("proposed_rent") or "Not provided"),
+                ("Service charge note", payload.get("service_charge_note") or "Not provided"),
             ]
         ),
     ])
@@ -2409,12 +2443,12 @@ def _render_management_agreement(builder: PremiumPdfBuilder, payload: dict[str, 
     story.append(
         builder.meta_table(
             [
-                ("Effective date", payload.get("effective_date") or "—"),
+                ("Effective date", payload.get("effective_date") or "Not provided"),
                 ("Owner", _contact_lines(payload.get("owner") or {})),
                 ("Manager", _contact_lines(payload.get("manager") or {})),
-                ("Property", payload.get("property_title") or "—"),
-                ("Property address", payload.get("property_address") or "—"),
-                ("Term summary", payload.get("term_summary") or "—"),
+                ("Property", payload.get("property_title") or "Not provided"),
+                ("Property address", payload.get("property_address") or "Not provided"),
+                ("Term summary", payload.get("term_summary") or "Not provided"),
             ]
         )
     )
@@ -2448,7 +2482,7 @@ def _render_management_agreement(builder: PremiumPdfBuilder, payload: dict[str, 
             builder.paragraph("Authority and reporting", "section"),
             builder.meta_table(
                 [
-                    ("Reporting cadence", payload.get("reporting_cadence") or "—"),
+                    ("Reporting cadence", payload.get("reporting_cadence") or "Not provided"),
                     ("Authority scope", "See authority limits below"),
                 ]
             ),
@@ -2476,13 +2510,13 @@ def _render_tenancy_agreement(builder: PremiumPdfBuilder, payload: dict[str, Any
     story.append(
         builder.meta_table(
             [
-                ("Tenancy type", payload.get("tenancy_type") or "—"),
+                ("Tenancy type", payload.get("tenancy_type") or "Not provided"),
                 ("Landlord", _contact_lines(payload.get("landlord") or {})),
                 ("Tenant", _contact_lines(payload.get("tenant") or {})),
-                ("Property", payload.get("property_title") or "—"),
-                ("Premises", payload.get("premises_address") or "—"),
-                ("Commencement", payload.get("commencement_date") or "—"),
-                ("Expiry", payload.get("expiry_date") or "—"),
+                ("Property", payload.get("property_title") or "Not provided"),
+                ("Premises", payload.get("premises_address") or "Not provided"),
+                ("Commencement", payload.get("commencement_date") or "Not provided"),
+                ("Expiry", payload.get("expiry_date") or "Not provided"),
             ]
         )
     )
@@ -2500,10 +2534,10 @@ def _render_tenancy_agreement(builder: PremiumPdfBuilder, payload: dict[str, Any
         builder.paragraph("Commercial terms", "section"),
         builder.meta_table(
             [
-                ("Rent", payload.get("rent_amount") or "—"),
-                ("Deposit", payload.get("deposit_amount") or "—"),
-                ("Payment schedule", payload.get("payment_schedule") or "—"),
-                ("Permitted use", payload.get("permitted_use") or "—"),
+                ("Rent", payload.get("rent_amount") or "Not provided"),
+                ("Deposit", payload.get("deposit_amount") or "Not provided"),
+                ("Payment schedule", payload.get("payment_schedule") or "Not provided"),
+                ("Permitted use", payload.get("permitted_use") or "Not provided"),
             ]
         ),
     ])
@@ -2537,11 +2571,11 @@ def _render_sale_agreement(builder: PremiumPdfBuilder, payload: dict[str, Any]) 
             [
                 ("Seller", _contact_lines(payload.get("seller") or {})),
                 ("Buyer", _contact_lines(payload.get("buyer") or {})),
-                ("Property", payload.get("property_title") or "—"),
-                ("Property address", payload.get("property_address") or "—"),
-                ("Interest being sold", payload.get("property_interest") or "—"),
-                ("Title status", payload.get("title_status") or "—"),
-                ("Completion date", payload.get("completion_date") or "—"),
+                ("Property", payload.get("property_title") or "Not provided"),
+                ("Property address", payload.get("property_address") or "Not provided"),
+                ("Interest being sold", payload.get("property_interest") or "Not provided"),
+                ("Title status", payload.get("title_status") or "Not provided"),
+                ("Completion date", payload.get("completion_date") or "Not provided"),
             ]
         )
     )
@@ -2559,9 +2593,9 @@ def _render_sale_agreement(builder: PremiumPdfBuilder, payload: dict[str, Any]) 
         builder.paragraph("Commercial terms", "section"),
         builder.meta_table(
             [
-                ("Purchase price", payload.get("purchase_price") or "—"),
-                ("Initial deposit", payload.get("deposit_amount") or "—"),
-                ("Completion notes", payload.get("completion_notes") or "—"),
+                ("Purchase price", payload.get("purchase_price") or "Not provided"),
+                ("Initial deposit", payload.get("deposit_amount") or "Not provided"),
+                ("Completion notes", payload.get("completion_notes") or "Not provided"),
             ]
         ),
     ])

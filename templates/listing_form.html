@@ -15,13 +15,18 @@
         </p>
       </div>
 
-      <aside class="page-hero-card">
+      <aside class="page-hero-card listing-editor-brief">
         <p class="eyebrow">Publishing Checklist</p>
         <ul class="hero-proof hero-proof-compact">
           <li>Use clear district and address fields for Lagos search intent</li>
           <li>Add a strong summary for better scan value on the catalogue page</li>
           <li>Upload property photography to improve trust and conversion</li>
         </ul>
+        <div class="listing-editor-status-row" aria-label="Current listing editor defaults">
+          <span>{{ "Published" if form_data.published else "Draft" }}</span>
+          <span>{{ "Featured" if form_data.featured else "Not featured" }}</span>
+          <span>{{ form_data.status or "Market status pending" }}</span>
+        </div>
       </aside>
     </div>
   </section>
@@ -258,9 +263,12 @@
         </div>
       </section>
 
-      <div class="form-actions">
-        <button type="submit" class="cta" data-loading-label="Saving...">{{ submit_label }}</button>
-        <a href="{{ back_url }}" class="text-link">Back</a>
+      <div class="form-actions listing-editor-actions">
+        <div>
+          <button type="submit" class="cta" data-loading-label="Saving...">{{ submit_label }}</button>
+          <a href="{{ back_url }}" class="text-link">Back</a>
+        </div>
+        <p class="form-note">Saving returns you to the inventory queue. Published listings update the public catalogue immediately.</p>
       </div>
     </form>
   </section>

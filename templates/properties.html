@@ -24,29 +24,25 @@
         </div>
         <div class="hero-actions masthead-actions">
           <a href="#listing-filters" class="cta">Filter listings</a>
-          <a href="{{ general_whatsapp_url }}" class="text-link text-link-strong" target="_blank" rel="noreferrer">Talk to an advisor</a>
         </div>
       </div>
     </div>
   </section>
 
   <section class="section shell section-tight" data-reveal>
-    <div class="inner-summary-strip catalogue-summary-strip" aria-label="Current listing view">
-      <div>
-        <p class="eyebrow">Current view</p>
-        <p><strong>{{ listings|length }} listing{% if listings|length != 1 %}s{% endif %}</strong> in the live catalogue. Use filters to narrow by district, type, market intent, or availability.</p>
-      </div>
-      <a href="{{ general_whatsapp_url }}" class="text-link text-link-strong" target="_blank" rel="noreferrer">Talk to an advisor</a>
-    </div>
-  </section>
-
-  <section class="section shell section-tight" data-reveal>
-    <details class="filter-panel" open>
+    <details class="filter-panel catalogue-filter-panel" open>
       <summary>
         <span>Filters</span>
         <strong>{{ listings|length }} result{% if listings|length != 1 %}s{% endif %}</strong>
       </summary>
       <form method="get" action="{{ url_for('properties') }}" class="listing-filters" id="listing-filters" aria-label="Filter property listings">
+        <div class="catalogue-filter-head">
+          <div>
+            <p class="eyebrow">Current view</p>
+            <p><strong>{{ listings|length }} listing{% if listings|length != 1 %}s{% endif %}</strong> in the live catalogue.</p>
+          </div>
+          <a href="{{ general_whatsapp_url }}" class="text-link text-link-strong catalogue-advisor-link" target="_blank" rel="noreferrer">Need help shortlisting?</a>
+        </div>
         <div class="form-group">
           <label for="q">Search</label>
           <input type="search" id="q" name="q" value="{{ filters.q }}" placeholder="Ikoyi penthouse, Lekki rent, office">
@@ -114,24 +110,14 @@
   </section>
 
   <section class="section shell section-tight" data-reveal>
-    <div class="objection-strip" aria-label="Listing reassurance">
-      <article>
-        <strong>Before you view</strong>
-        <p>Ask the team to confirm current availability, access timing, and viewing windows.</p>
-      </article>
-      <article>
-        <strong>Price questions</strong>
-        <p>Confirm agency fees, service charges, payment terms, and negotiation room before travelling.</p>
-      </article>
-      <article>
-        <strong>Listing confidence</strong>
-        <p>Verified badges indicate reviewed availability, price, and basic listing details.</p>
-      </article>
-    </div>
-  </section>
-
-  <section class="section shell section-tight" data-reveal>
     {% if listings %}
+      <div class="catalogue-results-head">
+        <div>
+          <p class="eyebrow">Results</p>
+          <h2>{{ listings|length }} property option{% if listings|length != 1 %}s{% endif %}</h2>
+        </div>
+        <a href="{{ general_whatsapp_url }}" class="text-link text-link-strong" target="_blank" rel="noreferrer">Ask for a shortlist</a>
+      </div>
       <div class="property-grid-list">
         {% for listing in listings %}
           <article class="property-card" id="listing-{{ listing.id }}">
@@ -199,6 +185,23 @@
         </div>
       </div>
     {% endif %}
+  </section>
+
+  <section class="section shell section-tight" data-reveal>
+    <div class="objection-strip catalogue-reassurance" aria-label="Listing reassurance">
+      <article>
+        <strong>Before you view</strong>
+        <p>Confirm availability, access timing, and viewing windows.</p>
+      </article>
+      <article>
+        <strong>Price questions</strong>
+        <p>Ask about agency fees, service charges, payment terms, and negotiation room.</p>
+      </article>
+      <article>
+        <strong>Listing confidence</strong>
+        <p>Verified badges mean core listing details have been reviewed.</p>
+      </article>
+    </div>
   </section>
 
   <section class="section shell section-tight" data-reveal>
