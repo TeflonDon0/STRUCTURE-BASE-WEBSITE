@@ -21,7 +21,7 @@ from email.message import EmailMessage
 from email.utils import formataddr, parseaddr
 from functools import wraps
 from pathlib import Path
-from urllib.parse import quote, urlsplit
+from urllib.parse import quote
 
 # Prevent Cloudinary import failure if CLOUDINARY_URL is set but invalid.
 _cloudinary_url_env = os.environ.get("CLOUDINARY_URL", "").strip()
@@ -64,9 +64,21 @@ from PIL import Image, ImageOps, UnidentifiedImageError
 from dotenv import load_dotenv
 from pymongo import ASCENDING, DESCENDING, MongoClient
 from pymongo.errors import PyMongoError
+from security_helpers import (
+    admin_return_target as _admin_return_target,
+    check_admin_credentials as _check_admin_credentials,
+    client_ip as _client_ip,
+    is_default_admin_password as _is_default_admin_password,
+    login_is_rate_limited as _login_is_rate_limited,
+    login_rate_limit_key as _login_rate_limit_key,
+    login_rate_limit_store as _login_rate_limit_store,
+    prune_login_attempts as _prune_login_attempts,
+    record_failed_login as _record_failed_login,
+    reset_failed_login as _reset_failed_login,
+    safe_redirect_target as _safe_redirect_target,
+)
 from werkzeug.exceptions import NotFound, RequestEntityTooLarge
 from werkzeug.middleware.proxy_fix import ProxyFix
-from werkzeug.security import check_password_hash
 from werkzeug.utils import secure_filename
 
 
@@ -1537,8 +1549,7 @@ def site_settings() -> dict[str, str | bool]:
     ]
     using_default_credentials = (
         app.config["ADMIN_USERNAME"] == DEFAULT_ADMIN_USERNAME
-        and not app.config["ADMIN_PASSWORD_HASH"]
-        and app.config["ADMIN_PASSWORD"] == DEFAULT_ADMIN_PASSWORD
+        and admin_password_is_default()
     )
     return {
         "site_name": merged["site_name"],
@@ -1999,38 +2010,30 @@ def is_authenticated() -> bool:
     return bool(session.get("is_admin"))
 
 
+def admin_password_is_default() -> bool:
+    return _is_default_admin_password(app, DEFAULT_ADMIN_PASSWORD)
+
+
 def check_admin_credentials(username: str, password: str) -> bool:
-    if username != app.config["ADMIN_USERNAME"]:
-        return False
-    if app.config["ADMIN_PASSWORD_HASH"]:
-        return check_password_hash(app.config["ADMIN_PASSWORD_HASH"], password)
-    return password == app.config["ADMIN_PASSWORD"]
+    return _check_admin_credentials(
+        app,
+        username,
+        password,
+        DEFAULT_ADMIN_USERNAME,
+        DEFAULT_ADMIN_PASSWORD,
+    )
 
 
 def safe_redirect_target(target: str | None) -> str:
-    if not target:
-        return url_for("dashboard")
-    parsed = urlsplit(target)
-    if parsed.scheme or parsed.netloc:
-        if parsed.netloc and parsed.netloc != request.host:
-            return url_for("dashboard")
-        target = parsed.path or "/"
-        if parsed.query:
-            target = f"{target}?{parsed.query}"
-    if not target.startswith("/") or target.startswith("//"):
-        return url_for("dashboard")
-    return target
+    return _safe_redirect_target(target, request.host, url_for)
 
 
 def admin_return_target(default_endpoint: str) -> str:
-    target = request.form.get("next") if request.method == "POST" else request.args.get("next")
-    if target:
-        return safe_redirect_target(target)
-    return url_for(default_endpoint)
+    return _admin_return_target(default_endpoint, request, url_for)
 
 
 def client_ip() -> str:
-    return request.remote_addr or "unknown"
+    return _client_ip(request)
 
 
 def csrf_token() -> str:
@@ -2042,35 +2045,27 @@ def csrf_token() -> str:
 
 
 def login_rate_limit_store() -> dict[str, list[float]]:
-    return app.extensions.setdefault("login_attempts", {})
+    return _login_rate_limit_store(app)
 
 
 def login_rate_limit_key(username: str) -> str:
-    normalized = username.strip().lower() or "anonymous"
-    return f"{client_ip()}::{normalized}"
+    return _login_rate_limit_key(username, request)
 
 
 def prune_login_attempts(key: str) -> list[float]:
-    cutoff = time.time() - app.config["LOGIN_WINDOW_SECONDS"]
-    attempts = [stamp for stamp in login_rate_limit_store().get(key, []) if stamp >= cutoff]
-    login_rate_limit_store()[key] = attempts
-    return attempts
+    return _prune_login_attempts(app, key, app.config["LOGIN_WINDOW_SECONDS"])
 
 
 def login_is_rate_limited(username: str) -> bool:
-    attempts = prune_login_attempts(login_rate_limit_key(username))
-    return len(attempts) >= app.config["LOGIN_MAX_ATTEMPTS"]
+    return _login_is_rate_limited(app, username, request, app.config["LOGIN_WINDOW_SECONDS"])
 
 
 def record_failed_login(username: str) -> None:
-    key = login_rate_limit_key(username)
-    attempts = prune_login_attempts(key)
-    attempts.append(time.time())
-    login_rate_limit_store()[key] = attempts
+    _record_failed_login(app, username, request)
 
 
 def reset_failed_login(username: str) -> None:
-    login_rate_limit_store().pop(login_rate_limit_key(username), None)
+    _reset_failed_login(app, username, request)
 
 
 def build_content_security_policy(nonce: str) -> str:
