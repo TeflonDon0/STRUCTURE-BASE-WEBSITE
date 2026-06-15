@@ -6978,6 +6978,12 @@ button.cta:not(.cta-secondary):focus-visible {
   margin: 0.25rem 0 0;
 }
 
+.document-legal-note {
+  margin-bottom: 1rem;
+  font-size: 0.94rem;
+  line-height: 1.6;
+}
+
 .document-reference-panel {
   padding: 0;
   overflow: hidden;

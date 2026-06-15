@@ -2,7 +2,10 @@ import os
 
 import pytest
 
-from app import app, all_documents, check_admin_credentials, delete_document_file, delete_document_record, safe_redirect_target
+from pathlib import Path
+
+from app import app, all_documents, check_admin_credentials, delete_document_file, delete_document_record, safe_redirect_target, site_settings
+from document_generation import document_generator_catalog, render_document_pdf, validate_generator_payload
 
 
 @pytest.fixture(autouse=True)
@@ -155,3 +158,30 @@ def test_generated_document_saves_as_final_and_cleans_up(client) -> None:
             for document in created:
                 deleted = delete_document_record(document["id"])
                 delete_document_file(deleted.get("stored_filename"))
+
+
+def test_all_document_templates_render_sample_pdfs(tmp_path: Path) -> None:
+    with app.app_context():
+        settings = site_settings()
+        catalog = document_generator_catalog(settings)
+        for key, template in catalog.items():
+            payload, errors = validate_generator_payload(key, template["sample_payload"], settings)
+            assert errors == []
+            destination = tmp_path / f"{key}.pdf"
+            render_document_pdf(key, f"QA {template['label']}", payload, destination, settings)
+            assert destination.read_bytes().startswith(b"%PDF-")
+            assert destination.stat().st_size > 10_000
+
+
+def test_legal_templates_include_compliance_controls() -> None:
+    with app.app_context():
+        settings = site_settings()
+        catalog = document_generator_catalog(settings)
+        for key in ("tenancy_agreement", "sale_agreement", "lease_notice", "management_agreement"):
+            payload, errors = validate_generator_payload(key, catalog[key]["sample_payload"], settings)
+            assert errors == []
+            assert payload["legal_basis"]
+            assert payload["statutory_notes"]
+            assert payload["execution_notes"]
+            assert payload["governing_law"]
+            assert payload["lawyer_review_note"]

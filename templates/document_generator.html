@@ -35,6 +35,12 @@
             <p class="form-note">Choose a template, complete the required details, preview the PDF, then save the final file to the archive.</p>
           </div>
 
+          {% if selected_template in ['payment_receipt', 'inspection_report', 'maintenance_work_order', 'lease_notice', 'management_agreement', 'tenancy_agreement', 'sale_agreement'] %}
+            <div class="admin-settings-note document-legal-note" role="note">
+              This template includes Lagos/Nigeria property compliance prompts, but it is still a drafting aid. Confirm the current law, title facts, notice period, parties, schedules, and execution requirements with a Nigerian property lawyer before formal use.
+            </div>
+          {% endif %}
+
           <div class="form-row">
             <div class="form-group">
               <label for="template_key">Template</label>

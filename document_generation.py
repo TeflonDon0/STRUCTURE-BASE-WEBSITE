@@ -41,6 +41,15 @@ PDF_LOGO_CANDIDATES = (
     STATIC_DIR / "images" / "logo-mark.webp",
 )
 EMBEDDED_IMAGE_RE = re.compile(r'href="data:image/(?P<format>[A-Za-z0-9.+-]+);base64,(?P<data>[A-Za-z0-9+/=]+)"')
+LEGAL_CONTROL_TEMPLATE_KEYS = {
+    "payment_receipt",
+    "inspection_report",
+    "maintenance_work_order",
+    "lease_notice",
+    "management_agreement",
+    "tenancy_agreement",
+    "sale_agreement",
+}
 
 
 def _pdf_logo_path() -> Path | None:
@@ -1217,6 +1226,149 @@ def _normalize_string_sections(values: Any) -> list[dict[str, Any]]:
     return sections
 
 
+def _default_legal_controls(template_key: str) -> dict[str, Any]:
+    if template_key == "payment_receipt":
+        return {
+            "legal_basis": [
+                "For rent-related payments in Lagos, issue and retain a receipt containing the date received, names and addresses of landlord and tenant, premises description, amount received, and period covered.",
+                "Classify payments clearly as rent, service charge, caution deposit, utilities, agency fee, legal fee, or other approved charge.",
+            ],
+            "statutory_notes": [
+                "This receipt confirms payment only for the items listed and does not waive outstanding rent, charges, damage claims, or reconciliation items unless expressly stated.",
+                "Cash or transfer payments should be reconciled against bank records or signed acknowledgement before being treated as cleared funds.",
+            ],
+            "execution_notes": [
+                "Keep a copy with the tenancy, finance, and property-management records.",
+                "Where the payment relates to rent, confirm the payment period and premises are stated before issuing.",
+            ],
+            "governing_law": "Laws applicable in Lagos State and the Federal Republic of Nigeria, as relevant to the payment and premises.",
+            "dispute_resolution": "Payment or reconciliation disputes should first be escalated in writing with supporting bank or receipt evidence.",
+        }
+    if template_key == "inspection_report":
+        return {
+            "legal_basis": [
+                "Inspection records should be read with the tenancy, inventory, handover, and estate rules applicable to the premises.",
+                "This report is not a structural survey, valuation, title report, or statutory building-compliance certificate.",
+            ],
+            "statutory_notes": [
+                "Attach photographs, meter readings, key/access-card records, and signed inventory schedules where the inspection affects deposit, repair, or handover decisions.",
+                "Material safety issues should be escalated promptly to the owner, manager, tenant, vendor, or competent authority as appropriate.",
+            ],
+            "execution_notes": [
+                "Inspector and receiving party should sign or acknowledge the report where it will support handover, deposit, or repair decisions.",
+                "Unresolved defects should be converted into a maintenance ticket or written remedial schedule.",
+            ],
+            "governing_law": "Applicable Lagos State and Nigerian property, safety, contract, and tenancy principles.",
+            "dispute_resolution": "Condition disputes should be reviewed against photographs, inventory schedules, handover records, and written correspondence.",
+        }
+    if template_key == "maintenance_work_order":
+        return {
+            "legal_basis": [
+                "Vendor attendance is subject to property access rules, estate safety requirements, and the authority limits agreed with the owner or manager.",
+                "Emergency work should be limited to preventing injury, further damage, service failure, or asset loss unless wider approval is obtained.",
+            ],
+            "statutory_notes": [
+                "The vendor is responsible for safe work methods, competent personnel, and compliance with applicable building, electrical, plumbing, occupational-safety, and estate rules.",
+                "Where works may affect structure, title, statutory approvals, or regulated services, obtain owner and professional approval before execution.",
+            ],
+            "execution_notes": [
+                "Vendor must confirm attendance, completion status, replaced parts, photographs, and any unresolved risks before close-out.",
+                "Costs above the stated approval limit or outside assigned scope require written approval before commitment except in genuine emergency.",
+            ],
+            "governing_law": "Applicable Lagos State and Nigerian contract, property, safety, and service-provider obligations.",
+            "dispute_resolution": "Vendor disputes should be escalated with work photographs, attendance notes, quote approvals, and completion evidence.",
+        }
+    if template_key == "lease_notice":
+        return {
+            "legal_basis": [
+                "Check the applicable tenancy instrument and Lagos tenancy/recovery framework before relying on this notice.",
+                "Where the 2011 Lagos Tenancy Law applies, confirm whether the premises falls within or outside excluded areas and whether any newer enacted law has changed the position.",
+                "Rent review, renewal, termination, and recovery steps should follow the contract, statutory notice requirements, and court process where applicable.",
+            ],
+            "statutory_notes": [
+                "This notice is subject to contract unless expressly issued as a binding statutory or contractual notice by an authorised party.",
+                "Do not use this form as a recovery, quit, or owner-intention notice unless a legal adviser confirms the correct statutory wording and notice period.",
+                "Any rent or service-charge change should be supported by the tenancy terms, written agreement, or applicable law.",
+            ],
+            "execution_notes": [
+                "Serve the notice through the delivery method permitted by the tenancy and keep evidence of service.",
+                "Confirm the tenant name, premises, tenancy term, response deadline, and authority of the signatory before issue.",
+            ],
+            "governing_law": "Laws of Lagos State and the Federal Republic of Nigeria, subject to the applicable tenancy contract.",
+            "dispute_resolution": "Disputes should first be addressed through written engagement, then the forum or court process required by the tenancy and applicable law.",
+        }
+    if template_key == "management_agreement":
+        return {
+            "legal_basis": [
+                "Real estate agency and management activity in Lagos should be checked against LASRERA registration, disclosure, and transaction-compliance requirements.",
+                "Client-money handling, rent collection, vendor appointment, and expenditure authority should be documented and reconciled.",
+            ],
+            "statutory_notes": [
+                "Manager must act within written authority and should not bind the owner to sale, lease, concession, settlement, or major expenditure outside the approved authority matrix.",
+                "Fees, retainers, commissions, reimbursements, taxes, and third-party costs should be stated before execution.",
+                "The agreement should include confidentiality, data protection, insurance, indemnity, conflict-of-interest, and termination provisions appropriate to the appointment.",
+            ],
+            "execution_notes": [
+                "Attach schedules for managed property, approval limits, service standards, reporting cadence, bank/client-account details, and fee schedule.",
+                "Confirm LASRERA status and any client-specific compliance obligations before signing.",
+            ],
+            "governing_law": "Laws of Lagos State and the Federal Republic of Nigeria.",
+            "dispute_resolution": "Management disputes should first be escalated by written notice, then resolved through the agreed court, mediation, arbitration, or regulatory process.",
+        }
+    if template_key == "tenancy_agreement":
+        return {
+            "legal_basis": [
+                "Check the Lagos Tenancy Law framework, any enacted replacement law, and the location of the premises before execution.",
+                "Under the 2011 Lagos Tenancy Law framework, some high-value areas were excluded; confirm whether Ikoyi, Victoria Island, Ikeja GRA, Apapa, or any other excluded/special area applies.",
+                "Rent-in-advance limits, receipt requirements, recovery procedure, and notice periods must be checked against the current law and final tenancy type.",
+            ],
+            "statutory_notes": [
+                "Landlord should issue rent receipts stating date received, landlord and tenant details, premises, amount, and period covered where rent is paid.",
+                "Security deposit/caution deposit treatment, deductions, inventory reconciliation, and refund timing should be stated clearly.",
+                "Recovery of possession should only follow the applicable notice and court procedure; self-help eviction, unlawful lockout, or seizure of tenant goods should not be used.",
+                "Service charge, utility, diesel, estate, legal, agency, and other payments should be separated from rent where applicable.",
+            ],
+            "execution_notes": [
+                "Attach inventory, meter readings, house rules, service-charge schedule, deposit schedule, and evidence of authority to let.",
+                "Each party should sign with date, witness name, address, and occupation where formal execution is required.",
+                "Final document should be reviewed by a Nigerian property lawyer before use for execution or enforcement.",
+            ],
+            "governing_law": "Laws of Lagos State and the Federal Republic of Nigeria.",
+            "dispute_resolution": "Tenancy disputes should follow the agreed dispute clause and any mandatory Lagos tenancy/recovery process then in force.",
+        }
+    if template_key == "sale_agreement":
+        return {
+            "legal_basis": [
+                "Land transactions in Nigeria must be checked against the Land Use Act, state consent/perfection requirements, registration rules, taxes, and title due diligence.",
+                "Governor's consent, right of occupancy, deed registration, stamp duties, capital gains tax, land use charge, and perfection costs should be allocated before completion.",
+            ],
+            "statutory_notes": [
+                "Buyer should complete title verification before balance payment, including root of title, survey plan, encumbrances, planning status, possession, and seller authority.",
+                "Seller warranties should cover authority, title documents, encumbrances, possession, pending litigation, unpaid taxes/charges, and absence of undisclosed third-party interests.",
+                "Completion should define escrow/deposit treatment, default interest or forfeiture/refund position, document exchange, possession, and post-completion perfection obligations.",
+            ],
+            "execution_notes": [
+                "Attach title documents, survey plan, tax/perfection-cost schedule, completion checklist, board/resolution evidence where a company is party, and adviser review notes.",
+                "Do not rely on this template as final conveyance documentation without lawyer-prepared deeds and title review.",
+            ],
+            "governing_law": "Laws of the Federal Republic of Nigeria and the state where the property is located.",
+            "dispute_resolution": "Transaction disputes should follow the negotiated dispute clause, usually written notice followed by court or arbitration in the agreed Nigerian forum.",
+        }
+    return {}
+
+
+def _normalize_legal_controls(template_key: str, payload: dict[str, Any]) -> None:
+    if template_key not in LEGAL_CONTROL_TEMPLATE_KEYS:
+        return
+    defaults = _default_legal_controls(template_key)
+    for key in ("legal_basis", "statutory_notes", "execution_notes"):
+        value = payload.get(key)
+        payload[key] = [_as_string(item) for item in (value if isinstance(value, list) else defaults.get(key, [])) if _as_string(item)]
+    payload["governing_law"] = _as_string(payload.get("governing_law")) or str(defaults.get("governing_law") or "")
+    payload["dispute_resolution"] = _as_string(payload.get("dispute_resolution")) or str(defaults.get("dispute_resolution") or "")
+    payload["lawyer_review_note"] = _as_string(payload.get("lawyer_review_note")) or "Drafting aid only. Have a Nigerian property lawyer review the final document, parties, title, notices, statutory position, and execution requirements before use."
+
+
 def validate_generator_payload(template_key: str, raw_payload: dict[str, Any], site_settings: dict[str, Any]) -> tuple[dict[str, Any], list[str]]:
     catalog = document_generator_catalog(site_settings)
     template = catalog.get(template_key)
@@ -1690,6 +1842,7 @@ def validate_generator_payload(template_key: str, raw_payload: dict[str, Any], s
         payload["default_remedies"] = [_as_string(item) for item in payload.get("default_remedies") or [] if _as_string(item)]
         payload["transaction_steps"] = _normalize_schedule_rows(payload.get("transaction_steps"), required_keys=("step", "detail"))
 
+    _normalize_legal_controls(template_key, payload)
     payload["signatories"] = _normalize_signatories(payload)
     return payload, errors
 
@@ -2300,6 +2453,24 @@ def _render_delivery_checklist(builder: PremiumPdfBuilder, payload: dict[str, An
     return story
 
 
+def _append_legal_controls(story: list[Any], builder: PremiumPdfBuilder, payload: dict[str, Any]) -> None:
+    if payload.get("legal_basis"):
+        story.extend([builder.paragraph("Legal and statutory basis", "section"), builder.bullet_list(payload["legal_basis"])])
+    if payload.get("statutory_notes"):
+        story.extend([builder.paragraph("Compliance notes", "section"), builder.bullet_list(payload["statutory_notes"])])
+    if payload.get("execution_notes"):
+        story.extend([builder.paragraph("Execution checklist", "section"), builder.bullet_list(payload["execution_notes"])])
+    law_rows = []
+    if payload.get("governing_law"):
+        law_rows.append(("Governing law", payload["governing_law"]))
+    if payload.get("dispute_resolution"):
+        law_rows.append(("Dispute handling", payload["dispute_resolution"]))
+    if payload.get("lawyer_review_note"):
+        law_rows.append(("Legal review", payload["lawyer_review_note"]))
+    if law_rows:
+        story.extend([builder.paragraph("Legal controls", "section"), builder.meta_table(law_rows)])
+
+
 def _render_payment_receipt(builder: PremiumPdfBuilder, payload: dict[str, Any]) -> list[Any]:
     story = _document_header(builder, payload, builder.title, "Official payment receipt")
     issuer_block = {
@@ -2361,6 +2532,7 @@ def _render_payment_receipt(builder: PremiumPdfBuilder, payload: dict[str, Any])
     story.extend([builder.spacer(3), totals])
     if payload.get("notes"):
         story.extend([builder.paragraph("Confirmation notes", "section"), builder.bullet_list(payload["notes"])])
+    _append_legal_controls(story, builder, payload)
     if payload.get("signatories"):
         story.extend([builder.spacer(6), builder.signature_table(payload["signatories"])])
     return story
@@ -2405,6 +2577,7 @@ def _render_inspection_report(builder: PremiumPdfBuilder, payload: dict[str, Any
         ])
     if payload.get("recommendations"):
         story.extend([builder.paragraph("Recommendations", "section"), builder.bullet_list(payload["recommendations"])])
+    _append_legal_controls(story, builder, payload)
     if payload.get("signatories"):
         story.extend([builder.spacer(6), builder.signature_table(payload["signatories"])])
     return story
@@ -2450,6 +2623,7 @@ def _render_maintenance_work_order(builder: PremiumPdfBuilder, payload: dict[str
         story.extend([builder.paragraph("Site access and instructions", "section"), builder.bullet_list(payload["site_notes"])])
     if payload.get("completion_requirements"):
         story.extend([builder.paragraph("Completion requirements", "section"), builder.bullet_list(payload["completion_requirements"])])
+    _append_legal_controls(story, builder, payload)
     if payload.get("signatories"):
         story.extend([builder.spacer(6), builder.signature_table(payload["signatories"])])
     return story
@@ -2494,6 +2668,7 @@ def _render_lease_notice(builder: PremiumPdfBuilder, payload: dict[str, Any]) ->
         story.extend([builder.paragraph("Response instructions", "section"), builder.bullet_list(payload["next_steps"])])
     if payload.get("special_conditions"):
         story.extend([builder.paragraph("Special conditions", "section"), builder.bullet_list(payload["special_conditions"])])
+    _append_legal_controls(story, builder, payload)
     if payload.get("signatories"):
         story.extend([builder.spacer(6), builder.signature_table(payload["signatories"])])
     return story
@@ -2561,6 +2736,7 @@ def _render_management_agreement(builder: PremiumPdfBuilder, payload: dict[str, 
         story.extend([builder.paragraph("Termination events", "section"), builder.bullet_list(payload["termination_events"])])
     if payload.get("special_conditions"):
         story.extend([builder.paragraph("Special conditions", "section"), builder.bullet_list(payload["special_conditions"])])
+    _append_legal_controls(story, builder, payload)
     if payload.get("signatories"):
         story.extend([builder.spacer(6), builder.signature_table(payload["signatories"])])
     return story
@@ -2620,6 +2796,7 @@ def _render_tenancy_agreement(builder: PremiumPdfBuilder, payload: dict[str, Any
         story.extend([builder.paragraph("Default and remedies", "section"), builder.bullet_list(payload["default_events"])])
     if payload.get("special_conditions"):
         story.extend([builder.paragraph("Special conditions", "section"), builder.bullet_list(payload["special_conditions"])])
+    _append_legal_controls(story, builder, payload)
     if payload.get("signatories"):
         story.extend([builder.spacer(6), builder.signature_table(payload["signatories"])])
     return story
@@ -2681,6 +2858,7 @@ def _render_sale_agreement(builder: PremiumPdfBuilder, payload: dict[str, Any]) 
         story.extend([builder.paragraph("Costs, taxes, and perfection expenses", "section"), builder.bullet_list(payload["costs_and_taxes"])])
     if payload.get("default_remedies"):
         story.extend([builder.paragraph("Default and remedies", "section"), builder.bullet_list(payload["default_remedies"])])
+    _append_legal_controls(story, builder, payload)
     if payload.get("signatories"):
         story.extend([builder.spacer(6), builder.signature_table(payload["signatories"])])
     return story
