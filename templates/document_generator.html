@@ -9,36 +9,15 @@
     <div class="shell admin-module-hero-shell">
       <div>
         <p class="eyebrow">PDF generator</p>
-        <h1>Generate branded PDFs for billing, receipts, inspections, work orders, notices, agreements, proposals, checklists, and formal letterhead.</h1>
+        <h1>Generate branded PDFs.</h1>
         <p class="page-intro">
-          Create branded PDFs for billing, receipts, inspections, work orders, notices, agreements, proposals, checklists, and formal letters.
+          Create billing files, receipts, inspections, work orders, notices, agreements, proposals, checklists, and formal letters from guided templates.
         </p>
       </div>
       <div class="admin-module-actions">
         <a href="{{ url_for('document_generator_spec') }}" class="cta cta-outline">Open template guide</a>
         <a href="{{ back_url }}" class="text-link">Back to documents</a>
       </div>
-    </div>
-  </section>
-
-  <section class="section shell section-tight">
-    <div class="admin-chip-grid">
-      <article class="admin-chip-link admin-chip-static">
-        <span>Build flow</span>
-        <strong>{{ generator_spec.render_pipeline|length }} stages</strong>
-      </article>
-      <article class="admin-chip-link admin-chip-static">
-        <span>Template checks</span>
-        <strong>{{ generator_spec.validation_rules|length }} shared checks</strong>
-      </article>
-      <article class="admin-chip-link admin-chip-static">
-        <span>Quality checks</span>
-        <strong>{{ generator_spec.acceptance_criteria|length }} release checks</strong>
-      </article>
-      <article class="admin-chip-link admin-chip-static">
-        <span>Current release</span>
-        <strong>{{ generator_spec.version }}</strong>
-      </article>
     </div>
   </section>
 
@@ -53,7 +32,7 @@
               <p class="form-section-kicker">Document setup</p>
               <h2>Template and file details</h2>
             </div>
-            <p class="form-note">Choose the template first, then complete the main business fields. The advanced editor stays available when you need tighter control.</p>
+            <p class="form-note">Choose a template, complete the required details, preview the PDF, then save the final file to the archive.</p>
           </div>
 
           <div class="form-row">
@@ -208,11 +187,23 @@
           </div>
         </details>
 
-        <div class="form-actions">
-          <button type="submit" class="cta" data-loading-label="Creating PDF...">Create PDF and save it</button>
-          <a href="{{ url_for('generate_document_pdf', template_key=selected_template) }}" class="cta cta-outline">Reset template defaults</a>
+        <div class="form-actions document-generator-actions">
+          <button
+            type="submit"
+            class="cta cta-outline"
+            formaction="{{ url_for('preview_generated_document_pdf') }}"
+            formtarget="_blank"
+            data-loading-label="Opening preview..."
+          >
+            Preview PDF
+          </button>
+          <button type="submit" class="cta" data-loading-label="Saving final...">Save final PDF</button>
+          <a href="{{ url_for('generate_document_pdf', template_key=selected_template) }}" class="text-link">Reset</a>
           <a href="{{ back_url }}" class="text-link">Back</a>
         </div>
+        <p class="form-note document-final-note">
+          Preview opens without saving. Save final PDF only after the content has been reviewed.
+        </p>
       </form>
 
       <aside class="document-generator-sidebar">
@@ -240,93 +231,77 @@
           </ul>
         </article>
 
-        <article class="admin-panel admin-panel-subtle">
-          <div class="admin-panel-head">
-            <div>
-              <p class="dashboard-section-kicker">Shared sections</p>
-              <h2>What this template includes</h2>
-            </div>
-          </div>
-          <ul class="document-plan-list">
-            {% for item in active_template.reusable_components %}
-              <li>{{ item }}</li>
-            {% endfor %}
-          </ul>
-        </article>
+        <details class="admin-panel admin-panel-subtle document-reference-panel">
+          <summary class="document-advanced-summary">
+            <span>
+              <span class="dashboard-section-kicker">Reference</span>
+              <strong>Template details</strong>
+            </span>
+            <span class="document-advanced-summary-copy">Fields, checks, and build notes.</span>
+          </summary>
 
-        <article class="admin-panel admin-panel-subtle">
-          <div class="admin-panel-head">
-            <div>
-              <p class="dashboard-section-kicker">Template fields</p>
-              <h2>Field reference</h2>
+          <div class="document-reference-content">
+            <div class="admin-panel-head">
+              <div>
+                <p class="dashboard-section-kicker">Shared sections</p>
+                <h2>Included blocks</h2>
+              </div>
             </div>
+            <ul class="document-plan-list">
+              {% for item in active_template.reusable_components %}
+                <li>{{ item }}</li>
+              {% endfor %}
+            </ul>
+
+            <div class="admin-panel-head">
+              <div>
+                <p class="dashboard-section-kicker">Checks</p>
+                <h2>Required content</h2>
+              </div>
+            </div>
+            <ul class="document-plan-list">
+              {% for item in active_template.validation_rules %}
+                <li>{{ item }}</li>
+              {% endfor %}
+            </ul>
           </div>
-          <div class="document-schema-table">
-            <table>
-              <thead>
-                <tr>
-                  <th>Field</th>
-                  <th>Type</th>
-                  <th>Required</th>
-                </tr>
-              </thead>
-              <tbody>
-                {% for field in active_template.field_schema %}
+        </details>
+
+        <details class="admin-panel admin-panel-subtle document-reference-panel">
+          <summary class="document-advanced-summary">
+            <span>
+              <span class="dashboard-section-kicker">Advanced</span>
+              <strong>Field reference</strong>
+            </span>
+            <span class="document-advanced-summary-copy">For direct template data edits.</span>
+          </summary>
+
+          <div class="document-reference-content">
+            <div class="document-schema-table">
+              <table>
+                <thead>
                   <tr>
-                    <td><code>{{ field.path }}</code></td>
-                    <td>{{ field.type }}</td>
-                    <td>{{ "Yes" if field.required else "No" }}</td>
+                    <th>Field</th>
+                    <th>Type</th>
+                    <th>Required</th>
                   </tr>
-                  <tr class="document-schema-desc">
-                    <td colspan="3">{{ field.description }}</td>
-                  </tr>
-                {% endfor %}
-              </tbody>
-            </table>
-          </div>
-        </article>
-
-        <article class="admin-panel admin-panel-subtle">
-          <div class="admin-panel-head">
-            <div>
-              <p class="dashboard-section-kicker">Checks</p>
-              <h2>What must be present</h2>
+                </thead>
+                <tbody>
+                  {% for field in active_template.field_schema %}
+                    <tr>
+                      <td><code>{{ field.path }}</code></td>
+                      <td>{{ field.type }}</td>
+                      <td>{{ "Yes" if field.required else "No" }}</td>
+                    </tr>
+                    <tr class="document-schema-desc">
+                      <td colspan="3">{{ field.description }}</td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
             </div>
           </div>
-          <ul class="document-plan-list">
-            {% for item in active_template.validation_rules %}
-              <li>{{ item }}</li>
-            {% endfor %}
-          </ul>
-        </article>
-
-        <article class="admin-panel admin-panel-subtle">
-          <div class="admin-panel-head">
-            <div>
-              <p class="dashboard-section-kicker">Ready when</p>
-              <h2>Quality checks</h2>
-            </div>
-          </div>
-          <ul class="document-plan-list">
-            {% for item in active_template.acceptance_criteria %}
-              <li>{{ item }}</li>
-            {% endfor %}
-          </ul>
-        </article>
-
-        <article class="admin-panel admin-panel-subtle">
-          <div class="admin-panel-head">
-            <div>
-              <p class="dashboard-section-kicker">Build flow</p>
-              <h2>How the document is assembled</h2>
-            </div>
-          </div>
-          <ol class="document-plan-list document-plan-list-numbered">
-            {% for item in generator_spec.render_pipeline %}
-              <li>{{ item }}</li>
-            {% endfor %}
-          </ol>
-        </article>
+        </details>
       </aside>
     </div>
   </section>

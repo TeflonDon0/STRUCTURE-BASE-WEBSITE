@@ -33,6 +33,7 @@ if (backToTop) {
 
 if (nav && toggle) {
   const mobileNavQuery = window.matchMedia("(max-width: 860px)");
+  let focusBeforeNavOpen = null;
 
   const syncNavAvailability = (open) => {
     const shouldHideNav = mobileNavQuery.matches && !open;
@@ -48,17 +49,36 @@ if (nav && toggle) {
   };
 
   const closeNav = () => {
+    const wasOpen = nav.classList.contains("open");
     nav.classList.remove("open");
     syncToggleLabel(false);
+    if (wasOpen && focusBeforeNavOpen && document.contains(focusBeforeNavOpen)) {
+      focusBeforeNavOpen.focus({ preventScroll: true });
+    }
+    focusBeforeNavOpen = null;
   };
 
   toggle.addEventListener("click", () => {
+    const wasOpen = nav.classList.contains("open");
+    if (!wasOpen) {
+      focusBeforeNavOpen = document.activeElement;
+    }
     const open = nav.classList.toggle("open");
     syncToggleLabel(open);
+    if (open) {
+      window.setTimeout(() => {
+        nav.querySelector("a, button")?.focus({ preventScroll: true });
+      }, 120);
+    } else {
+      focusBeforeNavOpen = null;
+    }
   });
 
   nav.querySelectorAll("a").forEach((link) => {
-    link.addEventListener("click", closeNav);
+    link.addEventListener("click", () => {
+      focusBeforeNavOpen = null;
+      closeNav();
+    });
   });
 
   document.addEventListener("keydown", (event) => {

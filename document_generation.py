@@ -1847,6 +1847,15 @@ class PremiumPdfBuilder:
                 textColor=self.brand["muted"],
                 alignment=TA_CENTER,
             ),
+            "status_label": ParagraphStyle(
+                "status_label",
+                parent=base["BodyText"],
+                fontName="Helvetica-Bold",
+                fontSize=8,
+                leading=10,
+                textColor=colors.white,
+                alignment=TA_CENTER,
+            ),
         }
 
     def _build_doc(self) -> BaseDocTemplate:
@@ -1867,7 +1876,9 @@ class PremiumPdfBuilder:
         width, height = A4
         canvas.saveState()
         canvas.setFillColor(self.brand["primary"])
-        canvas.rect(0, height - (12 * mm), width, 12 * mm, stroke=0, fill=1)
+        canvas.rect(0, height - (13 * mm), width, 13 * mm, stroke=0, fill=1)
+        canvas.setFillColor(self.brand["accent"])
+        canvas.rect(0, height - (14.5 * mm), width, 1.5 * mm, stroke=0, fill=1)
         if self.logo_reader is not None:
             try:
                 max_logo_width = 32 * mm
@@ -1904,7 +1915,7 @@ class PremiumPdfBuilder:
             title_x = doc.leftMargin
         canvas.setFillColor(colors.white)
         canvas.setFont("Helvetica-Bold", 12)
-        canvas.drawString(title_x, height - 8 * mm, str(self.site_settings.get("site_name") or "Structurebase"))
+        canvas.drawString(title_x, height - 8.5 * mm, str(self.site_settings.get("site_name") or "Structurebase"))
 
         footer_primary = str(
             self.payload.get("legal_footer", {}).get("text") or self.site_settings.get("footer_summary") or ""
@@ -2022,13 +2033,29 @@ class PremiumPdfBuilder:
             title_bits = [bit for bit in [signatory.get("label"), signatory.get("name"), signatory.get("role")] if bit]
             text = "<br/>".join(
                 [
-                    "<font color='#5b615d'>______________________________</font>",
+                    "<font color='#5b615d'>Signature</font><br/><font color='#5b615d'>______________________________</font>",
                     *title_bits,
                 ]
             )
             columns.append(self.paragraph(text, "body"))
-        table = Table([columns], colWidths=[self.doc.width / max(len(columns), 1)] * max(len(columns), 1))
-        table.setStyle(TableStyle([("VALIGN", (0, 0), (-1, -1), "TOP")]))
+        table = Table(
+            [columns],
+            colWidths=[self.doc.width / max(len(columns), 1)] * max(len(columns), 1),
+            rowHeights=[21 * mm],
+        )
+        table.setStyle(
+            TableStyle(
+                [
+                    ("VALIGN", (0, 0), (-1, -1), "TOP"),
+                    ("BACKGROUND", (0, 0), (-1, -1), self.brand["panel"]),
+                    ("BOX", (0, 0), (-1, -1), 0.45, self.brand["line"]),
+                    ("LEFTPADDING", (0, 0), (-1, -1), 10),
+                    ("RIGHTPADDING", (0, 0), (-1, -1), 10),
+                    ("TOPPADDING", (0, 0), (-1, -1), 8),
+                    ("BOTTOMPADDING", (0, 0), (-1, -1), 7),
+                ]
+            )
+        )
         return table
 
 
@@ -2038,8 +2065,17 @@ def _document_header(builder: PremiumPdfBuilder, payload: dict[str, Any], title:
         meta_rows.append(("Due date", payload["due_date"]))
     if payload.get("valid_until"):
         meta_rows.append(("Valid until", payload["valid_until"]))
+    status_value = str(payload.get("document_status") or "").strip()
+    generated_value = str(payload.get("generated_at") or "").strip()
+    if status_value or generated_value:
+        status_bits = []
+        if status_value:
+            status_bits.append(status_value)
+        if generated_value:
+            status_bits.append(f"Generated {generated_value[:19].replace('T', ' ')}")
+        meta_rows.append(("Status", " - ".join(status_bits)))
     story: list[Any] = [
-        builder.paragraph("Prepared document", "eyebrow"),
+        builder.paragraph(f"{payload.get('document_status') or 'Prepared'} document", "eyebrow"),
         builder.paragraph(title, "title"),
     ]
     if subtitle:
@@ -2124,7 +2160,20 @@ def _render_billing(builder: PremiumPdfBuilder, payload: dict[str, Any]) -> list
         colWidths=[30 * mm, 45 * mm],
         hAlign="RIGHT",
     )
-    totals.setStyle(TableStyle([("ALIGN", (1, 0), (1, -1), "RIGHT"), ("BOTTOMPADDING", (0, 0), (-1, -1), 6)]))
+    totals.setStyle(
+        TableStyle(
+            [
+                ("BACKGROUND", (0, 0), (-1, -1), builder.brand["panel"]),
+                ("BOX", (0, 0), (-1, -1), 0.45, builder.brand["line"]),
+                ("LINEABOVE", (0, -1), (-1, -1), 0.6, builder.brand["accent"]),
+                ("ALIGN", (1, 0), (1, -1), "RIGHT"),
+                ("LEFTPADDING", (0, 0), (-1, -1), 8),
+                ("RIGHTPADDING", (0, 0), (-1, -1), 8),
+                ("TOPPADDING", (0, 0), (-1, -1), 7),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 7),
+            ]
+        )
+    )
     story.append(totals)
     if payload.get("payment_instructions"):
         story.extend([builder.paragraph("Payment instructions", "section"), builder.bullet_list(payload["payment_instructions"])])
@@ -2296,7 +2345,19 @@ def _render_payment_receipt(builder: PremiumPdfBuilder, payload: dict[str, Any])
         colWidths=[38 * mm, 50 * mm],
         hAlign="RIGHT",
     )
-    totals.setStyle(TableStyle([("ALIGN", (1, 0), (1, -1), "RIGHT")]))
+    totals.setStyle(
+        TableStyle(
+            [
+                ("BACKGROUND", (0, 0), (-1, -1), builder.brand["panel"]),
+                ("BOX", (0, 0), (-1, -1), 0.45, builder.brand["line"]),
+                ("ALIGN", (1, 0), (1, -1), "RIGHT"),
+                ("LEFTPADDING", (0, 0), (-1, -1), 8),
+                ("RIGHTPADDING", (0, 0), (-1, -1), 8),
+                ("TOPPADDING", (0, 0), (-1, -1), 7),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 7),
+            ]
+        )
+    )
     story.extend([builder.spacer(3), totals])
     if payload.get("notes"):
         story.extend([builder.paragraph("Confirmation notes", "section"), builder.bullet_list(payload["notes"])])

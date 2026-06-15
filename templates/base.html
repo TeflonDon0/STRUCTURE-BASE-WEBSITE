@@ -33,7 +33,7 @@
   <link rel="icon" type="image/png" sizes="192x192" href="{{ static_asset_url('images/icon-192.png') }}">
   <link rel="shortcut icon" href="{{ static_asset_url('images/icon-192.png') }}">
   <link rel="apple-touch-icon" href="{{ static_asset_url('images/apple-touch-icon.png') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=1.3">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=1.4">
   {% block head_extras %}{% endblock %}
   <script src="{{ static_asset_url('site.js') }}" defer></script>
   {% block structured_data %}{% endblock %}
@@ -43,6 +43,27 @@
   <a href="#main" class="skip-link">Skip to main content</a>
   {% set admin_shell = is_authenticated and request.path.startswith('/dashboard') %}
   {% set auth_shell = request.endpoint == 'login' and not is_authenticated %}
+  {% set admin_primary_label = "New listing" %}
+  {% set admin_primary_href = url_for('create_listing', next=request.full_path.rstrip('?')) %}
+  {% if request.endpoint in ['admin_finance', 'create_finance_record'] %}
+    {% set admin_primary_label = "New financial record" %}
+    {% set admin_primary_href = url_for('create_finance_record', next=request.full_path.rstrip('?')) %}
+  {% elif request.endpoint in ['admin_documents', 'create_document'] %}
+    {% set admin_primary_label = "Upload document" %}
+    {% set admin_primary_href = url_for('create_document', next=request.full_path.rstrip('?')) %}
+  {% elif request.endpoint == 'generate_document_pdf' %}
+    {% set admin_primary_label = "Upload document" %}
+    {% set admin_primary_href = url_for('create_document', next=url_for('admin_documents')) %}
+  {% elif request.endpoint == 'admin_maintenance' %}
+    {% set admin_primary_label = "Open request form" %}
+    {% set admin_primary_href = url_for('tenant_services') %}
+  {% elif request.endpoint in ['admin_settings', 'communication_preview', 'communication_preview_frame'] %}
+    {% set admin_primary_label = "Preview communications" %}
+    {% set admin_primary_href = url_for('communication_preview') %}
+  {% elif request.endpoint == 'admin_enquiries' %}
+    {% set admin_primary_label = "Back to overview" %}
+    {% set admin_primary_href = url_for('dashboard') %}
+  {% endif %}
   {% set public_nav_items = [
   {
   'label': 'Home',
@@ -111,8 +132,7 @@
 
         <div class="nav-mobile-utility stack-mobile">
           <a href="{{ url_for('home') }}" class="text-link">View site</a>
-          <a href="{{ url_for('create_listing', next=request.full_path.rstrip('?')) }}" class="cta cta-small">New
-            listing</a>
+          <a href="{{ admin_primary_href }}" class="cta cta-small">{{ admin_primary_label }}</a>
           <form method="post" action="{{ url_for('logout') }}" class="nav-mobile-form">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <button type="submit" class="cta cta-small cta-outline" data-loading-label="Signing out...">Logout</button>
@@ -148,8 +168,8 @@
       {% elif admin_shell %}
       <div class="header-auth">
         <a href="{{ url_for('home') }}" class="text-link">View site</a>
-        <a href="{{ url_for('create_listing', next=request.full_path.rstrip('?')) }}"
-          class="cta cta-small header-cta">New listing</a>
+        <a href="{{ admin_primary_href }}"
+          class="cta cta-small header-cta">{{ admin_primary_label }}</a>
         <form method="post" action="{{ url_for('logout') }}" class="header-logout">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
           <button type="submit" class="cta cta-small cta-outline" data-loading-label="Signing out...">Logout</button>

@@ -175,6 +175,10 @@
     {% else %}
       <div class="empty-state dashboard-empty-state">
         <p>No finance records match the current filters.</p>
+        <div class="dashboard-empty-actions">
+          <a href="{{ url_for('admin_finance') }}" class="cta cta-small cta-outline">Clear filters</a>
+          <a href="{{ url_for('create_finance_record', next=next_url) }}" class="cta cta-small">New financial record</a>
+        </div>
       </div>
     {% endif %}
   </section>

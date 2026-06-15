@@ -918,6 +918,10 @@ def normalize_document_record(record: Mapping[str, object] | sqlite3.Row) -> dic
     data["id"] = data.get("public_id") or data.get("id")
     data["file_size"] = int(data.get("file_size") or 0)
     data["note"] = str(data.get("note") or "").strip()
+    data["document_status"] = str(
+        data.get("document_status")
+        or ("Final" if str(data.get("source_kind") or "") == "generated" else "Filed")
+    ).strip()
     data["source_kind"] = str(data.get("source_kind") or "upload").strip() or "upload"
     data["template_key"] = str(data.get("template_key") or "").strip()
     data["template_version"] = str(data.get("template_version") or "").strip()
@@ -1057,6 +1061,7 @@ def init_sqlite_db() -> None:
             document_type TEXT NOT NULL,
             title TEXT NOT NULL,
             note TEXT,
+            document_status TEXT NOT NULL DEFAULT 'Filed',
             source_kind TEXT NOT NULL DEFAULT 'upload',
             template_key TEXT NOT NULL DEFAULT '',
             template_version TEXT NOT NULL DEFAULT '',
@@ -1106,6 +1111,7 @@ def init_sqlite_db() -> None:
     ensure_sqlite_column("maintenance_tickets", "internal_note", "TEXT")
     ensure_sqlite_column("financial_records", "assigned_to", "TEXT")
     ensure_sqlite_column("documents", "source_kind", "TEXT NOT NULL DEFAULT 'upload'")
+    ensure_sqlite_column("documents", "document_status", "TEXT NOT NULL DEFAULT 'Filed'")
     ensure_sqlite_column("documents", "template_key", "TEXT NOT NULL DEFAULT ''")
     ensure_sqlite_column("documents", "template_version", "TEXT NOT NULL DEFAULT ''")
     ensure_sqlite_column("documents", "payload_json", "TEXT NOT NULL DEFAULT ''")
@@ -1125,6 +1131,8 @@ def init_sqlite_db() -> None:
     db.execute("UPDATE maintenance_tickets SET internal_note = '' WHERE internal_note IS NULL")
     db.execute("UPDATE financial_records SET assigned_to = '' WHERE assigned_to IS NULL")
     db.execute("UPDATE documents SET source_kind = 'upload' WHERE source_kind IS NULL OR source_kind = ''")
+    db.execute("UPDATE documents SET document_status = 'Filed' WHERE document_status IS NULL OR document_status = ''")
+    db.execute("UPDATE documents SET document_status = 'Final' WHERE source_kind = 'generated' AND document_status = 'Filed'")
     db.execute("UPDATE documents SET template_key = '' WHERE template_key IS NULL")
     db.execute("UPDATE documents SET template_version = '' WHERE template_version IS NULL")
     db.execute("UPDATE documents SET payload_json = '' WHERE payload_json IS NULL")
@@ -1273,7 +1281,10 @@ def init_mongodb() -> None:
     documents.create_index([("public_id", ASCENDING)], unique=True)
     documents.create_index([("document_type", ASCENDING), ("created_at", DESCENDING)])
     documents.create_index([("source_kind", ASCENDING), ("template_key", ASCENDING)])
+    documents.create_index([("document_status", ASCENDING), ("created_at", DESCENDING)])
     documents.update_many({"source_kind": {"$exists": False}}, {"$set": {"source_kind": "upload"}})
+    documents.update_many({"document_status": {"$exists": False}}, {"$set": {"document_status": "Filed"}})
+    documents.update_many({"source_kind": "generated", "document_status": "Filed"}, {"$set": {"document_status": "Final"}})
     documents.update_many({"template_key": {"$exists": False}}, {"$set": {"template_key": ""}})
     documents.update_many({"template_version": {"$exists": False}}, {"$set": {"template_version": ""}})
     documents.update_many({"payload_json": {"$exists": False}}, {"$set": {"payload_json": ""}})
@@ -3726,6 +3737,9 @@ def create_document_record(data: dict[str, object]) -> str:
     payload = dict(data)
     payload["public_id"] = uuid.uuid4().hex[:12]
     payload["source_kind"] = str(payload.get("source_kind") or "upload").strip() or "upload"
+    payload["document_status"] = str(
+        payload.get("document_status") or ("Final" if payload["source_kind"] == "generated" else "Filed")
+    ).strip()
     payload["template_key"] = str(payload.get("template_key") or "").strip()
     payload["template_version"] = str(payload.get("template_version") or "").strip()
     payload["payload_json"] = (
@@ -3747,6 +3761,7 @@ def create_document_record(data: dict[str, object]) -> str:
             document_type,
             title,
             note,
+            document_status,
             source_kind,
             template_key,
             template_version,
@@ -3765,6 +3780,7 @@ def create_document_record(data: dict[str, object]) -> str:
             :document_type,
             :title,
             :note,
+            :document_status,
             :source_kind,
             :template_key,
             :template_version,
@@ -6088,6 +6104,36 @@ def document_generator_spec():
     return jsonify(generator_spec(site_settings()))
 
 
+@app.post("/dashboard/documents/preview")
+@login_required
+def preview_generated_document_pdf():
+    settings = site_settings()
+    form_data, payload_data, errors, _guided_form_data = validate_document_generation_form(request.form, settings)
+    selected_template = form_data.get("template_key", "")
+    if errors:
+        return jsonify({"errors": errors}), 400
+
+    temp_path = DOCUMENTS_DIR / f"preview-{uuid.uuid4().hex}.pdf"
+    try:
+        preview_payload = dict(payload_data)
+        preview_payload["document_status"] = "Preview"
+        preview_payload["generated_at"] = utc_now_iso()
+        render_document_pdf(selected_template, form_data["title"], preview_payload, temp_path, settings)
+        pdf_bytes = temp_path.read_bytes()
+    finally:
+        if temp_path.exists():
+            temp_path.unlink()
+
+    download_name = f"{secure_filename(form_data['title']) or 'document-preview'}-preview.pdf"
+    return send_file(
+        io.BytesIO(pdf_bytes),
+        mimetype="application/pdf",
+        as_attachment=False,
+        download_name=download_name,
+        max_age=0,
+    )
+
+
 @app.route("/dashboard/documents/generate", methods=["GET", "POST"])
 @login_required
 def generate_document_pdf():
@@ -6129,6 +6175,8 @@ def generate_document_pdf():
         else:
             temp_path = DOCUMENTS_DIR / f"tmp-{uuid.uuid4().hex}.pdf"
             try:
+                payload_data["document_status"] = "Final"
+                payload_data["generated_at"] = utc_now_iso()
                 render_document_pdf(selected_template, form_data["title"], payload_data, temp_path, settings)
                 upload_meta = save_generated_document_pdf(form_data["title"], temp_path)
             finally:
@@ -6145,6 +6193,7 @@ def generate_document_pdf():
                 **record_form_data,
                 **upload_meta,
                 "document_type": template_document_type(selected_template, settings),
+                "document_status": "Final",
                 "source_kind": "generated",
                 "template_key": selected_template,
                 "template_version": DOCUMENT_TEMPLATE_VERSION,

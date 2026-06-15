@@ -24,7 +24,7 @@
           {% endif %}
         </div>
         {% if not listing_has_uploaded_image(listing) %}
-          <span class="property-badge property-badge-secondary {% if listing.availability != 'Available' %}property-badge-stacked{% endif %}" title="Representative image. Ask for current photos before final decisions.">Representative image</span>
+            <span class="property-badge property-badge-secondary property-badge-representative {% if listing.availability != 'Available' %}property-badge-stacked{% endif %}" title="Representative image. Ask for current photos before final decisions.">Representative image</span>
         {% endif %}
       </div>
 
@@ -246,7 +246,7 @@
                   <span class="property-badge property-badge-secondary">{{ item.availability }}</span>
                 {% endif %}
                 {% if not listing_has_uploaded_image(item) %}
-                  <span class="property-badge property-badge-secondary {% if item.availability != 'Available' %}property-badge-stacked{% endif %}" title="Representative image. Ask for current photos before final decisions.">Representative image</span>
+                  <span class="property-badge property-badge-secondary property-badge-representative {% if item.availability != 'Available' %}property-badge-stacked{% endif %}" title="Representative image. Ask for current photos before final decisions.">Representative image</span>
                 {% endif %}
               </div>
             </a>

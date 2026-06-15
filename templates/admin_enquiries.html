@@ -100,7 +100,7 @@
     <div class="dashboard-section-head admin-section-head">
       <div>
         <p class="dashboard-section-kicker">Queue</p>
-        <h2>{{ enquiries|length }} enquiry{{ '' if enquiries|length == 1 else 'ies' }} shown</h2>
+        <h2>{{ enquiries|length }} {{ 'enquiry' if enquiries|length == 1 else 'enquiries' }} shown</h2>
       </div>
       <div class="dashboard-section-meta">
         <span class="dashboard-badge dashboard-badge-muted">{{ enquiry_total }} total</span>
@@ -225,6 +225,10 @@
     {% else %}
       <div class="empty-state dashboard-empty-state">
         <p>No enquiries match the current filters.</p>
+        <div class="dashboard-empty-actions">
+          <a href="{{ url_for('admin_enquiries') }}" class="cta cta-small cta-outline">Clear filters</a>
+          <a href="{{ url_for('properties') }}" class="cta cta-small">View public listings</a>
+        </div>
       </div>
     {% endif %}
   </section>

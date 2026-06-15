@@ -27,6 +27,10 @@
           <span>{{ "Featured" if form_data.featured else "Not featured" }}</span>
           <span>{{ form_data.status or "Market status pending" }}</span>
         </div>
+        <div class="listing-editor-status-row listing-editor-requirement-row" aria-label="Listing form guidance">
+          <span>Required: title, location, price, summary</span>
+          <span>Optional: gallery, map coordinates, trust filters</span>
+        </div>
       </aside>
     </div>
   </section>

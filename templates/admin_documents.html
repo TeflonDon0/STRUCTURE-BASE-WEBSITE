@@ -110,6 +110,7 @@
               </div>
               <div class="status-cluster">
                 <span class="dashboard-badge">{{ document.document_type }}</span>
+                <span class="dashboard-badge dashboard-badge-muted">{{ document.document_status }}</span>
                 {% if document.source_kind == 'generated' %}
                   <span class="dashboard-badge dashboard-badge-accent">{{ document.template_key.replace('_', ' ')|title }}</span>
                 {% else %}
@@ -152,15 +153,18 @@
               <div class="admin-inline-actions">
                 <button type="submit" class="cta cta-small" data-loading-label="Saving...">Save details</button>
                 <a href="{{ url_for('download_document', document_id=document.id) }}" class="cta cta-small cta-outline">Download</a>
-                <button
-                  type="submit"
-                  class="cta cta-small cta-danger"
-                  formaction="{{ url_for('delete_document', document_id=document.id) }}"
-                  data-confirm-message="Delete &quot;{{ document.title }}&quot; from documents?"
-                  data-loading-label="Deleting..."
-                >
-                  Delete
-                </button>
+                <details class="admin-danger-zone">
+                  <summary>More</summary>
+                  <button
+                    type="submit"
+                    class="cta cta-small cta-danger"
+                    formaction="{{ url_for('delete_document', document_id=document.id) }}"
+                    data-confirm-message="Delete &quot;{{ document.title }}&quot; from documents? This cannot be undone."
+                    data-loading-label="Deleting..."
+                  >
+                    Delete document
+                  </button>
+                </details>
               </div>
             </form>
           </article>
@@ -169,6 +173,10 @@
     {% else %}
       <div class="empty-state dashboard-empty-state">
         <p>No documents match the current filters.</p>
+        <div class="dashboard-empty-actions">
+          <a href="{{ url_for('admin_documents') }}" class="cta cta-small cta-outline">Clear filters</a>
+          <a href="{{ url_for('create_document', next=next_url) }}" class="cta cta-small">Upload document</a>
+        </div>
       </div>
     {% endif %}
   </section>
