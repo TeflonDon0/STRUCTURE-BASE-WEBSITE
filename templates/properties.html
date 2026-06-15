@@ -3,11 +3,6 @@
 {% block title %}Property Listings | {{ site_settings.site_name }}{% endblock %}
 {% block meta_description %}Browse the current {{ site_settings.site_name }} property catalogue by district, type, sale, rent, or lease intent, and live availability.{% endblock %}
 {% block body_class %}properties-page{% endblock %}
-{% block head_extras %}
-  <link href="https://api.mapbox.com/mapbox-gl-js/v3.17.0/mapbox-gl.css" rel="stylesheet">
-  <script src="https://api.mapbox.com/mapbox-gl-js/v3.17.0/mapbox-gl.js"></script>
-{% endblock %}
-
 {% block content %}
   <section class="page-hero" data-reveal>
     <div class="shell page-hero-shell">
@@ -23,7 +18,7 @@
           <span>Availability and viewing checks</span>
         </div>
         <div class="hero-actions masthead-actions">
-          <a href="#listing-filters" class="cta">Filter listings</a>
+          <a href="#listing-filters" class="cta" data-open-filter="true">Filter listings</a>
         </div>
       </div>
     </div>
@@ -223,6 +218,8 @@
         id="map"
         class="listing-map"
         data-token="{{ mapbox_token }}"
+        data-mapbox-css="https://api.mapbox.com/mapbox-gl-js/v3.17.0/mapbox-gl.css"
+        data-mapbox-script="https://api.mapbox.com/mapbox-gl-js/v3.17.0/mapbox-gl.js"
         data-longitude="3.3792"
         data-latitude="6.5244"
         data-zoom="12"

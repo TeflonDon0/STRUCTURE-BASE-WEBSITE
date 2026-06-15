@@ -37,8 +37,8 @@ def test_login_success_redirects_to_dashboard(client) -> None:
     response = client.post(
         "/login",
         data={
-            "username": "admin",
-            "password": "change-me-structurebase",
+            "username": app.config["ADMIN_USERNAME"],
+            "password": app.config["ADMIN_PASSWORD"],
             "csrf_token": "test-token",
         },
         follow_redirects=False,

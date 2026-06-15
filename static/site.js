@@ -217,7 +217,29 @@ if (detailMainImage) {
   });
 }
 
+const resetSubmitState = (form) => {
+  if (!form) {
+    return;
+  }
+
+  form.classList.remove("is-submitting");
+  form.querySelectorAll("[data-original-label]").forEach((button) => {
+    button.textContent = button.dataset.originalLabel;
+    delete button.dataset.originalLabel;
+    button.disabled = false;
+    button.removeAttribute("aria-busy");
+  });
+};
+
 document.querySelectorAll("form").forEach((form) => {
+  form.addEventListener(
+    "invalid",
+    () => {
+      resetSubmitState(form);
+    },
+    true
+  );
+
   form.addEventListener("submit", (event) => {
     const submitter = event.submitter;
     if (!submitter) {
@@ -239,7 +261,17 @@ document.querySelectorAll("form").forEach((form) => {
       submitter.dataset.originalLabel = submitter.textContent;
       submitter.textContent = loadingLabel;
     }
+
+    window.setTimeout(() => {
+      if (document.visibilityState === "visible") {
+        resetSubmitState(form);
+      }
+    }, 20000);
   });
+});
+
+window.addEventListener("pageshow", () => {
+  document.querySelectorAll("form.is-submitting").forEach(resetSubmitState);
 });
 
 document.querySelectorAll("[data-auto-submit-select]").forEach((select) => {
@@ -313,10 +345,11 @@ document.querySelectorAll("[data-advanced-payload-toggle]").forEach((toggle) => 
 const mapElement = document.getElementById("map");
 const mapDataElement = document.getElementById("map-data");
 const filterPanel = document.querySelector(".filter-panel");
+const filterOpenTriggers = document.querySelectorAll("[data-open-filter]");
 
 if (filterPanel) {
   const syncFilterPanel = () => {
-    if (window.innerWidth <= 700) {
+    if (window.innerWidth <= 700 && !filterPanel.dataset.userOpened) {
       filterPanel.removeAttribute("open");
       return;
     }
@@ -326,6 +359,21 @@ if (filterPanel) {
   syncFilterPanel();
   window.addEventListener("resize", syncFilterPanel);
 }
+
+filterOpenTriggers.forEach((trigger) => {
+  trigger.addEventListener("click", () => {
+    if (!filterPanel) {
+      return;
+    }
+
+    filterPanel.dataset.userOpened = "true";
+    filterPanel.setAttribute("open", "");
+    window.requestAnimationFrame(() => {
+      const firstField = filterPanel.querySelector("input, select, button, a");
+      firstField?.focus({ preventScroll: true });
+    });
+  });
+});
 
 const escapeHtml = (value) =>
   String(value ?? "").replace(/[&<>"']/g, (character) => {
@@ -397,6 +445,8 @@ const buildMapPopupNode = (properties) => {
 
 if (mapElement) {
   const token = mapElement.dataset.token || "";
+  const mapboxCssUrl = mapElement.dataset.mapboxCss || "";
+  const mapboxScriptUrl = mapElement.dataset.mapboxScript || "";
   const longitude = Number.parseFloat(mapElement.dataset.longitude || "3.3792");
   const latitude = Number.parseFloat(mapElement.dataset.latitude || "6.5244");
   const zoom = Number.parseFloat(mapElement.dataset.zoom || "12");
@@ -416,11 +466,53 @@ if (mapElement) {
     mapElement.innerHTML = `<div class="map-fallback"><p>${message}</p></div>`;
   };
 
-  if (navigator.webdriver) {
-    renderMapFallback("Map preview is disabled during automated browser checks.");
-  } else if (!window.mapboxgl || !token || token === "YOUR_MAPBOX_TOKEN_HERE") {
-    renderMapFallback("Add a valid Mapbox access token to enable the catalogue map.");
-  } else {
+  const loadStylesheet = (href) =>
+    new Promise((resolve, reject) => {
+      if (!href || document.querySelector(`link[href="${href}"]`)) {
+        resolve();
+        return;
+      }
+
+      const link = document.createElement("link");
+      link.rel = "stylesheet";
+      link.href = href;
+      link.addEventListener("load", resolve, { once: true });
+      link.addEventListener("error", reject, { once: true });
+      document.head.appendChild(link);
+    });
+
+  const loadScript = (src) =>
+    new Promise((resolve, reject) => {
+      if (window.mapboxgl) {
+        resolve();
+        return;
+      }
+      if (!src) {
+        reject(new Error("Missing Mapbox script URL."));
+        return;
+      }
+
+      const existingScript = document.querySelector(`script[src="${src}"]`);
+      if (existingScript) {
+        existingScript.addEventListener("load", resolve, { once: true });
+        existingScript.addEventListener("error", reject, { once: true });
+        return;
+      }
+
+      const script = document.createElement("script");
+      script.src = src;
+      script.async = true;
+      script.addEventListener("load", resolve, { once: true });
+      script.addEventListener("error", reject, { once: true });
+      document.head.appendChild(script);
+    });
+
+  const initializeMap = () => {
+    if (mapElement.dataset.mapInitialized === "true") {
+      return;
+    }
+
+    mapElement.dataset.mapInitialized = "true";
     window.mapboxgl.accessToken = token;
 
     const map = new window.mapboxgl.Map({
@@ -618,5 +710,39 @@ if (mapElement) {
         });
       });
     });
+  };
+
+  const loadMap = () => {
+    if (!token || token === "YOUR_MAPBOX_TOKEN_HERE") {
+      renderMapFallback("Add a valid Mapbox access token to enable the catalogue map.");
+      return;
+    }
+
+    loadStylesheet(mapboxCssUrl)
+      .then(() => loadScript(mapboxScriptUrl))
+      .then(() => {
+        if (!window.mapboxgl) {
+          throw new Error("Mapbox did not initialize.");
+        }
+        initializeMap();
+      })
+      .catch(() => {
+        renderMapFallback("Map preview is temporarily unavailable. Use the listing cards above or contact the team for location guidance.");
+      });
+  };
+
+  if ("IntersectionObserver" in window) {
+    const mapObserver = new IntersectionObserver(
+      (entries, observer) => {
+        if (entries.some((entry) => entry.isIntersecting)) {
+          observer.disconnect();
+          loadMap();
+        }
+      },
+      { rootMargin: "360px 0px" }
+    );
+    mapObserver.observe(mapElement);
+  } else {
+    loadMap();
   }
 }
