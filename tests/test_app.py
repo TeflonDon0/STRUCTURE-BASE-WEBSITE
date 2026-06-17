@@ -173,6 +173,26 @@ def test_all_document_templates_render_sample_pdfs(tmp_path: Path) -> None:
             assert destination.stat().st_size > 10_000
 
 
+def test_generated_pdfs_do_not_expose_internal_template_labels(tmp_path: Path) -> None:
+    from pypdf import PdfReader
+
+    with app.app_context():
+        settings = site_settings()
+        catalog = document_generator_catalog(settings)
+        for key in ("letterhead", "maintenance_work_order"):
+            template = catalog[key]
+            internal_title = f"QA {template['label']} - Structurebase"
+            payload, errors = validate_generator_payload(key, template["sample_payload"], settings)
+            assert errors == []
+            destination = tmp_path / f"{key}.pdf"
+            render_document_pdf(key, internal_title, payload, destination, settings)
+            text = "\n".join(page.extract_text() or "" for page in PdfReader(str(destination)).pages)
+            assert internal_title not in text
+            assert "Preview document" not in text
+            assert "Final document" not in text
+            assert "Generated " not in text
+
+
 def test_legal_templates_include_compliance_controls() -> None:
     with app.app_context():
         settings = site_settings()

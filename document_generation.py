@@ -1851,6 +1851,14 @@ def _currency_label(currency: str, amount: float) -> str:
     return f"{currency} {amount:,.2f}"
 
 
+def _public_document_title(template_key: str, fallback_title: str, payload: dict[str, Any]) -> str:
+    if template_key == "letterhead":
+        return _as_string(payload.get("subject")) or "Formal Correspondence"
+    if template_key == "maintenance_work_order":
+        return "Maintenance Work Order"
+    return _as_string(payload.get("public_title")) or fallback_title
+
+
 class PremiumPdfBuilder:
     def __init__(self, destination: Path, title: str, payload: dict[str, Any], site_settings: dict[str, Any]):
         self.destination = destination
@@ -2194,7 +2202,7 @@ class PremiumPdfBuilder:
         table = Table(
             [columns],
             colWidths=[self.doc.width / max(len(columns), 1)] * max(len(columns), 1),
-            rowHeights=[21 * mm],
+            rowHeights=[28 * mm],
         )
         table.setStyle(
             TableStyle(
@@ -2205,7 +2213,7 @@ class PremiumPdfBuilder:
                     ("LEFTPADDING", (0, 0), (-1, -1), 10),
                     ("RIGHTPADDING", (0, 0), (-1, -1), 10),
                     ("TOPPADDING", (0, 0), (-1, -1), 8),
-                    ("BOTTOMPADDING", (0, 0), (-1, -1), 7),
+                    ("BOTTOMPADDING", (0, 0), (-1, -1), 10),
                 ]
             )
         )
@@ -2219,19 +2227,10 @@ def _document_header(builder: PremiumPdfBuilder, payload: dict[str, Any], title:
     if payload.get("valid_until"):
         meta_rows.append(("Valid until", payload["valid_until"]))
     status_value = str(payload.get("document_status") or "").strip()
-    generated_value = str(payload.get("generated_at") or "").strip()
-    if status_value or generated_value:
-        status_bits = []
-        if status_value:
-            status_bits.append(status_value)
-        if generated_value:
-            status_bits.append(f"Generated {generated_value[:19].replace('T', ' ')}")
-        meta_rows.append(("Status", " - ".join(status_bits)))
-    story: list[Any] = [
-        builder.paragraph(f"{payload.get('document_status') or 'Prepared'} document", "eyebrow"),
-        builder.paragraph(title, "title"),
-    ]
-    if subtitle:
+    if status_value:
+        meta_rows.append(("Document status", status_value))
+    story: list[Any] = [builder.paragraph(title, "title")]
+    if subtitle and subtitle.strip().casefold() != title.strip().casefold():
         story.append(builder.paragraph(subtitle, "subtitle"))
     story.extend([builder.meta_table(meta_rows), builder.spacer(3)])
     return story
@@ -2865,7 +2864,8 @@ def _render_sale_agreement(builder: PremiumPdfBuilder, payload: dict[str, Any]) 
 
 
 def render_document_pdf(template_key: str, title: str, payload: dict[str, Any], destination: Path, site_settings: dict[str, Any]) -> None:
-    builder = PremiumPdfBuilder(destination=destination, title=title, payload=payload, site_settings=site_settings)
+    public_title = _public_document_title(template_key, title, payload)
+    builder = PremiumPdfBuilder(destination=destination, title=public_title, payload=payload, site_settings=site_settings)
     if template_key == "letterhead":
         story = _render_letterhead(builder, payload)
     elif template_key == "billing":
