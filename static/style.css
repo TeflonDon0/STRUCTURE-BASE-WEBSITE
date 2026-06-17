@@ -9447,6 +9447,22 @@ body.has-scrolled .site-header {
   color: #fffaf0;
 }
 
+@media (max-width: 48rem) {
+  .home-final-banner .hero-actions.stack-mobile {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+    width: 100%;
+    max-width: 26rem;
+  }
+
+  .home-final-banner .hero-actions.stack-mobile .cta {
+    width: 100%;
+    min-width: 0;
+    justify-content: center;
+  }
+}
+
 .page-hero {
   background: linear-gradient(135deg, #17090d 0%, #211311 52%, #10251f 100%);
   color: #fff;
