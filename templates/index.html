@@ -25,11 +25,7 @@
           {{ site_settings.homepage_hero_intro }}
         </p>
 
-        <ul class="hero-trust-list" aria-label="Structurebase trust signals">
-          {% for signal in site_settings.homepage_trust_signals %}
-            <li>{{ signal }}</li>
-          {% endfor %}
-        </ul>
+        <ul class="hero-trust-list" aria-label="Structurebase trust signals">{%- for signal in site_settings.homepage_trust_signals -%}<li>{{ signal }}</li>{%- endfor -%}</ul>
 
         <div class="hero-actions stack-mobile">
           <a href="{{ url_for('properties') }}" class="cta">
@@ -113,7 +109,7 @@
       <div class="home-editorial-grid">
         {% for listing in editorial %}
           <article class="editorial-card">
-            <a href="{{ url_for('property_detail', listing_id=listing.id) }}" class="editorial-media-link" style="--media-bg: url('{{ asset_url(listing_image_path(listing)) }}')" aria-label="View {{ listing.title }}">
+            <a href="{{ url_for('property_detail', listing_id=listing.id) }}" class="editorial-media-link" aria-label="View {{ listing.title }}">
               <img src="{{ asset_url(listing_image_path(listing)) }}" alt="{{ listing.title }}" class="editorial-image" loading="eager" decoding="async">
             </a>
             <div class="editorial-copy">
@@ -186,7 +182,7 @@
 
   <section class="section shell" data-reveal>
     <div class="home-story-grid">
-      <article class="home-story-card home-story-card-image" style="--media-bg: url('{{ static_asset_url('images/team-corporate-nigeria.webp') }}')">
+      <article class="home-story-card home-story-card-image">
         <img src="{{ static_asset_url('images/team-corporate-nigeria.webp') }}" alt="Structurebase advisors reviewing property options with clients in a Lagos office" loading="eager" decoding="async">
       </article>
       <article class="home-story-card home-story-card-copy">
@@ -212,7 +208,7 @@
 
   <section class="section shell" data-reveal>
     <div class="home-faq-grid">
-      <article class="home-faq-media" style="--media-bg: url('{{ static_asset_url('images/lekki-villa-sample.webp') }}')">
+      <article class="home-faq-media">
         <img src="{{ static_asset_url('images/lekki-villa-sample.webp') }}" alt="Modern residential home exterior" loading="eager" decoding="async">
       </article>
       <article class="home-faq-copy">

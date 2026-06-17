@@ -8255,6 +8255,14 @@ button.cta:not(.cta-secondary):focus-visible {
   background-color: #f7f0e6;
 }
 
+.home-story-card-image {
+  --media-bg: url("images/team-corporate-nigeria.webp");
+}
+
+.home-faq-media {
+  --media-bg: url("images/lekki-villa-sample.webp");
+}
+
 .hero-listing-media::after {
   background: linear-gradient(180deg, rgba(8, 9, 10, 0) 62%, rgba(8, 8, 8, 0.2) 100%);
 }
