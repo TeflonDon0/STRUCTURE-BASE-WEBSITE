@@ -12,6 +12,7 @@
     <div class="hero-atmosphere" aria-hidden="true"></div>
     <div class="shell hero-shell hero-shell-home">
       <div class="hero-copy">
+        <p class="hero-kicker">The Lagos property desk</p>
         {% set hero_heading_parts = site_settings.homepage_hero_heading.split('. ') %}
         <h1>
           {% for part in hero_heading_parts %}
@@ -42,7 +43,7 @@
         <div class="hero-card-stack hero-card-stack-mid" aria-hidden="true"></div>
         <article class="hero-listing-card">
           <div class="hero-listing-media">
-            <img src="{{ static_asset_url('images/ikoyi-penthouse-sample.webp') }}" alt="Ikoyi apartment tower with balconies and palm trees" loading="eager" decoding="async">
+            <img src="{{ static_asset_url('images/ikoyi-penthouse-sample.webp') }}" alt="Ikoyi apartment tower with balconies and palm trees" width="1536" height="1024" loading="eager" fetchpriority="high" decoding="async">
           </div>
           <div class="hero-listing-body">
             <div class="hero-listing-head">
@@ -96,6 +97,28 @@
     </div>
   </section>
 
+  <section class="home-standard shell" aria-labelledby="home-standard-title" data-reveal>
+    <div class="home-standard-intro">
+      <p class="eyebrow">The Structurebase standard</p>
+      <h2 id="home-standard-title">A focused catalogue, reviewed with care.</h2>
+      <a href="{{ url_for('about') }}#confidence-checks" class="text-link text-link-strong">See how confidence is built</a>
+    </div>
+    <ol class="home-standard-list">
+      <li>
+        <strong>Reviewed before publishing</strong>
+        <span>Price, status, location context, and the core listing details come first.</span>
+      </li>
+      <li>
+        <strong>Questions surfaced early</strong>
+        <span>Fees, access, timing, and representative media are called out before travel.</span>
+      </li>
+      <li>
+        <strong>Advisor-led handoff</strong>
+        <span>Your selected property stays attached when the conversation moves to the team.</span>
+      </li>
+    </ol>
+  </section>
+
   {% if editorial %}
     <section class="section shell" data-reveal>
       <div class="section-heading section-heading-inline">
@@ -110,7 +133,7 @@
         {% for listing in editorial %}
           <article class="editorial-card">
             <a href="{{ url_for('property_detail', listing_id=listing.id) }}" class="editorial-media-link" aria-label="View {{ listing.title }}">
-              <img src="{{ asset_url(listing_image_path(listing)) }}" alt="{{ listing.title }}" class="editorial-image" loading="eager" decoding="async">
+              <img src="{{ asset_url(listing_image_path(listing)) }}" alt="{{ listing.title }}" class="editorial-image" loading="lazy" decoding="async">
             </a>
             <div class="editorial-copy">
               <p class="editorial-kicker">{{ listing.district }} &middot; {{ listing.property_type }}</p>
@@ -183,7 +206,7 @@
   <section class="section shell" data-reveal>
     <div class="home-story-grid">
       <article class="home-story-card home-story-card-image">
-        <img src="{{ static_asset_url('images/team-corporate-nigeria.webp') }}" alt="Structurebase advisors reviewing property options with clients in a Lagos office" loading="eager" decoding="async">
+        <img src="{{ static_asset_url('images/team-corporate-nigeria.webp') }}" alt="Structurebase advisors reviewing property options with clients in a Lagos office" width="1619" height="972" loading="lazy" decoding="async">
       </article>
       <article class="home-story-card home-story-card-copy">
         <p class="eyebrow">How The Team Works</p>
@@ -209,7 +232,7 @@
   <section class="section shell" data-reveal>
     <div class="home-faq-grid">
       <article class="home-faq-media">
-        <img src="{{ static_asset_url('images/lekki-villa-sample.webp') }}" alt="Modern residential home exterior" loading="eager" decoding="async">
+        <img src="{{ static_asset_url('images/lekki-villa-sample.webp') }}" alt="Modern residential home exterior" width="1536" height="1024" loading="lazy" decoding="async">
       </article>
       <article class="home-faq-copy">
         <p class="eyebrow">Common Questions</p>

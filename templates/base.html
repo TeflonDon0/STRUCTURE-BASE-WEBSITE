@@ -34,6 +34,7 @@
   <link rel="shortcut icon" href="{{ static_asset_url('images/icon-192.png') }}">
   <link rel="apple-touch-icon" href="{{ static_asset_url('images/apple-touch-icon.png') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=1.4">
+  <link rel="stylesheet" href="{{ static_asset_url('refinement.css') }}">
   {% block head_extras %}{% endblock %}
   <script src="{{ static_asset_url('site.js') }}" defer></script>
   {% block structured_data %}{% endblock %}
@@ -91,8 +92,7 @@
     <div class="shell header-shell{% if auth_shell %} header-shell-auth{% endif %}">
       <a href="{{ url_for('dashboard' if admin_shell else 'home') }}" class="brand"
         aria-label="{{ site_settings.site_name }} home">
-        <img src="{{ static_asset_url('images/LOGO2.svg') }}" alt="{{ site_settings.site_name }} logo" width="39"
-          height="56">
+        <img src="{{ static_asset_url('images/logo-mark.webp') }}" alt="" width="42" height="42" aria-hidden="true">
         <span class="brand-copy">
           <span class="brand-name">{{ site_settings.site_name }}</span>
           <span class="brand-tag">{{ "Admin workspace" if admin_shell or auth_shell else "Based in Lagos, active across
@@ -240,8 +240,7 @@
     <div class="shell footer-shell">
       <div class="footer-brand">
         <a href="{{ url_for('home') }}" class="brand brand-footer" aria-label="{{ site_settings.site_name }} home">
-          <img src="{{ static_asset_url('images/LOGO2.svg') }}" alt="{{ site_settings.site_name }} logo" width="35"
-            height="50">
+          <img src="{{ static_asset_url('images/logo-mark.webp') }}" alt="" width="38" height="38" aria-hidden="true">
           <span class="brand-copy">
             <span class="brand-name">{{ site_settings.site_name }}</span>
             <span class="brand-tag">Property sales, rentals, and support across Nigeria</span>
@@ -270,8 +269,10 @@
         <ul class="contact-list">
           <li><strong>Email:</strong> <a href="mailto:{{ site_settings.contact_email }}">{{ site_settings.contact_email
               }}</a></li>
+          {% if site_settings.contact_phone_configured %}
           <li><strong>Phone:</strong> <a href="tel:{{ site_settings.contact_phone_raw }}">{{
               site_settings.contact_phone_display }}</a></li>
+          {% endif %}
           <li><strong>WhatsApp:</strong> <a href="{{ general_whatsapp_url }}" target="_blank" rel="noreferrer">Chat with
               sales desk</a></li>
           <li><strong>Coverage:</strong> {{ site_settings.coverage_area }}</li>

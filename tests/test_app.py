@@ -59,6 +59,40 @@ def test_healthz_returns_ok(client) -> None:
     assert payload["status"] == "ok"
 
 
+@pytest.mark.parametrize(
+    "path",
+    ["/", "/properties", "/properties/1", "/tenant-services", "/about", "/offline"],
+)
+def test_public_routes_render_with_refinement_layer(client, path: str) -> None:
+    response = client.get(path)
+
+    assert response.status_code == 200
+    assert b"refinement.css" in response.data
+
+
+def test_not_found_page_is_branded_and_recoverable(client) -> None:
+    response = client.get("/not-a-current-page")
+
+    assert response.status_code == 404
+    assert b"This address does not lead to a current page" in response.data
+    assert b"Browse live listings" in response.data
+
+
+def test_login_does_not_prefill_default_username(client) -> None:
+    response = client.get("/login")
+
+    assert response.status_code == 200
+    assert b'name="username"' in response.data
+    assert b'value="admin"' not in response.data
+
+
+def test_public_footer_hides_unconfigured_placeholder_phone(client) -> None:
+    response = client.get("/")
+
+    assert response.status_code == 200
+    assert b"+234 800 123 4567" not in response.data
+
+
 def test_safe_redirect_target_rejects_external_redirects() -> None:
     with app.test_request_context("/login?next=https://evil.example.com"):
         assert safe_redirect_target("https://evil.example.com") == "/dashboard"

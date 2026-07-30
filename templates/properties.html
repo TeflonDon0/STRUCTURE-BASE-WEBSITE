@@ -224,7 +224,12 @@
         data-latitude="6.5244"
         data-zoom="12"
         aria-label="Interactive property map"
-      ></div>
+      >
+        <div class="map-loading" role="status">
+          <strong>Preparing the catalogue map</strong>
+          <span>Property cards remain available while location data loads.</span>
+        </div>
+      </div>
       <script id="map-data" type="application/json" nonce="{{ csp_nonce() }}">{{ map_feature_collection | tojson }}</script>
     </article>
   </section>

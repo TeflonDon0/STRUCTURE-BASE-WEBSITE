@@ -1,7 +1,6 @@
-const CACHE_NAME = "structurebase-v6";
+const CACHE_NAME = "structurebase-v7";
 const APP_SHELL = [
   "/offline",
-  "/static/images/LOGO2.svg",
   "/static/images/logo-mark.svg",
   "/static/images/logo-mark.webp",
   "/static/images/apple-touch-icon.png",
@@ -83,8 +82,6 @@ self.addEventListener("fetch", (event) => {
           return response;
         })
         .catch(() =>
-          caches.match("/static/images/LOGO2.svg") ||
-          caches.match("/static/images/logo-mark.svg") ||
           caches.match("/static/images/logo-mark.webp")
         );
     })

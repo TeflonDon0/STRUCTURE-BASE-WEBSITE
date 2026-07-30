@@ -1392,6 +1392,7 @@ def site_settings_defaults() -> dict[str, str]:
         "contact_email": app.config["CONTACT_EMAIL"],
         "contact_phone_display": app.config["CONTACT_PHONE_DISPLAY"],
         "contact_phone_raw": app.config["CONTACT_PHONE_RAW"],
+        "contact_phone_configured": app.config["CONTACT_PHONE_DISPLAY"] != DEFAULT_PHONE_DISPLAY,
         "whatsapp_phone": app.config["WHATSAPP_PHONE"],
         "office_address": app.config["OFFICE_ADDRESS"],
         "coverage_area": app.config["COVERAGE_AREA"],
@@ -5833,7 +5834,7 @@ def login():
         "login.html",
         next_url=next_url,
         using_default_credentials=site_settings()["using_default_credentials"],
-        admin_username=request.form.get("username", "").strip() or app.config["ADMIN_USERNAME"],
+        admin_username=request.form.get("username", "").strip() if request.method == "POST" else "",
         show_local_default_credentials=is_local_request_host(),
         default_admin_username=DEFAULT_ADMIN_USERNAME,
         default_admin_password=DEFAULT_ADMIN_PASSWORD,
@@ -6892,6 +6893,35 @@ def handle_large_upload(_error):
     if request.path.startswith("/dashboard"):
         return redirect(url_for("dashboard"))
     return redirect(request.referrer or url_for("home"))
+
+
+@app.errorhandler(404)
+def handle_not_found(_error):
+    return (
+        render_template(
+            "error_page.html",
+            error_code="404",
+            error_label="Page not found",
+            error_heading="This address does not lead to a current page.",
+            error_message="The listing or page may have moved, expired, or been entered incorrectly. Return to the live catalogue or ask the team for guidance.",
+        ),
+        404,
+    )
+
+
+@app.errorhandler(500)
+def handle_server_error(_error):
+    app.logger.exception("Unhandled server error")
+    return (
+        render_template(
+            "error_page.html",
+            error_code="500",
+            error_label="Temporary issue",
+            error_heading="We could not complete that request.",
+            error_message="Nothing has been submitted twice. Try again, return to the catalogue, or contact the team if the issue continues.",
+        ),
+        500,
+    )
 
 
 configure_logging()

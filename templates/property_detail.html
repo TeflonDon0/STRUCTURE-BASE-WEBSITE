@@ -16,7 +16,7 @@
       {% set gallery = listing_media_gallery(listing) %}
       <div class="detail-media-column">
       <div class="detail-media-card">
-        <img src="{{ asset_url(gallery[0] if gallery else listing_image_path(listing)) }}" alt="{{ listing.title }}" class="detail-image" id="detail-main-image">
+        <img src="{{ asset_url(gallery[0] if gallery else listing_image_path(listing)) }}" alt="{{ listing.title }}" class="detail-image" id="detail-main-image" loading="eager" fetchpriority="high" decoding="async">
         <div class="detail-media-overlay">
           <span>{{ gallery|length if gallery else 1 }} photo{% if (gallery|length if gallery else 1) != 1 %}s{% endif %}</span>
           {% if not listing_has_uploaded_image(listing) %}
@@ -37,7 +37,7 @@
               data-gallery-target="{{ asset_url(image_path) }}"
               aria-label="Show gallery image {{ loop.index }}"
             >
-              <img src="{{ asset_url(image_path) }}" alt="{{ listing.title }} image {{ loop.index }}">
+              <img src="{{ asset_url(image_path) }}" alt="{{ listing.title }} image {{ loop.index }}" loading="lazy" decoding="async">
             </button>
           {% endfor %}
         </div>
@@ -81,7 +81,9 @@
             <a href="#property-enquiry" class="cta cta-accent">Send direct enquiry</a>
             <div class="detail-contact-links">
               <a href="{{ listing_whatsapp_url(listing) }}" class="text-link text-link-strong" target="_blank" rel="noreferrer">Chat on WhatsApp</a>
-              <a href="tel:{{ site_settings.contact_phone_raw }}" class="text-link">Call sales desk</a>
+              {% if site_settings.contact_phone_configured %}
+                <a href="tel:{{ site_settings.contact_phone_raw }}" class="text-link">Call sales desk</a>
+              {% endif %}
               <a href="mailto:{{ site_settings.contact_email }}?subject=Enquiry about {{ listing.title | urlencode }}" class="text-link">Enquire by email</a>
             </div>
           </div>
@@ -93,7 +95,7 @@
           {% if listing.bedrooms %}<li>{{ listing.bedrooms }} bedrooms</li>{% endif %}
           {% if listing.bathrooms %}<li>{{ listing.bathrooms }} bathrooms</li>{% endif %}
           {% if listing.area_sqm %}<li>{{ listing.area_sqm }} sqm</li>{% endif %}
-          {% if listing.view_count %}<li>{{ listing.view_count }} verified page views</li>{% endif %}
+          {% if listing.view_count %}<li>{{ listing.view_count }} recent page views</li>{% endif %}
         </ul>
 
         {% set feature_labels = listing_feature_labels(listing) %}
@@ -104,6 +106,27 @@
             {% endfor %}
           </div>
         {% endif %}
+
+        <aside class="verification-dossier" aria-labelledby="verification-dossier-title">
+          <div class="verification-dossier-head">
+            <p class="eyebrow">Property dossier</p>
+            <h2 id="verification-dossier-title">What this page confirms.</h2>
+          </div>
+          <dl>
+            <div>
+              <dt>Listing review</dt>
+              <dd>Price, status, location context, and core details reviewed before publishing.</dd>
+            </div>
+            <div>
+              <dt>Media status</dt>
+              <dd>{% if listing_has_uploaded_image(listing) %}Listing media supplied for this property.{% else %}Representative imagery is marked and current photos can be requested.{% endif %}</dd>
+            </div>
+            <div>
+              <dt>Before viewing</dt>
+              <dd>Availability, total costs, access timing, and required documents are reconfirmed with the advisor.</dd>
+            </div>
+          </dl>
+        </aside>
 
         <div class="detail-panels">
           <article class="info-card detail-info-card detail-location-card">

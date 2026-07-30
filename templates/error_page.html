@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block title %}{{ error_label }} | {{ site_settings.site_name }}{% endblock %}
+{% block robots %}noindex,nofollow{% endblock %}
+{% block body_class %}error-page{% endblock %}
+
+{% block content %}
+  <section class="page-hero error-hero">
+    <div class="shell page-hero-shell">
+      <div class="error-hero-copy">
+        <p class="eyebrow">{{ error_code }} &middot; {{ error_label }}</p>
+        <h1>{{ error_heading }}</h1>
+        <p class="page-intro">{{ error_message }}</p>
+      </div>
+
+      <aside class="page-hero-card error-recovery-card" aria-label="Recovery options">
+        <p class="eyebrow">Continue from here</p>
+        <h2>Keep the next step simple.</h2>
+        <div class="page-hero-card-actions">
+          <a href="{{ url_for('properties') }}" class="cta cta-small">Browse live listings</a>
+          <a href="{{ url_for('home') }}" class="text-link text-link-strong">Return home</a>
+          <a href="{{ general_whatsapp_url }}" class="text-link" target="_blank" rel="noreferrer">Ask an advisor</a>
+        </div>
+      </aside>
+    </div>
+  </section>
+{% endblock %}
