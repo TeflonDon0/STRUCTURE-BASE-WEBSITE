@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block title %}Activate Staff Account | {{ site_settings.site_name }}{% endblock %}
+{% block robots %}noindex,nofollow{% endblock %}
+{% block body_class %}login-page{% endblock %}
+
+{% block content %}
+  <section class="page-hero">
+    <div class="shell detail-shell">
+      <div class="detail-media-card detail-media-card-promo">
+        <img src="{{ url_for('static', filename='images/login-promo-lagos.webp') }}" alt="Lagos property skyline" class="detail-image" width="1536" height="1024" loading="eager" fetchpriority="high" decoding="async">
+      </div>
+      <div class="detail-copy">
+        <p class="eyebrow">Staff invitation</p>
+        {% if invitation %}
+          <h1>Create your individual account.</h1>
+          <p class="page-intro">
+            {{ invitation.full_name }}, you have been invited as {{ invitation.role_label }}. Choose a username and a strong password to activate your access.
+          </p>
+          <form method="post" class="contact-form login-form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="form-group">
+              <label for="username">Username</label>
+              <input type="text" id="username" name="username" value="{{ form_data.username }}" autocomplete="username" minlength="3" maxlength="40" required autofocus>
+              <p class="form-note">Use 3–40 letters, numbers, dots, dashes, or underscores.</p>
+            </div>
+            <div class="form-group">
+              <label for="password">Password</label>
+              <input type="password" id="password" name="password" autocomplete="new-password" minlength="12" maxlength="128" required>
+            </div>
+            <div class="form-group">
+              <label for="password_confirmation">Confirm password</label>
+              <input type="password" id="password_confirmation" name="password_confirmation" autocomplete="new-password" minlength="12" maxlength="128" required>
+            </div>
+            {% if errors %}
+              <div class="login-feedback" role="alert">
+                {% for error in errors %}<p>{{ error }}</p>{% endfor %}
+              </div>
+            {% endif %}
+            <div class="form-actions">
+              <button type="submit" class="cta" data-loading-label="Activating...">Activate account</button>
+            </div>
+          </form>
+        {% else %}
+          <h1>This invitation is no longer available.</h1>
+          <p class="page-intro">The link may have expired, already been used, or been revoked. Ask a super admin to issue a new invitation.</p>
+          <a href="{{ url_for('login') }}" class="cta">Return to sign in</a>
+        {% endif %}
+      </div>
+    </div>
+  </section>
+{% endblock %}

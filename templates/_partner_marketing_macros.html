@@ -1,0 +1,11 @@
+{% macro marketing_actions(listing, compact=false) %}
+<div class="partner-marketing-actions{% if compact %} partner-marketing-actions-compact{% endif %}" data-partner-marketing-actions data-listing-id="{{ listing.id }}" data-event-url="{{ url_for('record_partner_marketing_event') }}" data-csrf="{{ csrf_token() }}">
+  <a href="{{ listing.referral_url }}" class="cta cta-small" target="_blank" rel="noreferrer">View property</a>
+  <button type="button" class="cta cta-small cta-outline" data-partner-copy data-copy-value="{{ listing.referral_url }}">Copy referral link</button>
+  <button type="button" class="cta cta-small cta-outline" data-partner-share data-share-title="{{ listing.title }}" data-share-text="{{ listing.share_text }}" data-share-url="{{ listing.referral_url }}">Share</button>
+  <a href="{{ listing.whatsapp_share_url }}" class="cta cta-small cta-whatsapp" target="_blank" rel="noreferrer" data-partner-track="WHATSAPP_SHARE">Share to WhatsApp</a>
+  <a href="{{ url_for('partner_marketing_property', listing_id=listing.id) }}" class="cta cta-small cta-outline">Marketing information</a>
+  {% if listing.marketing_assets %}<a href="{{ listing.marketing_assets[0].download_url }}" class="cta cta-small cta-outline">Download image</a>{% endif %}
+  <p class="partner-action-status" data-partner-action-status role="status" aria-live="polite"></p>
+</div>
+{% endmacro %}

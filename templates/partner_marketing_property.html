@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% from "_partner_marketing_macros.html" import marketing_actions with context %}
+{% block title %}Market {{ listing.title }} | {{ site_settings.site_name }}{% endblock %}
+{% block robots %}noindex,nofollow{% endblock %}
+{% block body_class %}dashboard-page partner-marketing-page{% endblock %}
+{% block content %}
+<section class="page-hero admin-module-hero partner-marketing-hero">
+  <div class="shell admin-module-hero-shell">
+    <div>
+      <p class="eyebrow">Partner marketing &middot; {{ partner.partner_code }}</p>
+      <h1>{{ listing.title }}</h1>
+      <p class="page-intro">Approved public information and attributed sharing tools for this property.</p>
+    </div>
+    <a href="{{ url_for('partner_dashboard', section='materials') }}" class="text-link">Back to marketing materials</a>
+  </div>
+</section>
+
+<section class="section shell section-tight">
+  <div class="partner-marketing-layout">
+    <div class="partner-marketing-media">
+      <img src="{{ asset_url(listing_image_path(listing)) }}" alt="{{ listing.title }} in {{ listing.district }}">
+      <span class="property-badge">{{ listing.availability }}</span>
+    </div>
+    <article class="partner-marketing-summary">
+      <p class="property-location">{{ listing.district }} &middot; {{ listing.property_type }}</p>
+      <h2>{{ listing.price|naira }}{{ listing.price_suffix }}</h2>
+      <p>{{ listing.summary }}</p>
+      <dl class="partner-marketing-specs">
+        <div><dt>Bedrooms</dt><dd>{{ listing.bedrooms or '&mdash;'|safe }}</dd></div>
+        <div><dt>Bathrooms</dt><dd>{{ listing.bathrooms or '&mdash;'|safe }}</dd></div>
+        <div><dt>Area</dt><dd>{{ listing.area_sqm ~ ' sqm' if listing.area_sqm else 'On request' }}</dd></div>
+        <div><dt>Status</dt><dd>{{ listing.availability }}</dd></div>
+      </dl>
+      <div class="commission-opportunity">
+        <span>Commission opportunity</span>
+        <strong>{{ listing.commission_opportunity }}</strong>
+        <small>Subject to verified attribution, an eligible completed transaction, and finance approval.</small>
+      </div>
+    </article>
+  </div>
+</section>
+
+<section class="section shell section-tight partner-share-panel">
+  <div class="dashboard-section-head">
+    <div>
+      <p class="dashboard-section-kicker">Share with attribution</p>
+      <h2>Ready-to-use marketing actions</h2>
+      <p>Every enquiry submitted through the referral URL is validated by the attribution system.</p>
+    </div>
+  </div>
+  {{ marketing_actions(listing) }}
+</section>
+
+<section class="section shell section-tight">
+  <div class="partner-marketing-content-grid">
+    <article class="partner-approved-copy">
+      <p class="dashboard-section-kicker">Approved marketing description</p>
+      <h2>Property positioning</h2>
+      <p class="admin-record-message">{{ listing.description }}</p>
+    </article>
+    <article class="partner-approved-copy">
+      <p class="dashboard-section-kicker">Referral URL</p>
+      <h2>Share the verified link</h2>
+      <div class="form-group">
+        <label for="marketing-referral-url">Property referral link</label>
+        <input id="marketing-referral-url" class="partner-referral-field" value="{{ listing.referral_url }}" readonly>
+      </div>
+      <p class="form-hint">Do not edit the partner code or add customer information to the URL.</p>
+    </article>
+  </div>
+</section>
+
+<section class="section shell section-tight partner-downloads">
+  <div class="dashboard-section-head">
+    <div>
+      <p class="dashboard-section-kicker">Approved downloads</p>
+      <h2>{{ listing.marketing_assets|length }} available asset{{ '' if listing.marketing_assets|length == 1 else 's' }}</h2>
+    </div>
+  </div>
+  <div class="partner-download-list">
+    {% for asset in listing.marketing_assets %}
+    <article class="partner-download-item">
+      <div>
+        <p class="property-location">{{ asset.asset_type_label }}</p>
+        <h3>{{ asset.title }}</h3>
+        {% if asset.file_size %}<span>{{ asset.file_size|filesize }}</span>{% endif %}
+      </div>
+      <a href="{{ asset.download_url }}" class="cta cta-small cta-outline">Download</a>
+    </article>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

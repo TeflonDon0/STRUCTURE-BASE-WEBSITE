@@ -1,235 +1,64 @@
 {% extends "base.html" %}
 
-{% block title %}Leads Admin | {{ site_settings.site_name }}{% endblock %}
+{% block title %}Leads | {{ site_settings.site_name }}{% endblock %}
 {% block robots %}noindex,nofollow{% endblock %}
 {% block body_class %}dashboard-page admin-workspace-page admin-module-page{% endblock %}
 
 {% block content %}
-  {% set next_url = request.full_path.rstrip('?') %}
-  <section class="page-hero admin-module-hero">
-    <div class="shell admin-module-hero-shell">
-      <div>
-        <p class="eyebrow">Leads</p>
-        <h1>Review enquiries, assign ownership, and track next steps.</h1>
-        <p class="page-intro">
-          Keep follow-up details beside the original enquiry so the queue stays useful as volume grows.
-        </p>
-      </div>
-      <div class="admin-module-actions">
-        <a href="{{ url_for('dashboard') }}" class="text-link">Back to overview</a>
-      </div>
+{% set next_url = request.full_path.rstrip('?') %}
+<section class="page-hero admin-module-hero">
+  <div class="shell admin-module-hero-shell">
+    <div><p class="eyebrow">CRM</p><h1>Manage leads from first contact to close.</h1>
+      <p class="page-intro">Keep ownership, pipeline stage, value, follow-up, and source attached to one accountable record.</p></div>
+    {% if can('inspections.view') %}<a href="{{ url_for('admin_inspections') }}" class="cta cta-outline">View inspections</a>{% endif %}
+  </div>
+</section>
+
+<section class="section shell section-tight">
+  <div class="admin-pipeline-panel">
+    <div class="dashboard-section-head admin-section-head"><div><p class="dashboard-section-kicker">Pipeline</p><h2>Lead flow and follow-up health.</h2></div>
+      <div class="dashboard-section-meta"><span class="dashboard-badge dashboard-badge-muted">{{ enquiry_summary.open_count }} open</span><span class="dashboard-badge dashboard-badge-accent">{{ enquiry_summary.due_follow_up_count }} due</span></div></div>
+    <div class="admin-pipeline-grid">
+      {% for status in enquiry_status_options %}<article class="admin-pipeline-step {% if status in ['CLOSED_WON','CLOSED_LOST','ARCHIVED'] %}admin-pipeline-step-closed{% endif %}"><span>{{ lead_stage_labels[status] }}</span><strong>{{ enquiry_summary.status_counts.get(status, 0) }}</strong></article>{% endfor %}
     </div>
-  </section>
+    <p class="admin-insight-note">{{ enquiry_summary.unassigned_count }} open lead{{ '' if enquiry_summary.unassigned_count == 1 else 's' }} still need ownership.</p>
+  </div>
+</section>
 
-  <section class="section shell section-tight">
-    <div class="admin-pipeline-panel">
-      <div class="dashboard-section-head admin-section-head">
-        <div>
-          <p class="dashboard-section-kicker">Pipeline</p>
-          <h2>Lead flow and follow-up health.</h2>
-        </div>
-        <div class="dashboard-section-meta">
-          <span class="dashboard-badge dashboard-badge-muted">{{ enquiry_summary.open_count }} open</span>
-          <span class="dashboard-badge dashboard-badge-accent">{{ enquiry_summary.due_follow_up_count }} due</span>
-        </div>
-      </div>
-      <div class="admin-pipeline-grid">
-        {% for status in enquiry_status_options %}
-          <article class="admin-pipeline-step {% if status in ['Won', 'Lost', 'Handled'] %}admin-pipeline-step-closed{% endif %}">
-            <span>{{ status }}</span>
-            <strong>{{ enquiry_summary.status_counts.get(status, 0) }}</strong>
-          </article>
-        {% endfor %}
-      </div>
-      <p class="admin-insight-note">
-        {{ enquiry_summary.unassigned_count }} open lead{{ '' if enquiry_summary.unassigned_count == 1 else 's' }} still need ownership.
-      </p>
+<section class="section shell section-tight">
+  <form method="get" class="dashboard-filter-bar admin-filter-bar" aria-label="Filter leads">
+    <div class="dashboard-filter-grid admin-toolbar-grid">
+      <div class="form-group dashboard-filter-search"><label for="lead-q">Search</label><input type="search" id="lead-q" name="q" value="{{ enquiry_filters.q }}" placeholder="Name, contact, message, listing"></div>
+      <div class="form-group"><label for="lead-status">Stage</label><select id="lead-status" name="status"><option value="">All stages</option>{% for option in enquiry_status_options %}<option value="{{ option }}" {% if enquiry_filters.status == option %}selected{% endif %}>{{ lead_stage_labels[option] }}</option>{% endfor %}</select></div>
+      <div class="form-group"><label for="lead-source">Source</label><select id="lead-source" name="source"><option value="">All sources</option>{% for option in lead_sources %}<option value="{{ option }}" {% if enquiry_filters.source == option %}selected{% endif %}>{{ lead_source_labels[option] }}</option>{% endfor %}</select></div>
+      <div class="form-group"><label for="lead-owner">Owner</label><select id="lead-owner" name="assigned_to"><option value="">All owners</option>{% for option in enquiry_assignees %}<option value="{{ option }}" {% if enquiry_filters.assigned_to == option %}selected{% endif %}>{{ option }}</option>{% endfor %}</select></div>
+      <div class="form-group"><label for="lead-sort">Sort</label><select id="lead-sort" name="sort">{% for value, label in enquiry_sort_options %}<option value="{{ value }}" {% if enquiry_filters.sort == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
     </div>
-  </section>
+    <div class="dashboard-filter-actions filter-actions"><button class="cta cta-small">Apply</button><a href="{{ url_for('admin_enquiries') }}" class="text-link">Reset</a></div>
+  </form>
+  {% if active_filter_labels %}<div class="dashboard-active-filters">{% for label in active_filter_labels %}<span class="dashboard-filter-pill">{{ label }}</span>{% endfor %}</div>{% endif %}
+</section>
 
-  <section class="section shell section-tight">
-    <form method="get" action="{{ url_for('admin_enquiries') }}" class="dashboard-filter-bar admin-filter-bar" aria-label="Filter enquiries">
-      <div class="dashboard-filter-grid admin-toolbar-grid">
-        <div class="form-group dashboard-filter-search">
-          <label for="enquiry-q">Search</label>
-          <input type="search" id="enquiry-q" name="q" value="{{ enquiry_filters.q }}" placeholder="Name, email, phone, message, listing">
+<section class="section shell section-tight">
+  <div class="dashboard-section-head admin-section-head"><div><p class="dashboard-section-kicker">Queue</p><h2>{{ enquiries|length }} lead{{ '' if enquiries|length == 1 else 's' }} shown</h2></div><span class="dashboard-badge dashboard-badge-muted">{{ enquiry_total }} total</span></div>
+  {% if enquiries %}<div class="admin-record-grid">
+    {% for lead in enquiries %}<article class="admin-record-card">
+      <div class="admin-record-head"><div><p class="property-location">{{ lead.listing_title or 'General enquiry' }}</p><h3><a href="{{ url_for('admin_lead_detail', lead_id=lead.id) }}">{{ lead.name }}</a></h3></div><div class="status-cluster"><span class="dashboard-badge">{{ lead.status_label }}</span><span class="dashboard-badge dashboard-badge-muted">{{ lead.source_label }}</span></div></div>
+      <div class="admin-record-meta"><span>{% if lead.email %}<a href="mailto:{{ lead.email }}">{{ lead.email }}</a>{% endif %}</span><span>{% if lead.phone %}<a href="tel:{{ lead.phone }}">{{ lead.phone }}</a>{% endif %}</span><span>{{ lead.created_at[:16].replace('T',' ') }}</span><span>{{ lead.assigned_to or 'Unassigned' }}</span></div>
+      <p class="admin-record-message">{{ lead.message }}</p>
+      {% if can('leads.manage') %}<form method="post" action="{{ url_for('update_enquiry', enquiry_id=lead.id) }}" class="admin-inline-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="next" value="{{ next_url }}">
+        <div class="admin-form-grid admin-form-grid-compact">
+          <div class="form-group"><label for="status-{{ lead.id }}">Stage</label><select id="status-{{ lead.id }}" name="status">{% for option in enquiry_status_options %}<option value="{{ option }}" {% if lead.status == option %}selected{% endif %}>{{ lead_stage_labels[option] }}</option>{% endfor %}</select></div>
+          <div class="form-group"><label for="owner-{{ lead.id }}">Owner</label><select id="owner-{{ lead.id }}" name="assigned_staff_id"><option value="">Unassigned</option>{% for staff in assignable_staff %}<option value="{{ staff.id }}" {% if lead.assigned_staff_id == staff.id %}selected{% endif %}>{{ staff.full_name }}</option>{% endfor %}</select></div>
+          <div class="form-group"><label for="follow-{{ lead.id }}">Follow-up</label><input type="date" id="follow-{{ lead.id }}" name="follow_up_on" value="{{ lead.follow_up_on }}"></div>
+          <div class="form-group"><label for="source-{{ lead.id }}">Source</label><select id="source-{{ lead.id }}" name="source">{% for option in lead_sources %}<option value="{{ option }}" {% if lead.source == option %}selected{% endif %}>{{ lead_source_labels[option] }}</option>{% endfor %}</select></div>
+          <div class="form-group"><label for="value-{{ lead.id }}">Estimated value (NGN)</label><input type="number" min="0" id="value-{{ lead.id }}" name="estimated_value" value="{{ lead.estimated_value or '' }}"></div>
         </div>
-        <div class="form-group">
-          <label for="enquiry-status">Status</label>
-          <select id="enquiry-status" name="status">
-            <option value="">All statuses</option>
-            {% for option in enquiry_status_options %}
-              <option value="{{ option }}" {% if enquiry_filters.status == option %}selected{% endif %}>{{ option }}</option>
-            {% endfor %}
-          </select>
-        </div>
-        <div class="form-group">
-          <label for="enquiry-assigned">Owner</label>
-          <select id="enquiry-assigned" name="assigned_to">
-            <option value="">All owners</option>
-            {% for option in enquiry_assignees %}
-              <option value="{{ option }}" {% if enquiry_filters.assigned_to == option %}selected{% endif %}>{{ option }}</option>
-            {% endfor %}
-          </select>
-        </div>
-        <div class="form-group">
-          <label for="enquiry-sort">Sort</label>
-          <select id="enquiry-sort" name="sort">
-            {% for value, label in enquiry_sort_options %}
-              <option value="{{ value }}" {% if enquiry_filters.sort == value %}selected{% endif %}>{{ label }}</option>
-            {% endfor %}
-          </select>
-        </div>
-      </div>
-      <div class="dashboard-filter-actions filter-actions">
-        <button type="submit" class="cta cta-small">Apply</button>
-        <a href="{{ url_for('admin_enquiries') }}" class="text-link">Reset</a>
-      </div>
-    </form>
-
-    {% if active_filter_labels %}
-      <div class="dashboard-active-filters" aria-label="Active enquiry filters">
-        {% for label in active_filter_labels %}
-          <span class="dashboard-filter-pill">{{ label }}</span>
-        {% endfor %}
-      </div>
-    {% endif %}
-  </section>
-
-  <section class="section shell section-tight">
-    <div class="dashboard-section-head admin-section-head">
-      <div>
-        <p class="dashboard-section-kicker">Queue</p>
-        <h2>{{ enquiries|length }} {{ 'enquiry' if enquiries|length == 1 else 'enquiries' }} shown</h2>
-      </div>
-      <div class="dashboard-section-meta">
-        <span class="dashboard-badge dashboard-badge-muted">{{ enquiry_total }} total</span>
-      </div>
-    </div>
-
-    {% if enquiries %}
-      <div class="admin-record-grid">
-        {% for enquiry in enquiries %}
-          <article class="admin-record-card">
-            <div class="admin-record-head">
-              <div>
-                <p class="property-location">{{ enquiry.listing_title or 'General enquiry' }}</p>
-                <h3>{{ enquiry.name }}</h3>
-              </div>
-              <div class="status-cluster">
-                <span class="dashboard-badge">{{ enquiry.status }}</span>
-                {% if enquiry.preferred_contact %}<span class="dashboard-badge dashboard-badge-muted">{{ enquiry.preferred_contact }}</span>{% endif %}
-              </div>
-            </div>
-
-            <div class="admin-record-meta">
-              <span><a href="mailto:{{ enquiry.email }}">{{ enquiry.email }}</a></span>
-              <span><a href="tel:{{ enquiry.phone }}">{{ enquiry.phone }}</a></span>
-              <span>{{ enquiry.created_at[:16].replace('T', ' ') }}</span>
-              {% if enquiry.related_listing_public_url %}
-                <span><a href="{{ enquiry.related_listing_public_url }}" target="_blank" rel="noreferrer">View public listing</a></span>
-              {% endif %}
-              {% if enquiry.related_listing_edit_url %}
-                <span><a href="{{ enquiry.related_listing_edit_url }}">Find in inventory</a></span>
-              {% endif %}
-            </div>
-
-            <p class="admin-record-message">{{ enquiry.message }}</p>
-
-            <div class="admin-delivery-stack">
-              <div class="status-cluster">
-                <span class="dashboard-badge {% if enquiry.admin_email_status == 'sent' %}dashboard-badge-success{% elif enquiry.admin_email_status == 'failed' %}dashboard-badge-warning{% else %}dashboard-badge-muted{% endif %}">
-                  Admin email {{ 'sent' if enquiry.admin_email_status == 'sent' else 'failed' if enquiry.admin_email_status == 'failed' else 'pending' }}
-                </span>
-                <span class="dashboard-badge {% if enquiry.receipt_email_status == 'sent' %}dashboard-badge-success{% elif enquiry.receipt_email_status == 'failed' %}dashboard-badge-warning{% else %}dashboard-badge-muted{% endif %}">
-                  Visitor receipt
-                  {% if enquiry.receipt_email_status == 'sent' %}
-                    sent
-                  {% elif enquiry.receipt_email_status == 'failed' %}
-                    failed
-                  {% elif enquiry.receipt_email_status == 'not_requested' %}
-                    not requested
-                  {% else %}
-                    pending
-                  {% endif %}
-                </span>
-              </div>
-              <div class="admin-record-meta admin-delivery-meta">
-                {% if enquiry.admin_email_sent_at %}
-                  <span>Admin alert delivered {{ enquiry.admin_email_sent_at[:16].replace('T', ' ') }}</span>
-                {% elif enquiry.admin_email_last_error %}
-                  <span>Admin alert failed: {{ enquiry.admin_email_last_error }}</span>
-                {% else %}
-                  <span>Admin alert uses {{ enquiry.admin_email_recipient or site_settings.contact_email }}</span>
-                {% endif %}
-
-                {% if enquiry.receipt_email_sent_at %}
-                  <span>Visitor receipt delivered {{ enquiry.receipt_email_sent_at[:16].replace('T', ' ') }}</span>
-                {% elif enquiry.receipt_email_last_error %}
-                  <span>Visitor receipt failed: {{ enquiry.receipt_email_last_error }}</span>
-                {% elif enquiry.email %}
-                  <span>Receipt target: {{ enquiry.receipt_email_recipient or enquiry.email }}</span>
-                {% else %}
-                  <span>No visitor email was provided</span>
-                {% endif %}
-              </div>
-            </div>
-
-            <form method="post" action="{{ url_for('update_enquiry', enquiry_id=enquiry.id) }}" class="admin-inline-form">
-              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-              <input type="hidden" name="next" value="{{ next_url }}">
-              <div class="admin-form-grid admin-form-grid-compact">
-                <div class="form-group">
-                  <label for="status-{{ enquiry.id }}">Status</label>
-                  <select id="status-{{ enquiry.id }}" name="status">
-                    {% for option in enquiry_status_options %}
-                      <option value="{{ option }}" {% if enquiry.status == option %}selected{% endif %}>{{ option }}</option>
-                    {% endfor %}
-                  </select>
-                </div>
-                <div class="form-group">
-                  <label for="assigned-to-{{ enquiry.id }}">Owner</label>
-                  <input type="text" id="assigned-to-{{ enquiry.id }}" name="assigned_to" value="{{ enquiry.assigned_to }}">
-                </div>
-                <div class="form-group">
-                  <label for="follow-up-{{ enquiry.id }}">Follow-up date</label>
-                  <input type="date" id="follow-up-{{ enquiry.id }}" name="follow_up_on" value="{{ enquiry.follow_up_on }}">
-                </div>
-              </div>
-              <div class="form-group">
-                <label for="internal-note-{{ enquiry.id }}">Internal note</label>
-                <textarea id="internal-note-{{ enquiry.id }}" name="internal_note" rows="3">{{ enquiry.internal_note }}</textarea>
-              </div>
-              <div class="admin-inline-actions">
-                <button type="submit" class="cta cta-small" data-loading-label="Saving...">Save update</button>
-              </div>
-            </form>
-
-            <div class="admin-inline-actions admin-inline-actions-secondary">
-              <form method="post" action="{{ url_for('resend_enquiry_admin_email', enquiry_id=enquiry.id) }}" class="admin-inline-button-form">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <input type="hidden" name="next" value="{{ next_url }}">
-                <button type="submit" class="cta cta-outline cta-small" data-loading-label="Sending...">Resend admin email</button>
-              </form>
-              {% if enquiry.email %}
-                <form method="post" action="{{ url_for('resend_enquiry_receipt_email', enquiry_id=enquiry.id) }}" class="admin-inline-button-form">
-                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                  <input type="hidden" name="next" value="{{ next_url }}">
-                  <button type="submit" class="cta cta-outline cta-small" data-loading-label="Sending...">Resend visitor receipt</button>
-                </form>
-              {% endif %}
-            </div>
-          </article>
-        {% endfor %}
-      </div>
-    {% else %}
-      <div class="empty-state dashboard-empty-state">
-        <p>No enquiries match the current filters.</p>
-        <div class="dashboard-empty-actions">
-          <a href="{{ url_for('admin_enquiries') }}" class="cta cta-small cta-outline">Clear filters</a>
-          <a href="{{ url_for('properties') }}" class="cta cta-small">View public listings</a>
-        </div>
-      </div>
-    {% endif %}
-  </section>
+        <div class="form-group"><label for="internal-{{ lead.id }}">Internal summary</label><textarea id="internal-{{ lead.id }}" name="internal_note" rows="2">{{ lead.internal_note }}</textarea></div>
+        <div class="admin-inline-actions"><button class="cta cta-small" data-loading-label="Saving...">Save lead</button><a href="{{ url_for('admin_lead_detail', lead_id=lead.id) }}" class="text-link">Open full record</a></div>
+      </form>{% endif %}
+    </article>{% endfor %}
+  </div>{% else %}<div class="empty-state admin-empty-state"><p>No leads match the current filters.</p><a href="{{ url_for('admin_enquiries') }}" class="cta cta-small cta-outline">Clear filters</a></div>{% endif %}
+</section>
 {% endblock %}

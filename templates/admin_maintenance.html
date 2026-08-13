@@ -149,6 +149,7 @@
               </div>
             {% endif %}
 
+            {% if can('maintenance.manage') %}
             <form method="post" action="{{ url_for('update_maintenance', ticket_id=ticket.id) }}" class="admin-inline-form">
               <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
               <input type="hidden" name="next" value="{{ next_url }}">
@@ -178,6 +179,7 @@
                 <button type="submit" class="cta cta-small" data-loading-label="Saving...">Save update</button>
               </div>
             </form>
+            {% endif %}
           </article>
         {% endfor %}
       </div>

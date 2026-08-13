@@ -43,27 +43,39 @@
 <body class="{% block body_class %}{% endblock %}">
   <a href="#main" class="skip-link">Skip to main content</a>
   {% set admin_shell = is_authenticated and request.path.startswith('/dashboard') %}
-  {% set auth_shell = request.endpoint == 'login' and not is_authenticated %}
+  {% set partner_shell = is_partner_authenticated and request.path.startswith('/partner') %}
+  {% set auth_shell = request.endpoint in ['login', 'accept_staff_invitation', 'partner_login'] and not is_authenticated and not is_partner_authenticated %}
   {% set admin_primary_label = "New listing" %}
   {% set admin_primary_href = url_for('create_listing', next=request.full_path.rstrip('?')) %}
+  {% set admin_primary_allowed = can('properties.create') %}
   {% if request.endpoint in ['admin_finance', 'create_finance_record'] %}
     {% set admin_primary_label = "New financial record" %}
     {% set admin_primary_href = url_for('create_finance_record', next=request.full_path.rstrip('?')) %}
+    {% set admin_primary_allowed = can('finance.manage') %}
   {% elif request.endpoint in ['admin_documents', 'create_document'] %}
     {% set admin_primary_label = "Upload document" %}
     {% set admin_primary_href = url_for('create_document', next=request.full_path.rstrip('?')) %}
+    {% set admin_primary_allowed = can('documents.manage') %}
   {% elif request.endpoint == 'generate_document_pdf' %}
     {% set admin_primary_label = "Upload document" %}
     {% set admin_primary_href = url_for('create_document', next=url_for('admin_documents')) %}
+    {% set admin_primary_allowed = can('documents.manage') %}
   {% elif request.endpoint == 'admin_maintenance' %}
     {% set admin_primary_label = "Open request form" %}
     {% set admin_primary_href = url_for('tenant_services') %}
+    {% set admin_primary_allowed = can('maintenance.manage') %}
   {% elif request.endpoint in ['admin_settings', 'communication_preview', 'communication_preview_frame'] %}
     {% set admin_primary_label = "Preview communications" %}
     {% set admin_primary_href = url_for('communication_preview') %}
-  {% elif request.endpoint == 'admin_enquiries' %}
+    {% set admin_primary_allowed = can('settings.manage') %}
+  {% elif request.endpoint in ['admin_enquiries', 'admin_lead_detail', 'admin_inspections', 'update_inspection'] %}
     {% set admin_primary_label = "Back to overview" %}
     {% set admin_primary_href = url_for('dashboard') %}
+    {% set admin_primary_allowed = can('dashboard.view') %}
+  {% elif request.endpoint in ['admin_team', 'admin_audit_log', 'invite_staff', 'update_staff_member', 'revoke_staff_invitation', 'admin_partners', 'admin_partner_detail', 'review_partner', 'admin_referrals', 'admin_referral_detail', 'admin_commissions', 'admin_commission_detail', 'admin_commission_rules', 'update_commission_rule_status', 'adjust_commission', 'decide_commission', 'mark_commission_paid'] %}
+    {% set admin_primary_label = "Back to overview" %}
+    {% set admin_primary_href = url_for('dashboard') %}
+    {% set admin_primary_allowed = can('dashboard.view') %}
   {% endif %}
   {% set public_nav_items = [
   {
@@ -82,20 +94,25 @@
   'active_endpoints': ['tenant_services']
   },
   {
+  'label': 'Partner Programme',
+  'endpoint': 'partner_register',
+  'active_endpoints': ['partner_register', 'partner_login', 'partner_application_status']
+  },
+  {
   'label': 'About',
   'endpoint': 'about',
   'active_endpoints': ['about']
   }
   ] %}
 
-  <header class="site-header{% if admin_shell %} site-header-admin{% elif auth_shell %} site-header-auth{% endif %}">
+  <header class="site-header{% if admin_shell or partner_shell %} site-header-admin{% elif auth_shell %} site-header-auth{% endif %}">
     <div class="shell header-shell{% if auth_shell %} header-shell-auth{% endif %}">
-      <a href="{{ url_for('dashboard' if admin_shell else 'home') }}" class="brand"
+      <a href="{{ url_for('dashboard' if admin_shell else 'partner_dashboard' if partner_shell else 'home') }}" class="brand"
         aria-label="{{ site_settings.site_name }} home">
         <img src="{{ static_asset_url('images/logo-mark.webp') }}" alt="" width="42" height="42" aria-hidden="true">
         <span class="brand-copy">
           <span class="brand-name">{{ site_settings.site_name }}</span>
-          <span class="brand-tag">{{ "Admin workspace" if admin_shell or auth_shell else "Based in Lagos, active across
+          <span class="brand-tag">{{ "Partner portal" if partner_shell else "Admin workspace" if admin_shell or auth_shell else "Based in Lagos, active across
             Nigeria" }}</span>
         </span>
       </a>
@@ -115,27 +132,73 @@
         <ul class="nav-list nav-list-admin">
           <li><a href="{{ url_for('dashboard') }}" {% if request.endpoint=='dashboard' %}aria-current="page" {% endif
               %}>Overview</a></li>
+          {% if can('properties.view') %}
           <li><a href="{{ url_for('admin_listings') }}" {% if request.endpoint in ['admin_listings', 'create_listing'
               , 'edit_listing' ] %}aria-current="page" {% endif %}>Listings</a></li>
-          <li><a href="{{ url_for('admin_enquiries') }}" {% if request.endpoint=='admin_enquiries' %}aria-current="page"
+          {% endif %}
+          {% if can('leads.view') %}
+          <li><a href="{{ url_for('admin_enquiries') }}" {% if request.endpoint in ['admin_enquiries', 'admin_lead_detail'] %}aria-current="page"
               {% endif %}>Leads</a></li>
+          {% endif %}
+          {% if can('inspections.view') %}
+          <li><a href="{{ url_for('admin_inspections') }}" {% if request.endpoint in ['admin_inspections', 'update_inspection'] %}aria-current="page"{% endif %}>Inspections</a></li>
+          {% endif %}
+          {% if can('maintenance.view') %}
           <li><a href="{{ url_for('admin_maintenance') }}" {% if request.endpoint=='admin_maintenance'
               %}aria-current="page" {% endif %}>Operations</a></li>
+          {% endif %}
+          {% if can('finance.view') %}
           <li><a href="{{ url_for('admin_finance') }}" {% if request.endpoint in
               ['admin_finance', 'create_finance_record' ] %}aria-current="page" {% endif %}>Finance</a></li>
+          {% endif %}
+          {% if can('documents.view') %}
           <li><a href="{{ url_for('admin_documents') }}" {% if request.endpoint in ['admin_documents', 'create_document'
               , 'generate_document_pdf' ] %}aria-current="page" {% endif %}>Documents</a></li>
+          {% endif %}
+          {% if can('staff.view') %}
+          <li><a href="{{ url_for('admin_team') }}" {% if request.endpoint in ['admin_team', 'invite_staff', 'update_staff_member', 'revoke_staff_invitation'] %}aria-current="page" {% endif %}>Team</a></li>
+          {% endif %}
+          {% if can('partners.view') %}
+          <li><a href="{{ url_for('admin_partners') }}" {% if request.endpoint in ['admin_partners', 'admin_partner_detail', 'review_partner'] %}aria-current="page"{% endif %}>Partners</a></li>
+          {% endif %}
+          {% if can('referrals.view') %}
+          <li><a href="{{ url_for('admin_referrals') }}" {% if request.endpoint in ['admin_referrals', 'admin_referral_detail'] %}aria-current="page"{% endif %}>Referrals</a></li>
+          {% endif %}
+          {% if can('commissions.view') %}
+          <li><a href="{{ url_for('admin_commissions') }}" {% if request.endpoint in ['admin_commissions', 'admin_commission_detail', 'admin_commission_rules', 'update_commission_rule_status', 'adjust_commission', 'decide_commission', 'mark_commission_paid'] %}aria-current="page"{% endif %}>Commissions</a></li>
+          {% endif %}
+          {% if can('audit_logs.view') %}
+          <li><a href="{{ url_for('admin_audit_log') }}" {% if request.endpoint == 'admin_audit_log' %}aria-current="page" {% endif %}>Audit</a></li>
+          {% endif %}
+          {% if can('settings.manage') %}
           <li><a href="{{ url_for('admin_settings') }}" {% if request.endpoint in
               ['admin_settings', 'communication_preview' , 'communication_preview_frame' ] %}aria-current="page" {%
               endif %}>Settings</a></li>
+          {% endif %}
         </ul>
 
         <div class="nav-mobile-utility stack-mobile">
           <a href="{{ url_for('home') }}" class="text-link">View site</a>
-          <a href="{{ admin_primary_href }}" class="cta cta-small">{{ admin_primary_label }}</a>
+          {% if admin_primary_allowed %}<a href="{{ admin_primary_href }}" class="cta cta-small">{{ admin_primary_label }}</a>{% endif %}
           <form method="post" action="{{ url_for('logout') }}" class="nav-mobile-form">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <button type="submit" class="cta cta-small cta-outline" data-loading-label="Signing out...">Logout</button>
+          </form>
+        </div>
+        {% elif partner_shell %}
+        <ul class="nav-list nav-list-admin">
+          <li><a href="{{ url_for('partner_dashboard') }}" {% if request.endpoint == 'partner_dashboard' and request.view_args.get('section', 'overview') == 'overview' %}aria-current="page"{% endif %}>Overview</a></li>
+          <li><a href="{{ url_for('partner_dashboard', section='properties') }}" {% if request.endpoint == 'partner_marketing_property' or request.view_args.get('section') in ['properties', 'materials'] %}aria-current="page"{% endif %}>Properties</a></li>
+          <li><a href="{{ url_for('partner_dashboard', section='links') }}" {% if request.view_args.get('section') == 'links' %}aria-current="page"{% endif %}>Referral links</a></li>
+          <li><a href="{{ url_for('partner_dashboard', section='leads') }}" {% if request.view_args.get('section') == 'leads' %}aria-current="page"{% endif %}>My leads</a></li>
+          <li><a href="{{ url_for('partner_dashboard', section='commissions') }}" {% if request.view_args.get('section') in ['commissions', 'payouts'] %}aria-current="page"{% endif %}>Commissions</a></li>
+          <li><a href="{{ url_for('partner_dashboard', section='profile') }}" {% if request.view_args.get('section') == 'profile' %}aria-current="page"{% endif %}>Profile</a></li>
+        </ul>
+        <div class="nav-mobile-utility stack-mobile">
+          <a href="{{ url_for('home') }}" class="text-link">View site</a>
+          <form method="post" action="{{ url_for('partner_logout') }}" class="nav-mobile-form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="cta cta-small cta-outline">Logout</button>
           </form>
         </div>
         {% else %}
@@ -167,19 +230,26 @@
       </div>
       {% elif admin_shell %}
       <div class="header-auth">
+        {% if current_staff %}<span class="header-staff-name">{{ current_staff.full_name }}</span>{% endif %}
         <a href="{{ url_for('home') }}" class="text-link">View site</a>
-        <a href="{{ admin_primary_href }}"
+        {% if admin_primary_allowed %}<a href="{{ admin_primary_href }}"
           class="cta cta-small header-cta">{{ admin_primary_label }}</a>
+        {% endif %}
         <form method="post" action="{{ url_for('logout') }}" class="header-logout">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
           <button type="submit" class="cta cta-small cta-outline" data-loading-label="Signing out...">Logout</button>
         </form>
       </div>
-      {% elif not is_authenticated %}
+      {% elif partner_shell %}
+      <div class="header-auth"><span class="header-staff-name">{{ current_partner.full_name }}</span><a href="{{ url_for('home') }}" class="text-link">View site</a><form method="post" action="{{ url_for('partner_logout') }}" class="header-logout"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button type="submit" class="cta cta-small cta-outline">Logout</button></form></div>
+      {% elif has_partner_account %}
+      <div class="header-auth"><a href="{{ url_for('partner_application_status') }}" class="cta cta-small header-cta">Application status</a></div>
+      {% elif not is_authenticated and not is_partner_authenticated %}
       <div class="header-auth header-auth-home">
-        <a href="{{ general_whatsapp_url }}" class="cta cta-small header-cta home-header-cta" target="_blank"
-          rel="noreferrer">Talk to an advisor</a>
+        <a href="{{ url_for('partner_register') }}" class="cta cta-small header-cta home-header-cta">Become a partner</a>
       </div>
+      {% elif is_partner_authenticated %}
+      <div class="header-auth"><a href="{{ url_for('partner_dashboard') }}" class="cta cta-small header-cta">Partner portal</a></div>
       {% elif is_authenticated %}
       <div class="header-auth">
         <a href="{{ url_for('dashboard') }}" class="cta cta-small header-cta">Dashboard</a>
@@ -224,10 +294,12 @@
       </div>
     </div>
   </footer>
+  {% elif partner_shell %}
+  <footer class="site-footer site-footer-admin"><div class="shell footer-bottom footer-bottom-admin"><span>{{ site_settings.site_name }} partner portal</span><div class="footer-legal"><a href="{{ url_for('home') }}">View site</a><a href="{{ url_for('partner_dashboard', section='profile') }}">Profile</a></div></div></footer>
   {% elif auth_shell %}
   <footer class="site-footer site-footer-auth">
     <div class="shell footer-bottom footer-bottom-auth">
-      <span>Authorized staff access only.</span>
+      <span>{{ 'Partner access' if request.endpoint == 'partner_login' else 'Authorized staff access only.' }}</span>
       <div class="footer-legal">
         <a href="{{ url_for('home') }}">Public site</a>
         <a href="{{ url_for('privacy') }}">Privacy</a>
@@ -258,6 +330,7 @@
           <li><a href="{{ url_for('properties') }}">Listings</a></li>
           <li><a href="{{ url_for('tenant_services') }}">Tenant services</a></li>
           <li><a href="{{ url_for('about') }}">About</a></li>
+          <li><a href="{{ url_for('partner_register') }}">Partner programme</a></li>
           {% if is_authenticated %}
           <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
           {% endif %}
@@ -273,6 +346,7 @@
           <li><strong>Phone:</strong> <a href="tel:{{ site_settings.contact_phone_raw }}">{{
               site_settings.contact_phone_display }}</a></li>
           {% endif %}
+          {% if is_partner_authenticated %}<li><a href="{{ url_for('partner_dashboard') }}">Partner portal</a></li>{% endif %}
           <li><strong>WhatsApp:</strong> <a href="{{ general_whatsapp_url }}" target="_blank" rel="noreferrer">Chat with
               sales desk</a></li>
           <li><strong>Coverage:</strong> {{ site_settings.coverage_area }}</li>

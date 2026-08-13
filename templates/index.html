@@ -259,6 +259,13 @@
     </div>
   </section>
 
+  <section class="section shell" data-reveal>
+    <div class="cta-banner">
+      <div><p class="eyebrow">Structure Base Partner Programme</p><h2>Know someone looking for the right property?</h2><p>Join a reviewed partner network, market approved listings, and keep your introduced opportunities traceable from first contact onward.</p></div>
+      <div class="cta-banner-actions"><a href="{{ url_for('partner_dashboard') if is_partner_authenticated else url_for('partner_application_status') if has_partner_account else url_for('partner_register') }}" class="cta">{{ 'Open partner portal' if is_partner_authenticated else 'View application' if has_partner_account else 'Become a partner' }}</a><a href="{{ url_for('partner_login') }}" class="text-link">Partner sign in</a></div>
+    </div>
+  </section>
+
   {% if is_authenticated %}
     <section class="section shell" data-reveal>
       <div class="cta-banner">

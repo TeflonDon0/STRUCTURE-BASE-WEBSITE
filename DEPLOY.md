@@ -28,7 +28,54 @@ If Railway returns `502`, treat the service as unhealthy and inspect deploy logs
 - `STRUCTUREBASE_STORAGE_BACKEND=cloudinary`
 - `CLOUDINARY_URL` (must start with `cloudinary://`)
 - `STRUCTUREBASE_ADMIN_USERNAME` and `STRUCTUREBASE_ADMIN_PASSWORD`
+- `STRUCTUREBASE_INITIAL_ADMIN_NAME` and `STRUCTUREBASE_INITIAL_ADMIN_EMAIL`
 - `STRUCTUREBASE_SESSION_COOKIE_SECURE=1`
+
+The legacy admin variables are used only to bootstrap the first `SUPER_ADMIN` when the staff collection is empty. After that, authentication uses the hashed staff record in the database. Changing the environment password later does not overwrite an existing staff password.
+
+## Phase 1 staff migration
+
+1. Back up the production database.
+2. Set the initial admin name and email to the owner's real identity.
+3. Deploy once. Startup creates the staff, invitation, and durable login-attempt collections and bootstraps one super admin only when no staff records exist.
+4. Sign in with the existing configured admin username and password. Existing pre-upgrade browser sessions are intentionally invalidated.
+5. Open `Dashboard -> Team`, confirm the owner is the active super admin, then invite each staff member individually.
+6. Confirm `Dashboard -> Audit` attributes new administrative actions to the signed-in staff member.
+
+## Partner programme migration
+
+1. Back up the database before deployment.
+2. Deploy once; startup creates the partner collection/table and required unique/indexed fields.
+3. Open `/partners/register` and submit a staging application.
+
+## Referral attribution migration
+
+1. Back up the database before deployment.
+2. Deploy once; startup creates the `referrals` and `referral_events` stores plus their lookup indexes.
+3. Set `STRUCTUREBASE_REFERRAL_ATTRIBUTION_DAYS=30` and keep `STRUCTUREBASE_SECRET` stable, because it signs attribution cookies.
+4. Approve a staging partner, open one portal-generated property link, and submit a test enquiry.
+5. Confirm `Dashboard -> Referrals` shows the capture and that the lead displays the verified partner source.
+
+## Commission engine migration
+
+1. Back up the database before deployment.
+2. Deploy once; startup creates the commission rule and commission stores with uniqueness and workflow indexes.
+3. Sign in with a finance or administrator account and create at least one active rule under `Dashboard -> Commissions -> Manage rules`.
+4. Move an attributed staging lead with a positive estimated value through Negotiation, Deposit paid, and Closed won.
+5. Confirm the commission progresses through Potential, Pending, and Earned before separately testing approval and payout evidence recording.
+6. Confirm no real payment is initiated; `Paid` represents a verified internal record only.
+
+## Partner marketing tools migration
+
+1. Back up the database before deployment.
+2. Deploy once; startup creates `marketing_assets` and `partner_marketing_events` plus their lookup indexes.
+3. Add `STRUCTUREBASE_MONGODB_MARKETING_ASSETS_COLLECTION` and `STRUCTUREBASE_MONGODB_PARTNER_MARKETING_EVENTS_COLLECTION` when using MongoDB, or keep their documented defaults.
+4. Sign in as an approved staging partner and open `Partner portal -> Marketing materials`.
+5. Copy one referral link, open it in a private browser, and submit a staging enquiry. Confirm the dashboard reports the recorded copy, referral view, and attributed lead without exposing internal notes.
+6. Download the primary property image and verify the response is an attachment available only to an approved signed-in partner.
+4. Review it from `Dashboard -> Partners`, approve it, and verify the account can sign in at `/partners/login`.
+5. Suspend the staging partner and confirm portal access stops immediately.
+6. If SMTP is configured, confirm both the admin application alert and partner status email are delivered.
 
 ## Atlas / Network access
 - Ensure MongoDB Atlas network access allows connections from your hosting provider. For a quick test you can allow 0.0.0.0/0 temporarily; for production, restrict to provider IP ranges or use VPC peering.

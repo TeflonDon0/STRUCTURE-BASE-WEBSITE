@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block title %}Audit Log | {{ site_settings.site_name }}{% endblock %}
+{% block meta_description %}Review attributable staff and system activity for {{ site_settings.site_name }}.{% endblock %}
+{% block robots %}noindex,nofollow{% endblock %}
+{% block body_class %}dashboard-page admin-workspace-page admin-module-page{% endblock %}
+
+{% block content %}
+  <section class="page-hero admin-module-hero">
+    <div class="shell admin-module-hero-shell">
+      <div>
+        <p class="eyebrow">Audit log</p>
+        <h1>Trace important activity to the person who performed it.</h1>
+        <p class="page-intro">The newest 200 matching records are shown. Audit history is append-only from the workspace.</p>
+      </div>
+      <div class="admin-module-actions">
+        {% if can('staff.view') %}<a href="{{ url_for('admin_team') }}" class="cta cta-outline">Manage team</a>{% endif %}
+        <a href="{{ url_for('dashboard') }}" class="text-link">Back to overview</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="section shell section-tight admin-workbench-controls">
+    <form method="get" action="{{ url_for('admin_audit_log') }}" class="dashboard-filter-bar admin-filter-bar" aria-label="Filter audit log">
+      <div class="dashboard-filter-grid">
+        <div class="form-group dashboard-filter-search">
+          <label for="audit-q">Search</label>
+          <input type="search" id="audit-q" name="q" value="{{ filters.q }}" placeholder="Person, action, or summary">
+        </div>
+        <div class="form-group">
+          <label for="audit-entity">Record type</label>
+          <input type="text" id="audit-entity" name="entity_type" value="{{ filters.entity_type }}" placeholder="listing, staff_user, enquiry">
+        </div>
+        <div class="form-group">
+          <label for="audit-actor">Actor type</label>
+          <select id="audit-actor" name="actor_type">
+            <option value="">All actors</option>
+            {% for value, label in [('staff', 'Staff'), ('public', 'Public'), ('system', 'System')] %}
+              <option value="{{ value }}" {% if filters.actor_type == value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+      <div class="dashboard-filter-footer">
+        <div class="filter-actions dashboard-filter-actions">
+          <button type="submit" class="cta cta-small">Apply</button>
+          <a href="{{ url_for('admin_audit_log') }}" class="text-link">Reset</a>
+        </div>
+      </div>
+    </form>
+  </section>
+
+  <section class="section shell section-tight">
+    <div class="dashboard-section-head admin-section-head">
+      <div>
+        <p class="dashboard-section-kicker">Recorded activity</p>
+        <h2>{{ records|length }} matching event{% if records|length != 1 %}s{% endif %}</h2>
+      </div>
+    </div>
+    {% if records %}
+      <div class="admin-record-grid audit-record-grid">
+        {% for entry in records %}
+          <article class="admin-record-card audit-record-card">
+            <div class="admin-record-head">
+              <div>
+                <p class="property-location">{{ entry.entity_type.replace('_', ' ')|title }}</p>
+                <h3>{{ entry.action.replace('_', ' ')|title }}</h3>
+              </div>
+              <span class="dashboard-badge {% if entry.actor_type == 'staff' %}dashboard-badge-accent{% else %}dashboard-badge-muted{% endif %}">
+                {{ entry.actor_type|title }}
+              </span>
+            </div>
+            <p class="admin-record-message">{{ entry.summary }}</p>
+            <div class="admin-record-meta">
+              <span>{{ entry.actor_label }}</span>
+              <span>{{ entry.created_at[:19].replace('T', ' ') }}</span>
+              {% if entry.entity_id %}<span>Reference: {{ entry.entity_id }}</span>{% endif %}
+            </div>
+          </article>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="empty-state dashboard-empty-state"><p>No audit records match these filters.</p></div>
+    {% endif %}
+  </section>
+{% endblock %}

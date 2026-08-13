@@ -17,12 +17,17 @@
       </div>
 
       <div class="admin-hero-actions">
+        {% if can('properties.create') %}
         <a href="{{ url_for('create_listing', next=url_for('admin_listings')) }}" class="cta">New listing</a>
+        {% endif %}
+        {% if can('leads.view') %}
         <a href="{{ url_for('admin_enquiries') }}" class="cta cta-outline">Review leads</a>
+        {% endif %}
         <div class="admin-hero-secondary-actions" aria-label="Secondary admin actions">
-          <a href="{{ url_for('admin_maintenance') }}" class="text-link">Operations</a>
-          <a href="{{ url_for('admin_finance') }}" class="text-link">Finance</a>
-          <a href="{{ url_for('admin_settings') }}" class="text-link">Settings</a>
+          {% if can('maintenance.view') %}<a href="{{ url_for('admin_maintenance') }}" class="text-link">Operations</a>{% endif %}
+          {% if can('finance.view') %}<a href="{{ url_for('admin_finance') }}" class="text-link">Finance</a>{% endif %}
+          {% if can('staff.view') %}<a href="{{ url_for('admin_team') }}" class="text-link">Team</a>{% endif %}
+          {% if can('settings.manage') %}<a href="{{ url_for('admin_settings') }}" class="text-link">Settings</a>{% endif %}
         </div>
       </div>
     </div>
@@ -63,36 +68,48 @@
 
   <section class="section shell section-tight">
     <div class="admin-stat-grid">
+      {% if can('leads.view') %}
       <article class="admin-stat-card admin-stat-card-emphasis">
         <span class="admin-stat-label">Lead follow-up</span>
         <strong class="admin-stat-value">{{ overview_metrics.lead_attention_count or 0 }}</strong>
         <span class="admin-stat-meta">{{ overview_metrics.due_follow_up_count or 0 }} due now &middot; {{ overview_metrics.unassigned_leads_count or 0 }} unassigned</span>
       </article>
+      {% endif %}
+      {% if can('maintenance.view') %}
       <article class="admin-stat-card admin-stat-card-emphasis">
         <span class="admin-stat-label">Urgent operations</span>
         <strong class="admin-stat-value">{{ overview_metrics.urgent_ticket_count or 0 }}</strong>
         <span class="admin-stat-meta">{{ overview_metrics.emergency_ticket_count or 0 }} emergency &middot; {{ overview_metrics.unassigned_ticket_count or 0 }} without owner</span>
       </article>
+      {% endif %}
+      {% if can('finance.view') %}
       <article class="admin-stat-card admin-stat-card-emphasis">
         <span class="admin-stat-label">Overdue finance</span>
         <strong class="admin-stat-value">{{ overview_metrics.overdue_finance_count or 0 }}</strong>
         <span class="admin-stat-meta">{{ overview_metrics.overdue_finance_amount | naira }} outstanding &middot; {{ overview_metrics.finance_owner_gap_count or 0 }} owner gaps</span>
       </article>
+      {% endif %}
+      {% if can('properties.view') %}
       <article class="admin-stat-card admin-stat-card-context">
         <span class="admin-stat-label">Inventory</span>
         <strong class="admin-stat-value">{{ stats.total }}</strong>
         <span class="admin-stat-meta">{{ stats.published_count or 0 }} published &middot; {{ inventory_overview.draft_count or 0 }} drafts</span>
       </article>
+      {% endif %}
+      {% if can('documents.view') %}
       <article class="admin-stat-card admin-stat-card-context">
         <span class="admin-stat-label">Documents</span>
         <strong class="admin-stat-value">{{ stats.document_total or 0 }}</strong>
         <span class="admin-stat-meta">{{ overview_metrics.generated_document_count or 0 }} created in system &middot; documents on record</span>
       </article>
+      {% endif %}
+      {% if can('properties.view') %}
       <article class="admin-stat-card admin-stat-card-context">
         <span class="admin-stat-label">Tracked views</span>
         <strong class="admin-stat-value">{{ stats.total_views or 0 }}</strong>
         <span class="admin-stat-meta">{{ stats.featured_count or 0 }} featured listings live</span>
       </article>
+      {% endif %}
     </div>
   </section>
 
@@ -105,42 +122,81 @@
       </div>
 
     <div class="admin-domain-grid">
+      {% if can('properties.view') %}
       <a href="{{ url_for('admin_listings') }}" class="admin-domain-card">
         <span class="admin-domain-label">Listings</span>
         <strong>{{ stats.total }}</strong>
         <p>{{ inventory_overview.under_offer_count or 0 }} under offer &middot; {{ inventory_overview.off_market_count or 0 }} off market &middot; {{ inventory_overview.verified_count or 0 }} vetted</p>
       </a>
+      {% endif %}
+      {% if can('leads.view') %}
       <a href="{{ url_for('admin_enquiries') }}" class="admin-domain-card">
         <span class="admin-domain-label">Leads</span>
         <strong>{{ overview_metrics.lead_attention_count or 0 }}</strong>
         <p>{{ overview_metrics.due_follow_up_count or 0 }} due now &middot; {{ overview_metrics.unassigned_leads_count or 0 }} still need ownership.</p>
       </a>
+      {% endif %}
+      {% if can('inspections.view') %}
+      <a href="{{ url_for('admin_inspections') }}" class="admin-domain-card">
+        <span class="admin-domain-label">Inspections</span><strong>Schedule</strong>
+        <p>Confirm property visits, assign staff, and record outcomes against each lead.</p>
+      </a>
+      {% endif %}
+      {% if can('maintenance.view') %}
       <a href="{{ url_for('admin_maintenance') }}" class="admin-domain-card">
         <span class="admin-domain-label">Operations</span>
         <strong>{{ stats.maintenance_open or 0 }}</strong>
         <p>{{ overview_metrics.emergency_ticket_count or 0 }} emergency &middot; {{ overview_metrics.vendor_gap_count or 0 }} without vendor cover.</p>
       </a>
+      {% endif %}
+      {% if can('finance.view') %}
       <a href="{{ url_for('admin_finance') }}" class="admin-domain-card">
         <span class="admin-domain-label">Finance</span>
         <strong>{{ stats.financial_due_count or 0 }}</strong>
         <p>{{ overview_metrics.overdue_finance_count or 0 }} overdue &middot; {{ stats.financial_due_amount | naira }} still open.</p>
       </a>
+      {% endif %}
+      {% if can('documents.view') %}
       <a href="{{ url_for('admin_documents') }}" class="admin-domain-card">
         <span class="admin-domain-label">Documents</span>
         <strong>{{ stats.document_total or 0 }}</strong>
         <p>{{ overview_metrics.generated_document_count or 0 }} ready-made agreements and receipts alongside uploaded files.</p>
       </a>
+      {% endif %}
+      {% if can('staff.view') %}
+      <a href="{{ url_for('admin_team') }}" class="admin-domain-card">
+        <span class="admin-domain-label">Team</span>
+        <strong>Staff access</strong>
+        <p>Review individual accounts, roles, status, and pending invitations.</p>
+      </a>
+      {% endif %}
+      {% if can('partners.view') %}
+      <a href="{{ url_for('admin_partners') }}" class="admin-domain-card">
+        <span class="admin-domain-label">Partners</span><strong>{{ partner_summary.pending }} pending</strong>
+        <p>{{ partner_summary.approved }} approved &middot; {{ partner_summary.total }} total applications.</p>
+      </a>
+      {% endif %}
+      {% if can('audit_logs.view') %}
+      <a href="{{ url_for('admin_audit_log') }}" class="admin-domain-card">
+        <span class="admin-domain-label">Audit</span>
+        <strong>Activity history</strong>
+        <p>Trace important staff, public, and system actions to accountable records.</p>
+      </a>
+      {% endif %}
+      {% if can('settings.manage') %}
       <a href="{{ url_for('admin_settings') }}" class="admin-domain-card">
         <span class="admin-domain-label">Settings</span>
         <strong>Site controls</strong>
         <p>Update public contact routes, office details, and footer messaging.</p>
       </a>
+      {% endif %}
     </div>
   </section>
 
   <section class="section shell section-tight">
     <div class="admin-workboard">
       <div class="admin-workboard-main">
+        {% if can('leads.view') %}
         <article class="admin-panel">
           <div class="admin-panel-head">
             <div>
@@ -170,7 +226,9 @@
             <div class="empty-state admin-empty-state"><p>No enquiries yet.</p></div>
           {% endif %}
         </article>
+        {% endif %}
 
+        {% if can('maintenance.view') %}
         <article class="admin-panel">
           <div class="admin-panel-head">
             <div>
@@ -200,7 +258,9 @@
             <div class="empty-state admin-empty-state"><p>No maintenance tickets yet.</p></div>
           {% endif %}
         </article>
+        {% endif %}
 
+        {% if can('properties.view') %}
         <article class="admin-panel">
           <div class="admin-panel-head">
             <div>
@@ -229,9 +289,11 @@
             <div class="empty-state admin-empty-state"><p>No listings yet.</p></div>
           {% endif %}
         </article>
+        {% endif %}
       </div>
 
       <aside class="admin-workboard-side">
+        {% if can('finance.view') %}
         <article class="admin-panel admin-panel-subtle">
           <div class="admin-panel-head">
             <div>
@@ -261,7 +323,9 @@
             <div class="empty-state admin-empty-state"><p>No finance records yet.</p></div>
           {% endif %}
         </article>
+        {% endif %}
 
+        {% if can('documents.view') %}
         <article class="admin-panel admin-panel-subtle">
           <div class="admin-panel-head">
             <div>
@@ -290,7 +354,9 @@
             <div class="empty-state admin-empty-state"><p>No documents yet.</p></div>
           {% endif %}
         </article>
+        {% endif %}
 
+        {% if can('audit_logs.view') %}
         <article class="admin-panel admin-panel-subtle">
           <div class="admin-panel-head">
             <div>
@@ -312,6 +378,7 @@
             <div class="empty-state admin-empty-state"><p>No recent activity yet.</p></div>
           {% endif %}
         </article>
+        {% endif %}
       </aside>
     </div>
   </section>

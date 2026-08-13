@@ -31,6 +31,112 @@ if (backToTop) {
   });
 }
 
+const copyTextToClipboard = async (value) => {
+  if (navigator.clipboard && window.isSecureContext) {
+    await navigator.clipboard.writeText(value);
+    return;
+  }
+
+  const fallback = document.createElement("textarea");
+  fallback.value = value;
+  fallback.setAttribute("readonly", "");
+  fallback.style.position = "fixed";
+  fallback.style.left = "0";
+  fallback.style.top = "0";
+  fallback.style.opacity = "0";
+  document.body.appendChild(fallback);
+  fallback.focus();
+  fallback.select();
+  fallback.setSelectionRange(0, fallback.value.length);
+  const copied = document.execCommand("copy");
+  fallback.remove();
+  if (!copied) {
+    throw new Error("Clipboard access is unavailable.");
+  }
+};
+
+document.querySelectorAll("[data-partner-marketing-actions]").forEach((actions) => {
+  const eventUrl = actions.dataset.eventUrl;
+  const csrfToken = actions.dataset.csrf;
+  const listingId = actions.dataset.listingId;
+  const status = actions.querySelector("[data-partner-action-status]");
+
+  const announce = (message, isError = false) => {
+    if (!status) {
+      return;
+    }
+    status.textContent = message;
+    status.classList.toggle("form-error", isError);
+  };
+
+  const recordEvent = (eventType) => {
+    if (!eventUrl || !csrfToken || !listingId) {
+      return Promise.resolve();
+    }
+    const payload = new FormData();
+    payload.append("csrf_token", csrfToken);
+    payload.append("listing_id", listingId);
+    payload.append("event_type", eventType);
+    return fetch(eventUrl, {
+      method: "POST",
+      body: payload,
+      credentials: "same-origin",
+      keepalive: true,
+      headers: { Accept: "application/json" },
+    }).then((response) => {
+      if (!response.ok) {
+        throw new Error("The activity could not be recorded.");
+      }
+    });
+  };
+
+  actions.querySelector("[data-partner-copy]")?.addEventListener("click", async (event) => {
+    const button = event.currentTarget;
+    button.setAttribute("aria-busy", "true");
+    try {
+      await copyTextToClipboard(button.dataset.copyValue || "");
+      announce("Referral link copied.");
+      recordEvent("LINK_COPIED").catch(() => {});
+    } catch (error) {
+      announce("Copy failed. Select the referral URL and copy it manually.", true);
+    } finally {
+      button.removeAttribute("aria-busy");
+    }
+  });
+
+  actions.querySelector("[data-partner-share]")?.addEventListener("click", async (event) => {
+    const button = event.currentTarget;
+    const shareData = {
+      title: button.dataset.shareTitle || document.title,
+      text: button.dataset.shareText || "",
+      url: button.dataset.shareUrl || window.location.href,
+    };
+    button.setAttribute("aria-busy", "true");
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+        announce("Share completed.");
+      } else {
+        await copyTextToClipboard(`${shareData.text}\n${shareData.url}`.trim());
+        announce("Share text copied. Paste it into your preferred app.");
+      }
+      recordEvent("SHARE_INITIATED").catch(() => {});
+    } catch (error) {
+      if (error?.name !== "AbortError") {
+        announce("Sharing is unavailable. Copy the referral link instead.", true);
+      }
+    } finally {
+      button.removeAttribute("aria-busy");
+    }
+  });
+
+  actions.querySelectorAll("[data-partner-track]").forEach((link) => {
+    link.addEventListener("click", () => {
+      recordEvent(link.dataset.partnerTrack).catch(() => {});
+    });
+  });
+});
+
 if (nav && toggle) {
   const mobileNavQuery = window.matchMedia("(max-width: 860px)");
   let focusBeforeNavOpen = null;

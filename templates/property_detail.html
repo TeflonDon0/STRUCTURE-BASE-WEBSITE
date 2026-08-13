@@ -248,6 +248,19 @@
     </div>
   </section>
 
+  <section class="section shell section-tight detail-enquiry-section" id="property-inspection" data-reveal>
+    <div class="detail-enquiry-surface contact-form">
+      <div class="detail-enquiry-head"><div><p class="eyebrow">Property inspection</p><h2>Request a date to visit this property.</h2></div><p class="form-note">Choose your preferred slot. The team will check availability and confirm the appointment with you.</p></div>
+      <form method="post" action="{{ url_for('submit_inspection') }}" class="detail-enquiry-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="listing_id" value="{{ listing.id }}"><input type="hidden" name="source_path" value="{{ request.path }}">
+        <div class="form-row"><div class="form-group"><label for="inspection-name">Your name</label><input id="inspection-name" type="text" name="name" autocomplete="name" required></div><div class="form-group"><label for="inspection-email">Email</label><input id="inspection-email" type="email" name="email" autocomplete="email"></div></div>
+        <div class="form-row"><div class="form-group"><label for="inspection-phone">Phone or WhatsApp</label><input id="inspection-phone" type="tel" name="phone" autocomplete="tel"></div><div class="form-group"><label for="inspection-date">Preferred date</label><input id="inspection-date" type="date" name="requested_date" min="{{ today_iso }}" required></div></div>
+        <div class="form-row"><div class="form-group"><label for="inspection-time">Preferred time</label><input id="inspection-time" type="time" name="requested_time" required></div><div class="form-group"><label for="inspection-notes">Notes (optional)</label><textarea id="inspection-notes" name="notes" rows="3" placeholder="Alternative times or access questions"></textarea></div></div>
+        <div class="form-actions"><button class="cta" data-loading-label="Requesting...">Request inspection</button><span class="form-note">Your request is provisional until a team member confirms it.</span></div>
+      </form>
+    </div>
+  </section>
+
   {% if related %}
     <section class="section shell" data-reveal>
       <div class="section-heading">

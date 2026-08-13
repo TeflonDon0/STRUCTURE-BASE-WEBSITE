@@ -30,8 +30,36 @@ services:
         value: listings
       - key: STRUCTUREBASE_MONGODB_ENQUIRIES_COLLECTION
         value: enquiries
+      - key: STRUCTUREBASE_MONGODB_CONTACTS_COLLECTION
+        value: contacts
+      - key: STRUCTUREBASE_MONGODB_LEAD_NOTES_COLLECTION
+        value: lead_notes
+      - key: STRUCTUREBASE_MONGODB_INSPECTIONS_COLLECTION
+        value: inspections
+      - key: STRUCTUREBASE_MONGODB_PARTNERS_COLLECTION
+        value: partners
+      - key: STRUCTUREBASE_MONGODB_REFERRALS_COLLECTION
+        value: referrals
+      - key: STRUCTUREBASE_MONGODB_REFERRAL_EVENTS_COLLECTION
+        value: referral_events
+      - key: STRUCTUREBASE_REFERRAL_ATTRIBUTION_DAYS
+        value: "30"
+      - key: STRUCTUREBASE_MONGODB_COMMISSION_RULES_COLLECTION
+        value: commission_rules
+      - key: STRUCTUREBASE_MONGODB_COMMISSIONS_COLLECTION
+        value: commissions
+      - key: STRUCTUREBASE_MONGODB_MARKETING_ASSETS_COLLECTION
+        value: marketing_assets
+      - key: STRUCTUREBASE_MONGODB_PARTNER_MARKETING_EVENTS_COLLECTION
+        value: partner_marketing_events
       - key: STRUCTUREBASE_MONGODB_ACTIVITY_COLLECTION
         value: activity_log
+      - key: STRUCTUREBASE_MONGODB_STAFF_COLLECTION
+        value: staff_users
+      - key: STRUCTUREBASE_MONGODB_STAFF_INVITATIONS_COLLECTION
+        value: staff_invitations
+      - key: STRUCTUREBASE_MONGODB_LOGIN_ATTEMPTS_COLLECTION
+        value: staff_login_attempts
       - key: CLOUDINARY_URL
         sync: false
       - key: STRUCTUREBASE_CLOUDINARY_FOLDER
@@ -46,6 +74,12 @@ services:
         sync: false
       - key: STRUCTUREBASE_ADMIN_PASSWORD
         sync: false
+      - key: STRUCTUREBASE_INITIAL_ADMIN_NAME
+        value: Structurebase Owner
+      - key: STRUCTUREBASE_INITIAL_ADMIN_EMAIL
+        sync: false
+      - key: STRUCTUREBASE_STAFF_INVITATION_HOURS
+        value: "48"
       - key: STRUCTUREBASE_SESSION_COOKIE_SECURE
         value: "1"
       - key: STRUCTUREBASE_SESSION_HOURS

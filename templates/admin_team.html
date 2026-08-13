@@ -1,0 +1,188 @@
+{% extends "base.html" %}
+
+{% block title %}Team Management | {{ site_settings.site_name }}{% endblock %}
+{% block meta_description %}Manage individual staff access, roles, invitations, and account status for {{ site_settings.site_name }}.{% endblock %}
+{% block robots %}noindex,nofollow{% endblock %}
+{% block body_class %}dashboard-page admin-workspace-page admin-module-page form-page{% endblock %}
+
+{% block content %}
+  <section class="page-hero admin-module-hero">
+    <div class="shell admin-module-hero-shell">
+      <div>
+        <p class="eyebrow">Team and access</p>
+        <h1>Give every staff member accountable access.</h1>
+        <p class="page-intro">
+          Each person signs in with an individual account. Roles are enforced on the server and important access changes are recorded in the activity log.
+        </p>
+      </div>
+      <div class="admin-module-actions">
+        <span class="dashboard-badge dashboard-badge-accent">{{ staff_members|selectattr('status', 'equalto', 'ACTIVE')|list|length }} active</span>
+        <a href="{{ url_for('dashboard') }}" class="text-link">Back to overview</a>
+      </div>
+    </div>
+  </section>
+
+  {% if new_invitation_url %}
+    <section class="section shell section-tight">
+      <div class="admin-settings-note staff-invitation-link" role="status">
+        <strong>One-time invitation link</strong>
+        <p>Keep this private. It expires in {{ config.STAFF_INVITATION_HOURS }} hours and is replaced if the same person is invited again.</p>
+        <input type="url" value="{{ new_invitation_url }}" readonly aria-label="One-time staff invitation link">
+      </div>
+    </section>
+  {% endif %}
+
+  {% if can('staff.invite') %}
+    <section class="section shell section-tight">
+      <form method="post" action="{{ url_for('invite_staff') }}" class="contact-form listing-form team-invite-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <section class="form-section">
+          <div class="form-section-head">
+            <div>
+              <p class="form-section-kicker">Invite staff</p>
+              <h2>Create an individual account.</h2>
+            </div>
+            <p class="form-note">The recipient chooses a username and password through a single-use secure link.</p>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="full_name">Full name</label>
+              <input type="text" id="full_name" name="full_name" autocomplete="name" maxlength="100" required>
+            </div>
+            <div class="form-group">
+              <label for="email">Work email</label>
+              <input type="email" id="email" name="email" autocomplete="email" maxlength="254" required>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="role">Role</label>
+            <select id="role" name="role" required>
+              {% for role in role_options %}
+                <option value="{{ role }}">{{ role_labels[role] }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="cta" data-loading-label="Creating invitation...">Send invitation</button>
+          </div>
+        </section>
+      </form>
+    </section>
+  {% endif %}
+
+  <section class="section shell section-tight">
+    <div class="dashboard-section-head admin-section-head">
+      <div>
+        <p class="dashboard-section-kicker">Current staff</p>
+        <h2>Roles and account status</h2>
+      </div>
+    </div>
+
+    <div class="admin-record-grid team-record-grid">
+      {% for staff in staff_members %}
+        <article class="admin-record-card team-record-card">
+          <div class="admin-record-head">
+            <div>
+              <p class="property-location">{{ staff.role_label }}</p>
+              <h3>{{ staff.full_name }}</h3>
+            </div>
+            <span class="dashboard-badge {% if staff.status == 'ACTIVE' %}dashboard-badge-success{% else %}dashboard-badge-muted{% endif %}">
+              {{ staff.status|title }}
+            </span>
+          </div>
+          <div class="admin-record-meta">
+            <span>{{ staff.email }}</span>
+            <span>@{{ staff.username }}</span>
+            <span>Last login: {{ staff.last_login_at[:16].replace('T', ' ') if staff.last_login_at else 'Never' }}</span>
+          </div>
+
+          {% if can('staff.edit') %}
+            <form method="post" action="{{ url_for('update_staff_member', user_id=staff.id) }}" class="admin-inline-form">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <div class="admin-form-grid admin-form-grid-compact">
+                <div class="form-group">
+                  <label for="staff-name-{{ staff.id }}">Name</label>
+                  <input type="text" id="staff-name-{{ staff.id }}" name="full_name" value="{{ staff.full_name }}" maxlength="100" required>
+                </div>
+                <div class="form-group">
+                  <label for="staff-role-{{ staff.id }}">Role</label>
+                  <select id="staff-role-{{ staff.id }}" name="role" {% if current_staff.id == staff.id %}disabled{% endif %}>
+                    {% for role in role_options %}
+                      <option value="{{ role }}" {% if staff.role == role %}selected{% endif %}>{{ role_labels[role] }}</option>
+                    {% endfor %}
+                  </select>
+                  {% if current_staff.id == staff.id %}<input type="hidden" name="role" value="{{ staff.role }}">{% endif %}
+                </div>
+                <div class="form-group">
+                  <label for="staff-status-{{ staff.id }}">Status</label>
+                  <select id="staff-status-{{ staff.id }}" name="status" {% if current_staff.id == staff.id %}disabled{% endif %}>
+                    {% for status in staff_status_options %}
+                      <option value="{{ status }}" {% if staff.status == status %}selected{% endif %}>{{ status|title }}</option>
+                    {% endfor %}
+                  </select>
+                  {% if current_staff.id == staff.id %}<input type="hidden" name="status" value="{{ staff.status }}">{% endif %}
+                </div>
+              </div>
+              <div class="admin-inline-actions">
+                <button type="submit" class="cta cta-small" data-loading-label="Saving...">Save access</button>
+              </div>
+            </form>
+          {% endif %}
+        </article>
+      {% endfor %}
+    </div>
+  </section>
+
+  {% if invitations %}
+    <section class="section shell section-tight">
+      <div class="dashboard-section-head admin-section-head">
+        <div>
+          <p class="dashboard-section-kicker">Pending invitations</p>
+          <h2>Accounts waiting for activation</h2>
+        </div>
+      </div>
+      <div class="admin-record-grid team-record-grid">
+        {% for invitation in invitations %}
+          <article class="admin-record-card team-record-card">
+            <div class="admin-record-head">
+              <div>
+                <p class="property-location">{{ invitation.role_label }}</p>
+                <h3>{{ invitation.full_name }}</h3>
+              </div>
+              <span class="dashboard-badge {% if invitation.is_expired %}dashboard-badge-warning{% else %}dashboard-badge-muted{% endif %}">
+                {{ 'Expired' if invitation.is_expired else 'Pending' }}
+              </span>
+            </div>
+            <div class="admin-record-meta">
+              <span>{{ invitation.email }}</span>
+              <span>Expires {{ invitation.expires_at[:16].replace('T', ' ') }}</span>
+            </div>
+            {% if can('staff.invite') %}
+              <form method="post" action="{{ url_for('revoke_staff_invitation', invitation_id=invitation.id) }}" class="admin-inline-button-form">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="cta cta-outline cta-small" data-loading-label="Revoking...">Revoke invitation</button>
+              </form>
+            {% endif %}
+          </article>
+        {% endfor %}
+      </div>
+    </section>
+  {% endif %}
+
+  <section class="section shell section-tight">
+    <details class="credential-hint team-permission-matrix">
+      <summary class="credential-summary">
+        <span class="credential-title">Permission matrix</span>
+        <span class="credential-summary-copy">Review the backend capabilities attached to each role.</span>
+      </summary>
+      <div class="credential-detail team-permission-grid">
+        {% for role, permissions in permission_matrix.items() %}
+          <article>
+            <strong>{{ role_labels[role] }}</strong>
+            <p>{{ permissions|join(', ') }}</p>
+          </article>
+        {% endfor %}
+      </div>
+    </details>
+  </section>
+{% endblock %}

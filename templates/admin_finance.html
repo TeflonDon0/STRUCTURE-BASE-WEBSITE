@@ -16,7 +16,9 @@
         </p>
       </div>
       <div class="admin-module-actions">
+        {% if can('finance.manage') %}
         <a href="{{ url_for('create_finance_record', next=next_url) }}" class="cta">New financial record</a>
+        {% endif %}
         <a href="{{ url_for('dashboard') }}" class="text-link">Back to overview</a>
       </div>
     </div>
@@ -144,6 +146,7 @@
               <p class="admin-record-message">{{ record.note }}</p>
             {% endif %}
 
+            {% if can('finance.manage') %}
             <form method="post" action="{{ url_for('update_finance', record_id=record.id) }}" class="admin-inline-form">
               <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
               <input type="hidden" name="next" value="{{ next_url }}">
@@ -169,6 +172,7 @@
                 <button type="submit" class="cta cta-small" data-loading-label="Saving...">Save update</button>
               </div>
             </form>
+            {% endif %}
           </article>
         {% endfor %}
       </div>
@@ -177,7 +181,7 @@
         <p>No finance records match the current filters.</p>
         <div class="dashboard-empty-actions">
           <a href="{{ url_for('admin_finance') }}" class="cta cta-small cta-outline">Clear filters</a>
-          <a href="{{ url_for('create_finance_record', next=next_url) }}" class="cta cta-small">New financial record</a>
+          {% if can('finance.manage') %}<a href="{{ url_for('create_finance_record', next=next_url) }}" class="cta cta-small">New financial record</a>{% endif %}
         </div>
       </div>
     {% endif %}

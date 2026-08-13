@@ -16,8 +16,10 @@
         </p>
       </div>
       <div class="admin-module-actions">
+        {% if can('documents.manage') %}
         <a href="{{ url_for('generate_document_pdf') }}" class="cta cta-outline">Generate PDF</a>
         <a href="{{ url_for('create_document', next=next_url) }}" class="cta">Upload document</a>
+        {% endif %}
         <a href="{{ url_for('dashboard') }}" class="text-link">Back to overview</a>
       </div>
     </div>
@@ -129,6 +131,7 @@
               {% endif %}
             </div>
 
+            {% if can('documents.manage') %}
             <form method="post" action="{{ url_for('update_document', document_id=document.id) }}" class="admin-inline-form">
               <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
               <input type="hidden" name="next" value="{{ next_url }}">
@@ -167,6 +170,11 @@
                 </details>
               </div>
             </form>
+            {% else %}
+              <div class="admin-inline-actions">
+                <a href="{{ url_for('download_document', document_id=document.id) }}" class="cta cta-small cta-outline">Download</a>
+              </div>
+            {% endif %}
           </article>
         {% endfor %}
       </div>
@@ -175,7 +183,7 @@
         <p>No documents match the current filters.</p>
         <div class="dashboard-empty-actions">
           <a href="{{ url_for('admin_documents') }}" class="cta cta-small cta-outline">Clear filters</a>
-          <a href="{{ url_for('create_document', next=next_url) }}" class="cta cta-small">Upload document</a>
+          {% if can('documents.manage') %}<a href="{{ url_for('create_document', next=next_url) }}" class="cta cta-small">Upload document</a>{% endif %}
         </div>
       </div>
     {% endif %}

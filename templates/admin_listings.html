@@ -16,7 +16,9 @@
         </p>
       </div>
       <div class="admin-module-actions">
+        {% if can('properties.create') %}
         <a href="{{ url_for('create_listing', next=next_url) }}" class="cta">New listing</a>
+        {% endif %}
         <a href="{{ url_for('dashboard') }}" class="text-link">Back to overview</a>
       </div>
     </div>
@@ -161,6 +163,7 @@
 
   <section class="section shell section-tight">
     {% if listings %}
+      {% if can('properties.edit') %}
       <form method="post" action="{{ url_for('bulk_update_listings') }}" class="admin-bulk-shell" data-selection-scope>
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <input type="hidden" name="next" value="{{ next_url }}">
@@ -180,15 +183,20 @@
             <button type="submit" class="cta cta-small">Apply to selected</button>
           </div>
         </div>
+      {% else %}
+      <div class="admin-bulk-shell">
+      {% endif %}
 
         <div class="admin-record-grid admin-record-grid-listings">
           {% for listing in listings %}
             <article class="admin-record-card admin-record-card-listing">
               <div class="admin-record-select">
+                {% if can('properties.edit') %}
                 <label class="checkbox">
                   <input type="checkbox" name="listing_ids" value="{{ listing.id }}" data-selection-item>
                   <span>Select</span>
                 </label>
+                {% endif %}
               </div>
               <div class="admin-record-media">
                 <img src="{{ asset_url(listing_image_path(listing)) }}" alt="{{ listing.title }}" loading="lazy" decoding="async">
@@ -228,7 +236,8 @@
                 {% if listing.published %}
                   <a href="{{ url_for('property_detail', listing_id=listing.id) }}" class="cta cta-small cta-outline">Preview</a>
                 {% endif %}
-                <a href="{{ url_for('edit_listing', listing_id=listing.id, next=next_url) }}" class="cta cta-small">Edit</a>
+                {% if can('properties.edit') %}<a href="{{ url_for('edit_listing', listing_id=listing.id, next=next_url) }}" class="cta cta-small">Edit</a>{% endif %}
+                {% if can('properties.delete') %}
                 <details class="admin-danger-zone">
                   <summary>More</summary>
                   <form method="post" action="{{ url_for('delete_listing', listing_id=listing.id) }}" data-confirm-message="Delete &quot;{{ listing.title }}&quot; permanently? This cannot be undone.">
@@ -237,17 +246,18 @@
                     <button type="submit" class="cta cta-small cta-danger" data-loading-label="Deleting...">Delete listing</button>
                   </form>
                 </details>
+                {% endif %}
               </div>
             </article>
           {% endfor %}
         </div>
-      </form>
+      {% if can('properties.edit') %}</form>{% else %}</div>{% endif %}
     {% else %}
       <div class="empty-state dashboard-empty-state">
         <p>No listings match the current inventory view.</p>
         <div class="dashboard-empty-actions">
           <a href="{{ url_for('admin_listings') }}" class="cta cta-small cta-outline">Clear filters</a>
-          <a href="{{ url_for('create_listing', next=next_url) }}" class="cta cta-small">Create listing</a>
+          {% if can('properties.create') %}<a href="{{ url_for('create_listing', next=next_url) }}" class="cta cta-small">Create listing</a>{% endif %}
         </div>
       </div>
     {% endif %}

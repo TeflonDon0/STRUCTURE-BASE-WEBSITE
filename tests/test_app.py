@@ -1,18 +1,54 @@
 import os
+import uuid
 
 import pytest
 
 from pathlib import Path
 
-from app import app, all_documents, check_admin_credentials, delete_document_file, delete_document_record, safe_redirect_target, site_settings
+import app as app_module
+from app import (
+    app,
+    all_documents,
+    check_admin_credentials,
+    create_staff_invitation,
+    create_partner,
+    create_enquiry_record,
+    delete_document_file,
+    delete_document_record,
+    fetch_staff_by_identifier,
+    fetch_staff_user,
+    reset_failed_login,
+    safe_redirect_target,
+    site_settings,
+)
 from document_generation import document_generator_catalog, render_document_pdf, validate_generator_payload
+from crm import advanced_lead_stage, canonical_lead_stage, validate_inspection_request
+from commissions import (
+    calculate_commission_minor,
+    decimal_money_to_minor,
+    percentage_to_basis_points,
+    rule_matches,
+    rule_sort_key,
+    target_status_for_lead_stage,
+    transition_is_allowed,
+)
+from partner_auth import validate_partner_registration
+from marketing import marketing_share_message
+from staff_auth import role_has_permission, validate_password
+from staff_auth import hash_password, verify_password
 
 
 @pytest.fixture(autouse=True)
 def reset_login_attempts() -> None:
-    app.extensions.pop("login_attempts", None)
+    with app.test_request_context("/", environ_base={"REMOTE_ADDR": "127.0.0.1"}):
+        reset_failed_login("admin")
+        reset_failed_login(app.config["ADMIN_USERNAME"])
+        reset_failed_login("application", "partner-registration")
     yield
-    app.extensions.pop("login_attempts", None)
+    with app.test_request_context("/", environ_base={"REMOTE_ADDR": "127.0.0.1"}):
+        reset_failed_login("admin")
+        reset_failed_login(app.config["ADMIN_USERNAME"])
+        reset_failed_login("application", "partner-registration")
 
 
 @pytest.fixture
@@ -21,9 +57,13 @@ def client() -> object:
 
 
 def authenticated_client(client) -> object:
+    with app.app_context():
+        staff = fetch_staff_by_identifier(app.config["ADMIN_USERNAME"])
+    assert staff is not None
     with client.session_transaction() as session:
-        session["is_admin"] = True
-        session["admin_username"] = app.config["ADMIN_USERNAME"]
+        session["staff_user_id"] = staff["id"]
+        session["staff_role"] = staff["role"]
+        session["staff_name"] = staff["full_name"]
         session["_csrf_token"] = "test-token"
     return client
 
@@ -61,7 +101,7 @@ def test_healthz_returns_ok(client) -> None:
 
 @pytest.mark.parametrize(
     "path",
-    ["/", "/properties", "/properties/1", "/tenant-services", "/about", "/offline"],
+    ["/", "/properties", "/properties/1", "/tenant-services", "/partners/register", "/partners/login", "/about", "/offline"],
 )
 def test_public_routes_render_with_refinement_layer(client, path: str) -> None:
     response = client.get(path)
@@ -239,3 +279,1027 @@ def test_legal_templates_include_compliance_controls() -> None:
             assert payload["execution_notes"]
             assert payload["governing_law"]
             assert payload["lawyer_review_note"]
+
+
+def test_legacy_shared_admin_session_no_longer_grants_access(client) -> None:
+    with client.session_transaction() as session:
+        session["is_admin"] = True
+        session["admin_username"] = app.config["ADMIN_USERNAME"]
+
+    response = client.get("/dashboard", follow_redirects=False)
+
+    assert response.status_code == 302
+    assert response.headers["Location"].startswith("/login?next=")
+
+
+def test_role_permissions_follow_least_privilege() -> None:
+    assert role_has_permission("SUPER_ADMIN", "staff.invite")
+    assert not role_has_permission("ADMIN", "staff.invite")
+    assert role_has_permission("PROPERTY_MANAGER", "properties.edit")
+    assert not role_has_permission("PROPERTY_MANAGER", "properties.delete")
+    assert role_has_permission("SALES_MANAGER", "leads.manage")
+    assert role_has_permission("SALES_MANAGER", "partners.view")
+    assert not role_has_permission("SALES_MANAGER", "partners.approve")
+    assert role_has_permission("SALES_MANAGER", "inspections.manage")
+    assert role_has_permission("PROPERTY_MANAGER", "inspections.view")
+    assert not role_has_permission("SALES_MANAGER", "finance.view")
+    assert role_has_permission("FINANCE_MANAGER", "commissions.mark_paid")
+
+
+def test_partner_registration_validation_requires_real_contact_and_company_name() -> None:
+    _data, errors = validate_partner_registration({
+        "full_name": "A", "email": "not-email", "phone": "12", "whatsapp": "x",
+        "location": "", "partner_type": "COMPANY", "company_name": "", "experience_notes": "",
+        "referral_source": "",
+    })
+    assert len(errors) == 6
+
+
+def test_crm_stage_migration_and_inspection_advancement_never_regress() -> None:
+    assert canonical_lead_stage("Viewing Scheduled") == "INSPECTION_SCHEDULED"
+    assert advanced_lead_stage("QUALIFIED", "CONFIRMED") == "INSPECTION_SCHEDULED"
+    assert advanced_lead_stage("NEGOTIATION", "COMPLETED") == "NEGOTIATION"
+    assert advanced_lead_stage("CLOSED_WON", "RESCHEDULED") == "CLOSED_WON"
+
+
+def test_inspection_validation_rejects_past_or_incomplete_request() -> None:
+    data, errors = validate_inspection_request(
+        {"name": "A", "email": "", "phone": "", "requested_date": "2026-08-12", "requested_time": "30:90"},
+        listing_id="1", listing_title="Test", today=app_module.date(2026, 8, 13),
+    )
+    assert data["listing_id"] == "1"
+    assert len(errors) == 4
+
+
+def test_public_inspection_creates_linked_contact_and_lead(client) -> None:
+    suffix = uuid.uuid4().hex[:10]
+    email = f"inspection-{suffix}@example.test"
+    with client.session_transaction() as session:
+        session["_csrf_token"] = "test-token"
+
+    response = client.post(
+        "/inspections",
+        data={
+            "csrf_token": "test-token", "listing_id": "1", "source_path": "/properties/1",
+            "name": "Inspection Client", "email": email, "phone": "08012345678",
+            "requested_date": "2099-01-02", "requested_time": "10:30", "notes": "Morning works best.",
+        },
+        follow_redirects=False,
+    )
+    assert response.status_code == 302
+    assert response.headers["Location"].endswith("/properties/1#property-inspection")
+
+    with app.app_context():
+        db = app_module.get_db()
+        contact = db.execute("SELECT * FROM contacts WHERE email_key = ?", (email,)).fetchone()
+        assert contact is not None
+        contact_id = str(contact["public_id"])
+        lead = db.execute("SELECT * FROM enquiries WHERE contact_id = ? ORDER BY created_at DESC", (contact["public_id"],)).fetchone()
+        assert lead is not None
+        assert lead["source"] == "WEBSITE_INSPECTION"
+        inspection = db.execute("SELECT * FROM inspections WHERE lead_id = ?", (lead["public_id"],)).fetchone()
+        assert inspection is not None
+        assert inspection["status"] == "REQUESTED"
+        lead_id = str(lead["public_id"])
+        inspection_id = str(inspection["public_id"])
+
+    authenticated_client(client)
+    detail = client.get(f"/dashboard/leads/{lead_id}")
+    assert detail.status_code == 200
+    assert b"Inspection Client" in detail.data
+    note_response = client.post(
+        f"/dashboard/leads/{lead_id}/notes",
+        data={"csrf_token": "test-token", "body": "Client confirmed they have valid identification."},
+        follow_redirects=False,
+    )
+    assert note_response.status_code == 302
+    update_response = client.post(
+        f"/dashboard/inspections/{inspection_id}/update",
+        data={
+            "csrf_token": "test-token", "status": "CONFIRMED", "requested_date": "2099-01-02",
+            "requested_time": "10:30", "assigned_staff_id": "", "internal_note": "Confirmed by phone.",
+        },
+        follow_redirects=False,
+    )
+    assert update_response.status_code == 302
+
+    with app.app_context():
+        db = app_module.get_db()
+        assert db.execute("SELECT status FROM enquiries WHERE public_id = ?", (lead_id,)).fetchone()["status"] == "INSPECTION_SCHEDULED"
+        assert db.execute("SELECT COUNT(*) AS count FROM lead_notes WHERE lead_id = ?", (lead_id,)).fetchone()["count"] == 1
+        db.execute("DELETE FROM activity_log WHERE entity_id IN (?, ?)", (lead_id, inspection_id))
+        db.execute("DELETE FROM lead_notes WHERE lead_id = ?", (lead_id,))
+        db.execute("DELETE FROM inspections WHERE public_id = ?", (inspection_id,))
+        db.execute("DELETE FROM enquiries WHERE public_id = ?", (lead_id,))
+        db.execute("DELETE FROM contacts WHERE public_id = ?", (contact_id,))
+        db.commit()
+
+
+def test_phase_two_staff_routes_render(client) -> None:
+    authenticated_client(client)
+    assert client.get("/dashboard/enquiries").status_code == 200
+    assert client.get("/dashboard/inspections").status_code == 200
+
+
+def test_partner_application_approval_and_session_separation(client) -> None:
+    suffix = uuid.uuid4().hex[:10]
+    email = f"partner-{suffix}@example.test"
+    password = "HarborSunset2026!"
+    with client.session_transaction() as session:
+        session["_csrf_token"] = "test-token"
+    response = client.post(
+        "/partners/register",
+        data={
+            "csrf_token": "test-token", "full_name": "Amina Partner", "email": email,
+            "phone": "08023456789", "whatsapp": "08023456789", "location": "Lagos",
+            "partner_type": "INDIVIDUAL", "company_name": "", "experience_notes": "Residential sales",
+            "referral_source": "Professional network", "password": password,
+            "password_confirmation": password,
+        },
+        follow_redirects=False,
+    )
+    assert response.status_code == 302
+    assert response.headers["Location"] == "/partner/status"
+    with app.app_context():
+        partner = app_module.fetch_partner_by_email(email)
+    assert partner is not None
+    partner_id = str(partner["id"])
+    assert partner["status"] == "PENDING"
+    assert partner["partner_code"].startswith("SB")
+    assert partner["password_hash"] != password
+    assert verify_password(str(partner["password_hash"]), password)
+
+    pending_access = client.get("/partner", follow_redirects=False)
+    assert pending_access.status_code == 302
+    assert pending_access.headers["Location"] == "/partner/status"
+    staff_access = client.get("/dashboard", follow_redirects=False)
+    assert staff_access.status_code == 302
+    assert staff_access.headers["Location"].startswith("/login?next=")
+
+    authenticated_client(client)
+    detail = client.get(f"/dashboard/partners/{partner_id}")
+    assert detail.status_code == 200
+    assert b"Amina Partner" in detail.data
+    review = client.post(
+        f"/dashboard/partners/{partner_id}/status",
+        data={"csrf_token": "test-token", "status": "APPROVED", "review_note": "Identity reviewed."},
+        follow_redirects=False,
+    )
+    assert review.status_code == 302
+    with client.session_transaction() as session:
+        session.clear()
+        session["_csrf_token"] = "test-token"
+    partner_login = client.post(
+        "/partners/login",
+        data={"csrf_token": "test-token", "email": email, "password": password, "next": "/partner"},
+        follow_redirects=False,
+    )
+    assert partner_login.status_code == 302
+    assert partner_login.headers["Location"] == "/partner"
+    portal = client.get("/partner")
+    assert portal.status_code == 200
+    assert b"Approved partner" in portal.data
+    assert b"Staff access" not in portal.data
+    assert client.get("/dashboard", follow_redirects=False).headers["Location"].startswith("/login?next=")
+
+    with app.app_context():
+        app_module.update_partner_status(partner_id, status="SUSPENDED", review_note="Review required.", reviewed_by="test")
+    suspended = client.get("/partner", follow_redirects=False)
+    assert suspended.status_code == 302
+    assert suspended.headers["Location"] == "/partner/status"
+
+    with app.app_context():
+        db = app_module.get_db()
+        db.execute("DELETE FROM activity_log WHERE entity_type = 'partner' AND entity_id = ?", (partner_id,))
+        db.execute("DELETE FROM partners WHERE public_id = ?", (partner_id,))
+        db.commit()
+
+
+def test_partner_portal_isolates_leads_and_staff_permissions(client, monkeypatch) -> None:
+    suffix = uuid.uuid4().hex[:8]
+    base = {
+        "phone": "08034567890", "whatsapp": "08034567890", "location": "Lagos",
+        "partner_type": "INDIVIDUAL", "company_name": "", "experience_notes": "",
+        "referral_source": "",
+    }
+    with app.app_context():
+        first_id = create_partner({**base, "full_name": "First Partner", "email": f"first-{suffix}@example.test"}, hash_password("HarborSunset2026!"))
+        second_id = create_partner({**base, "full_name": "Second Partner", "email": f"second-{suffix}@example.test"}, hash_password("HarborSunset2026!"))
+        app_module.update_partner_status(first_id, status="APPROVED", review_note="", reviewed_by="test")
+        app_module.update_partner_status(second_id, status="APPROVED", review_note="", reviewed_by="test")
+        lead_ids = []
+        contact_ids = []
+        for partner_id, title, email in (
+            (first_id, "FIRST PRIVATE LISTING", f"lead-one-{suffix}@example.test"),
+            (second_id, "SECOND PRIVATE LISTING", f"lead-two-{suffix}@example.test"),
+        ):
+            lead_id = create_enquiry_record({
+                "listing_id": "", "listing_title": title, "name": "Private Customer", "email": email,
+                "phone": "", "preferred_contact": "Email", "message": "Private lead", "source_path": "/",
+            })
+            lead = app_module.fetch_enquiry(lead_id)
+            app_module.get_db().execute("UPDATE enquiries SET partner_id = ? WHERE public_id = ?", (partner_id, lead_id))
+            app_module.get_db().commit()
+            lead_ids.append(lead_id)
+            contact_ids.append(str(lead["contact_id"]))
+
+    with client.session_transaction() as session:
+        session["partner_user_id"] = first_id
+        session["_csrf_token"] = "test-token"
+    response = client.get("/partner/leads")
+    assert response.status_code == 200
+    assert b"FIRST PRIVATE LISTING" in response.data
+    assert b"SECOND PRIVATE LISTING" not in response.data
+    assert b"Private Customer" not in response.data
+    assert f"lead-one-{suffix}@example.test".encode() not in response.data
+    assert b"Private lead" not in response.data
+    with app.app_context():
+        first = app_module.fetch_partner(first_id)
+        second = app_module.fetch_partner(second_id)
+    links = client.get("/partner/links")
+    assert links.status_code == 200
+    assert str(first["partner_code"]).encode() in links.data
+    assert str(second["partner_code"]).encode() not in links.data
+
+    fake_sales_staff = {
+        "id": "test-sales", "public_id": "test-sales", "username": "sales", "email": "sales@example.test",
+        "full_name": "Sales Manager", "role": "SALES_MANAGER", "status": "ACTIVE", "password_hash": "unused",
+    }
+    monkeypatch.setattr(app_module, "fetch_staff_user", lambda _user_id: dict(fake_sales_staff))
+    with client.session_transaction() as session:
+        session.clear()
+        session["staff_user_id"] = fake_sales_staff["id"]
+        session["_csrf_token"] = "test-token"
+    assert client.get("/dashboard/partners").status_code == 200
+    forbidden = client.post(
+        f"/dashboard/partners/{first_id}/status",
+        data={"csrf_token": "test-token", "status": "SUSPENDED", "review_note": ""},
+    )
+    assert forbidden.status_code == 403
+
+    with app.app_context():
+        db = app_module.get_db()
+        for lead_id in lead_ids:
+            db.execute("DELETE FROM activity_log WHERE entity_id = ?", (lead_id,))
+            db.execute("DELETE FROM enquiries WHERE public_id = ?", (lead_id,))
+        for contact_id in contact_ids:
+            db.execute("DELETE FROM contacts WHERE public_id = ?", (contact_id,))
+        db.execute("DELETE FROM partners WHERE public_id IN (?, ?)", (first_id, second_id))
+        db.commit()
+
+
+def test_referral_first_touch_is_private_and_competing_codes_cannot_overwrite(client) -> None:
+    suffix = uuid.uuid4().hex[:8]
+    base = {
+        "phone": "08045678901", "whatsapp": "08045678901", "location": "Lagos",
+        "partner_type": "INDIVIDUAL", "company_name": "", "experience_notes": "", "referral_source": "",
+    }
+    with app.app_context():
+        first_id = create_partner({**base, "full_name": "First Touch", "email": f"touch-a-{suffix}@example.test"}, hash_password("HarborSunset2026!"))
+        second_id = create_partner({**base, "full_name": "Second Touch", "email": f"touch-b-{suffix}@example.test"}, hash_password("HarborSunset2026!"))
+        app_module.update_partner_status(first_id, status="APPROVED", review_note="", reviewed_by="test")
+        app_module.update_partner_status(second_id, status="APPROVED", review_note="", reviewed_by="test")
+        first = app_module.fetch_partner(first_id)
+        second = app_module.fetch_partner(second_id)
+    assert first and second
+
+    response = client.get(f"/properties/1?ref={first['partner_code']}")
+    assert response.status_code == 200
+    assert "sb_referral=" in response.headers.get("Set-Cookie", "")
+    client.get(f"/properties/1?ref={second['partner_code']}")
+
+    with app.app_context():
+        db = app_module.get_db()
+        referrals = db.execute("SELECT * FROM referrals WHERE partner_id IN (?, ?)", (first_id, second_id)).fetchall()
+        assert len(referrals) == 1
+        referral = referrals[0]
+        assert referral["partner_id"] == first_id
+        assert first["partner_code"] not in referral["token_hash"]
+        events = db.execute("SELECT event_type FROM referral_events WHERE referral_id = ?", (referral["public_id"],)).fetchall()
+        assert "COMPETING_CODE_IGNORED" in {item["event_type"] for item in events}
+        db.execute("DELETE FROM referral_events WHERE referral_id = ?", (referral["public_id"],))
+        db.execute("DELETE FROM referrals WHERE public_id = ?", (referral["public_id"],))
+        db.execute("DELETE FROM partners WHERE public_id IN (?, ?)", (first_id, second_id))
+        db.commit()
+
+
+def test_invalid_and_unapproved_partner_codes_are_not_captured(client) -> None:
+    suffix = uuid.uuid4().hex[:8]
+    with app.app_context():
+        partner_id = create_partner({
+            "full_name": "Pending Source", "email": f"pending-source-{suffix}@example.test",
+            "phone": "08089012345", "whatsapp": "08089012345", "location": "Lagos",
+            "partner_type": "INDIVIDUAL", "company_name": "", "experience_notes": "", "referral_source": "",
+        }, hash_password("HarborSunset2026!"))
+        partner = app_module.fetch_partner(partner_id)
+        before = app_module.get_db().execute("SELECT COUNT(*) AS count FROM referrals").fetchone()["count"]
+    assert partner and partner["status"] == "PENDING"
+    invalid = client.get("/properties/1?ref=SB000000")
+    pending = client.get(f"/properties/1?ref={partner['partner_code']}")
+    assert "sb_referral=" not in invalid.headers.get("Set-Cookie", "")
+    assert "sb_referral=" not in pending.headers.get("Set-Cookie", "")
+    with app.app_context():
+        db = app_module.get_db()
+        assert db.execute("SELECT COUNT(*) AS count FROM referrals").fetchone()["count"] == before
+        db.execute("DELETE FROM partners WHERE public_id = ?", (partner_id,))
+        db.commit()
+
+
+def test_referral_attribution_ignores_form_spoofing_and_connects_enquiry(client) -> None:
+    suffix = uuid.uuid4().hex[:8]
+    email = f"attributed-{suffix}@example.test"
+    with app.app_context():
+        partner_id = create_partner({
+            "full_name": "Verified Source", "email": f"source-{suffix}@example.test", "phone": "08056789012",
+            "whatsapp": "08056789012", "location": "Lagos", "partner_type": "INDIVIDUAL",
+            "company_name": "", "experience_notes": "", "referral_source": "",
+        }, hash_password("HarborSunset2026!"))
+        app_module.update_partner_status(partner_id, status="APPROVED", review_note="", reviewed_by="test")
+        partner = app_module.fetch_partner(partner_id)
+    assert partner
+    client.get(f"/properties/1?ref={partner['partner_code']}")
+    with client.session_transaction() as session:
+        session["_csrf_token"] = "test-token"
+    response = client.post("/enquiries", data={
+        "csrf_token": "test-token", "listing_id": "1", "name": "Referral Customer", "email": email,
+        "preferred_contact": "Email", "message": "I would like details.", "source_path": "/properties/1",
+        "partner_id": "attacker-selected-partner", "referral_id": "attacker-selected-referral",
+    }, follow_redirects=False)
+    assert response.status_code == 302
+
+    with app.app_context():
+        db = app_module.get_db()
+        lead = db.execute("SELECT * FROM enquiries WHERE email = ?", (email,)).fetchone()
+        assert lead is not None
+        assert lead["partner_id"] == partner_id
+        assert lead["referral_id"] != "attacker-selected-referral"
+        referral = db.execute("SELECT * FROM referrals WHERE public_id = ?", (lead["referral_id"],)).fetchone()
+        assert referral["status"] == "LEAD_CREATED"
+        app_module.update_enquiry_record(lead["public_id"], status="CLOSED_WON")
+        app_module.record_referral_lead_lifecycle(
+            lead["referral_id"], lead["public_id"], lead["status"], "CLOSED_WON"
+        )
+        assert db.execute("SELECT status FROM referrals WHERE public_id = ?", (referral["public_id"],)).fetchone()["status"] == "CONVERTED"
+        event_types = {
+            item["event_type"] for item in db.execute(
+                "SELECT event_type FROM referral_events WHERE referral_id = ?", (referral["public_id"],)
+            ).fetchall()
+        }
+        assert {"LEAD_STATUS_CHANGED", "CONVERTED"} <= event_types
+        db.execute("DELETE FROM referral_events WHERE referral_id = ?", (referral["public_id"],))
+        db.execute("DELETE FROM referrals WHERE public_id = ?", (referral["public_id"],))
+        db.execute("DELETE FROM activity_log WHERE entity_id = ?", (lead["public_id"],))
+        db.execute("DELETE FROM enquiries WHERE public_id = ?", (lead["public_id"],))
+        db.execute("DELETE FROM contacts WHERE email = ?", (email,))
+        db.execute("DELETE FROM partners WHERE public_id = ?", (partner_id,))
+        db.commit()
+
+
+def test_expired_referrals_do_not_attribute_new_leads(client) -> None:
+    suffix = uuid.uuid4().hex[:8]
+    email = f"expired-{suffix}@example.test"
+    with app.app_context():
+        partner_id = create_partner({
+            "full_name": "Expiring Source", "email": f"expiry-{suffix}@example.test", "phone": "08067890123",
+            "whatsapp": "08067890123", "location": "Lagos", "partner_type": "INDIVIDUAL",
+            "company_name": "", "experience_notes": "", "referral_source": "",
+        }, hash_password("HarborSunset2026!"))
+        app_module.update_partner_status(partner_id, status="APPROVED", review_note="", reviewed_by="test")
+        partner = app_module.fetch_partner(partner_id)
+    assert partner
+    client.get(f"/properties/1?ref={partner['partner_code']}")
+    with app.app_context():
+        db = app_module.get_db()
+        referral = db.execute("SELECT * FROM referrals WHERE partner_id = ?", (partner_id,)).fetchone()
+        db.execute("UPDATE referrals SET expires_at = ? WHERE public_id = ?", ("2020-01-01T00:00:00+00:00", referral["public_id"]))
+        db.commit()
+    with client.session_transaction() as session:
+        session["_csrf_token"] = "test-token"
+    client.post("/enquiries", data={
+        "csrf_token": "test-token", "listing_id": "1", "name": "Expired Visitor", "email": email,
+        "preferred_contact": "Email", "message": "Please contact me.", "source_path": "/properties/1",
+    })
+    with app.app_context():
+        db = app_module.get_db()
+        lead = db.execute("SELECT * FROM enquiries WHERE email = ?", (email,)).fetchone()
+        assert lead is not None and not lead["partner_id"] and not lead["referral_id"]
+        assert db.execute("SELECT status FROM referrals WHERE public_id = ?", (referral["public_id"],)).fetchone()["status"] == "EXPIRED"
+        db.execute("DELETE FROM referral_events WHERE referral_id = ?", (referral["public_id"],))
+        db.execute("DELETE FROM referrals WHERE public_id = ?", (referral["public_id"],))
+        db.execute("DELETE FROM activity_log WHERE entity_id = ?", (lead["public_id"],))
+        db.execute("DELETE FROM enquiries WHERE public_id = ?", (lead["public_id"],))
+        db.execute("DELETE FROM contacts WHERE email = ?", (email,))
+        db.execute("DELETE FROM partners WHERE public_id = ?", (partner_id,))
+        db.commit()
+
+
+def test_suspended_partner_cannot_receive_a_new_attributed_lead(client) -> None:
+    suffix = uuid.uuid4().hex[:8]
+    email = f"suspended-{suffix}@example.test"
+    with app.app_context():
+        partner_id = create_partner({
+            "full_name": "Suspended Source", "email": f"suspended-source-{suffix}@example.test",
+            "phone": "08090123456", "whatsapp": "08090123456", "location": "Lagos",
+            "partner_type": "INDIVIDUAL", "company_name": "", "experience_notes": "", "referral_source": "",
+        }, hash_password("HarborSunset2026!"))
+        app_module.update_partner_status(partner_id, status="APPROVED", review_note="", reviewed_by="test")
+        partner = app_module.fetch_partner(partner_id)
+    assert partner
+    client.get(f"/properties/1?ref={partner['partner_code']}")
+    with app.app_context():
+        app_module.update_partner_status(partner_id, status="SUSPENDED", review_note="Review", reviewed_by="test")
+    with client.session_transaction() as session:
+        session["_csrf_token"] = "test-token"
+    client.post("/enquiries", data={
+        "csrf_token": "test-token", "listing_id": "1", "name": "Suspended Visitor", "email": email,
+        "preferred_contact": "Email", "message": "Please contact me.", "source_path": "/properties/1",
+    })
+    with app.app_context():
+        db = app_module.get_db()
+        lead = db.execute("SELECT * FROM enquiries WHERE email = ?", (email,)).fetchone()
+        referral = db.execute("SELECT * FROM referrals WHERE partner_id = ?", (partner_id,)).fetchone()
+        assert lead is not None and not lead["partner_id"] and not lead["referral_id"]
+        db.execute("DELETE FROM referral_events WHERE referral_id = ?", (referral["public_id"],))
+        db.execute("DELETE FROM referrals WHERE public_id = ?", (referral["public_id"],))
+        db.execute("DELETE FROM activity_log WHERE entity_id = ?", (lead["public_id"],))
+        db.execute("DELETE FROM enquiries WHERE public_id = ?", (lead["public_id"],))
+        db.execute("DELETE FROM contacts WHERE email = ?", (email,))
+        db.execute("DELETE FROM partners WHERE public_id = ?", (partner_id,))
+        db.commit()
+
+
+def test_inspection_inherits_verified_referral_from_its_lead(client) -> None:
+    suffix = uuid.uuid4().hex[:8]
+    email = f"inspection-referral-{suffix}@example.test"
+    with app.app_context():
+        partner_id = create_partner({
+            "full_name": "Inspection Source", "email": f"inspection-source-{suffix}@example.test",
+            "phone": "08078901234", "whatsapp": "08078901234", "location": "Lagos",
+            "partner_type": "INDIVIDUAL", "company_name": "", "experience_notes": "", "referral_source": "",
+        }, hash_password("HarborSunset2026!"))
+        app_module.update_partner_status(partner_id, status="APPROVED", review_note="", reviewed_by="test")
+        partner = app_module.fetch_partner(partner_id)
+    assert partner
+    client.get(f"/properties/1?ref={partner['partner_code']}")
+    with client.session_transaction() as session:
+        session["_csrf_token"] = "test-token"
+    response = client.post("/inspections", data={
+        "csrf_token": "test-token", "listing_id": "1", "name": "Inspection Visitor", "email": email,
+        "phone": "", "requested_date": "2099-01-15", "requested_time": "10:30",
+        "notes": "Please confirm access.", "source_path": "/properties/1",
+        "partner_id": "spoofed-partner", "referral_id": "spoofed-referral",
+    }, follow_redirects=False)
+    assert response.status_code == 302
+    with app.app_context():
+        db = app_module.get_db()
+        inspection = db.execute("SELECT * FROM inspections WHERE email = ?", (email,)).fetchone()
+        assert inspection is not None
+        assert inspection["partner_id"] == partner_id
+        assert inspection["referral_id"] != "spoofed-referral"
+        referral = db.execute("SELECT * FROM referrals WHERE public_id = ?", (inspection["referral_id"],)).fetchone()
+        assert referral["status"] == "INSPECTION_REQUESTED"
+        lead = db.execute("SELECT * FROM enquiries WHERE public_id = ?", (inspection["lead_id"],)).fetchone()
+        assert lead["partner_id"] == partner_id and lead["referral_id"] == inspection["referral_id"]
+        db.execute("DELETE FROM referral_events WHERE referral_id = ?", (referral["public_id"],))
+        db.execute("DELETE FROM referrals WHERE public_id = ?", (referral["public_id"],))
+        db.execute("DELETE FROM activity_log WHERE entity_id IN (?, ?)", (lead["public_id"], inspection["public_id"]))
+        db.execute("DELETE FROM inspections WHERE public_id = ?", (inspection["public_id"],))
+        db.execute("DELETE FROM enquiries WHERE public_id = ?", (lead["public_id"],))
+        db.execute("DELETE FROM contacts WHERE email = ?", (email,))
+        db.execute("DELETE FROM partners WHERE public_id = ?", (partner_id,))
+        db.commit()
+
+
+def test_referral_permissions_follow_operational_roles() -> None:
+    assert role_has_permission("SALES_MANAGER", "referrals.view")
+    assert role_has_permission("MARKETING_MANAGER", "referrals.view")
+    assert not role_has_permission("PROPERTY_MANAGER", "referrals.view")
+
+
+def test_commission_money_math_is_decimal_safe_and_validated() -> None:
+    assert decimal_money_to_minor("1,234.567") == 123457
+    assert percentage_to_basis_points("2.345") == 235
+    assert calculate_commission_minor(101, calculation_type="PERCENTAGE", percentage_bps=5000) == 51
+    assert calculate_commission_minor(50_000_00, calculation_type="FIXED", fixed_amount_minor=125_50) == 125_50
+    with pytest.raises(ValueError):
+        calculate_commission_minor(0, calculation_type="PERCENTAGE", percentage_bps=250)
+    with pytest.raises(ValueError):
+        percentage_to_basis_points("100.01")
+    with pytest.raises(ValueError):
+        app_module.create_commission_for_lead(
+            {"id": "invalid-sale", "estimated_value": 100, "partner_id": "none"},
+            {
+                "id": "oversized-fixed", "name": "Oversized", "scope_type": "DEFAULT",
+                "calculation_type": "FIXED", "percentage_bps": 0, "fixed_amount_minor": 20_000,
+                "priority": 1,
+            },
+            "EARNED",
+        )
+
+
+def test_commission_rule_matching_and_lifecycle_are_deterministic() -> None:
+    common = {
+        "active": True, "valid_from": "2026-01-01", "valid_until": "2026-12-31", "created_at": "2026-01-01",
+    }
+    default = {**common, "scope_type": "DEFAULT", "priority": 10}
+    property_rule = {**common, "scope_type": "PROPERTY", "property_id": "1", "priority": 10}
+    partner_rule = {**common, "scope_type": "PARTNER", "partner_id": "partner-1", "priority": 10}
+    campaign_rule = {**common, "scope_type": "CAMPAIGN", "campaign_id": "launch-26", "priority": 10}
+    assert rule_matches(default, property_id="1", partner_id="partner-1")
+    assert rule_matches(property_rule, property_id="1", partner_id="partner-1")
+    assert rule_matches(partner_rule, property_id="1", partner_id="partner-1")
+    assert rule_matches(
+        campaign_rule, property_id="1", partner_id="partner-1", campaign_id="launch-26"
+    )
+    assert max([default, property_rule, campaign_rule, partner_rule], key=rule_sort_key) is partner_rule
+    assert target_status_for_lead_stage("NEGOTIATION") == "POTENTIAL"
+    assert target_status_for_lead_stage("DEPOSIT_PAID") == "PENDING"
+    assert target_status_for_lead_stage("CLOSED_WON") == "EARNED"
+    assert transition_is_allowed("EARNED", "APPROVED")
+    assert not transition_is_allowed("PAID", "APPROVED")
+
+
+def test_commission_lifecycle_requires_attributed_deal_and_records_payout(client) -> None:
+    suffix = uuid.uuid4().hex[:8]
+    lead_email = f"commission-lead-{suffix}@example.test"
+    with app.app_context():
+        partner_id = create_partner({
+            "full_name": "Commission Partner", "email": f"commission-partner-{suffix}@example.test",
+            "phone": "08101234567", "whatsapp": "08101234567", "location": "Lagos",
+            "partner_type": "INDIVIDUAL", "company_name": "", "experience_notes": "", "referral_source": "",
+        }, hash_password("HarborSunset2026!"))
+        app_module.update_partner_status(partner_id, status="APPROVED", review_note="", reviewed_by="test")
+        partner = app_module.fetch_partner(partner_id)
+        rule_id = app_module.save_commission_rule({
+            "name": "QA default 2.5 percent", "calculation_type": "PERCENTAGE", "percentage_bps": 250,
+            "fixed_amount_minor": 0, "scope_type": "PARTNER", "property_id": "", "property_title": "",
+            "campaign_id": "", "partner_id": partner_id, "active": 1, "valid_from": "", "valid_until": "",
+            "priority": 1000,
+        }, created_by="test")
+    assert partner
+    client.get(f"/properties/1?ref={partner['partner_code']}")
+    with client.session_transaction() as session:
+        session["_csrf_token"] = "test-token"
+    client.post("/enquiries", data={
+        "csrf_token": "test-token", "listing_id": "1", "name": "Commission Customer", "email": lead_email,
+        "preferred_contact": "Email", "message": "I want to purchase.", "source_path": "/properties/1",
+    })
+    with app.app_context():
+        db = app_module.get_db()
+        lead = db.execute("SELECT * FROM enquiries WHERE email = ?", (lead_email,)).fetchone()
+        lead_id = lead["public_id"]
+        referral_id = lead["referral_id"]
+
+    authenticated_client(client)
+    for stage, expected in (("NEGOTIATION", "POTENTIAL"), ("DEPOSIT_PAID", "PENDING"), ("CLOSED_WON", "EARNED")):
+        response = client.post(f"/dashboard/enquiries/{lead_id}/status", data={
+            "csrf_token": "test-token", "status": stage, "source": "PARTNER",
+            "estimated_value": "100000000", "assigned_staff_id": "", "internal_note": "",
+            "follow_up_on": "",
+        })
+        assert response.status_code == 302
+        with app.app_context():
+            commission = app_module.fetch_commission_for_lead(lead_id)
+            assert commission is not None and commission["status"] == expected
+            assert commission["final_amount_minor"] == 250_000_000
+
+    commission_id = str(commission["id"])
+    detail = client.get(f"/dashboard/commissions/{commission_id}")
+    assert detail.status_code == 200 and b"Finance decision" in detail.data
+    rejected_adjustment = client.post(f"/dashboard/commissions/{commission_id}/adjust", data={
+        "csrf_token": "test-token", "adjustment": "-999999999", "reason": "Would make amount invalid",
+    })
+    assert rejected_adjustment.status_code == 302
+    with app.app_context():
+        assert app_module.fetch_commission(commission_id)["adjustment_minor"] == 0
+    adjustment = client.post(f"/dashboard/commissions/{commission_id}/adjust", data={
+        "csrf_token": "test-token", "adjustment": "1000.50", "reason": "Documented campaign incentive",
+    })
+    assert adjustment.status_code == 302
+    approved = client.post(f"/dashboard/commissions/{commission_id}/decision", data={
+        "csrf_token": "test-token", "decision": "APPROVED", "reason": "",
+    })
+    assert approved.status_code == 302
+    paid = client.post(f"/dashboard/commissions/{commission_id}/paid", data={
+        "csrf_token": "test-token", "payment_reference": f"QA-PAY-{suffix}",
+        "paid_on": app_module.date.today().isoformat(), "payment_note": "Verified test payout evidence",
+    })
+    assert paid.status_code == 302
+    duplicate_paid = client.post(f"/dashboard/commissions/{commission_id}/paid", data={
+        "csrf_token": "test-token", "payment_reference": "OVERWRITE-ATTEMPT",
+        "paid_on": app_module.date.today().isoformat(), "payment_note": "Should not replace evidence",
+    })
+    assert duplicate_paid.status_code == 302
+    paid_detail = client.get(f"/dashboard/commissions/{commission_id}")
+    assert paid_detail.status_code == 200 and f"QA-PAY-{suffix}".encode() in paid_detail.data
+    client.post(f"/dashboard/enquiries/{lead_id}/status", data={
+        "csrf_token": "test-token", "status": "CLOSED_LOST", "source": "PARTNER",
+        "estimated_value": "100000000", "assigned_staff_id": "", "internal_note": "",
+        "follow_up_on": "",
+    })
+
+    with app.app_context():
+        db = app_module.get_db()
+        final = app_module.fetch_commission(commission_id)
+        assert final and final["status"] == "PAID"
+        assert final["final_amount_minor"] == 250_100_050
+        assert final["payment_reference"] == f"QA-PAY-{suffix}"
+        assert db.execute("SELECT COUNT(*) AS count FROM commissions WHERE lead_id = ?", (lead_id,)).fetchone()["count"] == 1
+        actions = {
+            row["action"] for row in db.execute(
+                "SELECT action FROM activity_log WHERE entity_type = 'commission' AND entity_id = ?", (commission_id,)
+            ).fetchall()
+        }
+        assert {"created", "adjusted", "approved", "paid"} <= actions
+        db.execute("DELETE FROM activity_log WHERE entity_id IN (?, ?, ?)", (commission_id, lead_id, partner_id))
+        db.execute("DELETE FROM commissions WHERE public_id = ?", (commission_id,))
+        db.execute("DELETE FROM commission_rules WHERE public_id = ?", (rule_id,))
+        db.execute("DELETE FROM referral_events WHERE referral_id = ?", (referral_id,))
+        db.execute("DELETE FROM referrals WHERE public_id = ?", (referral_id,))
+        db.execute("DELETE FROM enquiries WHERE public_id = ?", (lead_id,))
+        db.execute("DELETE FROM contacts WHERE email = ?", (lead_email,))
+        db.execute("DELETE FROM partners WHERE public_id = ?", (partner_id,))
+        db.commit()
+
+
+def test_commission_permissions_keep_approval_and_payout_with_finance() -> None:
+    assert role_has_permission("FINANCE_MANAGER", "commissions.view")
+    assert role_has_permission("FINANCE_MANAGER", "commissions.manage")
+    assert role_has_permission("FINANCE_MANAGER", "commissions.approve")
+    assert role_has_permission("FINANCE_MANAGER", "commissions.mark_paid")
+    assert not role_has_permission("SALES_MANAGER", "commissions.approve")
+    assert not role_has_permission("MARKETING_MANAGER", "commissions.mark_paid")
+
+
+def test_sales_and_partner_sessions_cannot_use_commission_controls(client, monkeypatch) -> None:
+    fake_sales_staff = {
+        "id": "commission-sales", "public_id": "commission-sales", "username": "commission-sales",
+        "email": "commission-sales@example.test", "full_name": "Sales User", "role": "SALES_MANAGER",
+        "status": "ACTIVE", "password_hash": "unused",
+    }
+    monkeypatch.setattr(app_module, "fetch_staff_user", lambda _user_id: dict(fake_sales_staff))
+    with client.session_transaction() as session:
+        session["staff_user_id"] = fake_sales_staff["id"]
+        session["_csrf_token"] = "test-token"
+    assert client.get("/dashboard/commissions").status_code == 403
+    assert client.post(
+        "/dashboard/commissions/not-a-record/decision",
+        data={"csrf_token": "test-token", "decision": "APPROVED", "reason": ""},
+    ).status_code == 403
+
+    with client.session_transaction() as session:
+        session.clear()
+        session["partner_user_id"] = "partner-session-only"
+        session["_csrf_token"] = "test-token"
+    response = client.get("/dashboard/commissions", follow_redirects=False)
+    assert response.status_code == 302 and response.headers["Location"].startswith("/login?next=")
+
+
+def test_partner_commission_page_isolates_records_and_customer_identity(client) -> None:
+    suffix = uuid.uuid4().hex[:8]
+    partner_ids: list[str] = []
+    lead_ids: list[str] = []
+    referral_ids: list[str] = []
+    contact_ids: list[str] = []
+    commission_ids: list[str] = []
+    rule_id = ""
+    with app.app_context():
+        base = {
+            "phone": "08112345678", "whatsapp": "08112345678", "location": "Lagos",
+            "partner_type": "INDIVIDUAL", "company_name": "", "experience_notes": "", "referral_source": "",
+        }
+        for label in ("Alpha", "Beta"):
+            partner_id = create_partner({
+                **base, "full_name": f"{label} Commission Partner",
+                "email": f"{label.lower()}-commission-{suffix}@example.test",
+            }, hash_password("HarborSunset2026!"))
+            app_module.update_partner_status(partner_id, status="APPROVED", review_note="", reviewed_by="test")
+            partner_ids.append(partner_id)
+        rule_id = app_module.save_commission_rule({
+            "name": "QA isolation fixed", "calculation_type": "FIXED", "percentage_bps": 0,
+            "fixed_amount_minor": 500_000_00, "scope_type": "DEFAULT", "property_id": "",
+            "property_title": "", "campaign_id": "", "partner_id": "", "active": 1,
+            "valid_from": "", "valid_until": "", "priority": 1000,
+        }, created_by="test")
+        for index, partner_id in enumerate(partner_ids):
+            partner = app_module.fetch_partner(partner_id)
+            title = "ALPHA COMMISSION PROPERTY" if index == 0 else "BETA COMMISSION PROPERTY"
+            customer = "Alpha Private Customer" if index == 0 else "Beta Private Customer"
+            email = f"commission-private-{index}-{suffix}@example.test"
+            with app.test_request_context(f"/properties/{index + 1}"):
+                referral = app_module.create_referral_record(
+                    token=uuid.uuid4().hex, partner=partner, listing_id=str(index + 1),
+                    listing_title=title, path=f"/properties/{index + 1}",
+                )
+            lead_id = create_enquiry_record({
+                "listing_id": str(index + 1), "listing_title": title, "name": customer, "email": email,
+                "phone": "", "preferred_contact": "Email", "message": "Private commission deal",
+                "source_path": f"/properties/{index + 1}", "source": "PARTNER", "status": "CLOSED_WON",
+                "estimated_value": "50000000", "partner_id": partner_id, "referral_id": str(referral["id"]),
+            })
+            lead = app_module.fetch_enquiry(lead_id)
+            app_module.update_referral_record(str(referral["id"]), status="CONVERTED", lead_id=lead_id)
+            commission = app_module.sync_commission_for_lead(lead_id)
+            assert commission is not None
+            lead_ids.append(lead_id)
+            referral_ids.append(str(referral["id"]))
+            contact_ids.append(str(lead["contact_id"]))
+            commission_ids.append(str(commission["id"]))
+
+    with client.session_transaction() as session:
+        session["partner_user_id"] = partner_ids[0]
+        session["_csrf_token"] = "test-token"
+    page = client.get("/partner/commissions")
+    assert page.status_code == 200
+    assert b"ALPHA COMMISSION PROPERTY" in page.data
+    assert b"BETA COMMISSION PROPERTY" not in page.data
+    assert b"Alpha Private Customer" not in page.data
+    assert b"Beta Private Customer" not in page.data
+
+    with app.app_context():
+        db = app_module.get_db()
+        for commission_id in commission_ids:
+            db.execute("DELETE FROM activity_log WHERE entity_type = 'commission' AND entity_id = ?", (commission_id,))
+            db.execute("DELETE FROM commissions WHERE public_id = ?", (commission_id,))
+        db.execute("DELETE FROM commission_rules WHERE public_id = ?", (rule_id,))
+        for referral_id in referral_ids:
+            db.execute("DELETE FROM referral_events WHERE referral_id = ?", (referral_id,))
+            db.execute("DELETE FROM referrals WHERE public_id = ?", (referral_id,))
+        for lead_id in lead_ids:
+            db.execute("DELETE FROM enquiries WHERE public_id = ?", (lead_id,))
+        for contact_id in contact_ids:
+            db.execute("DELETE FROM contacts WHERE public_id = ?", (contact_id,))
+        db.execute("DELETE FROM partners WHERE public_id IN (?, ?)", tuple(partner_ids))
+        db.commit()
+
+
+def test_password_policy_rejects_weak_or_personal_passwords() -> None:
+    assert validate_password("short")
+    assert validate_password(
+        "AdaStructure2026",
+        personal_values=("Ada Structure", "ada@example.com", "ada"),
+    )
+    assert validate_password("HarborSunset2026!") == []
+
+
+def test_backend_permissions_return_forbidden_for_wrong_role(client, monkeypatch) -> None:
+    fake_staff = {
+        "id": "test-property-manager",
+        "public_id": "test-property-manager",
+        "username": "property.manager",
+        "email": "property.manager@example.test",
+        "full_name": "Property Manager",
+        "role": "PROPERTY_MANAGER",
+        "status": "ACTIVE",
+        "password_hash": "unused",
+    }
+    monkeypatch.setattr(app_module, "fetch_staff_user", lambda _user_id: dict(fake_staff))
+    with client.session_transaction() as session:
+        session["staff_user_id"] = fake_staff["id"]
+
+    allowed = client.get("/dashboard/listings")
+    forbidden = client.get("/dashboard/finance")
+
+    assert allowed.status_code == 200
+    assert forbidden.status_code == 403
+    assert b"Your staff role does not allow this action" in forbidden.data
+
+
+def test_super_admin_cannot_disable_own_account(client) -> None:
+    authenticated_client(client)
+    with app.app_context():
+        staff = fetch_staff_by_identifier(app.config["ADMIN_USERNAME"])
+    assert staff is not None
+
+    response = client.post(
+        f"/dashboard/team/{staff['id']}/update",
+        data={
+            "csrf_token": "test-token",
+            "full_name": staff["full_name"],
+            "role": staff["role"],
+            "status": "DISABLED",
+        },
+        follow_redirects=False,
+    )
+
+    with app.app_context():
+        refreshed = fetch_staff_user(str(staff["id"]))
+    assert response.status_code == 302
+    assert refreshed is not None
+    assert refreshed["status"] == "ACTIVE"
+
+
+@pytest.mark.parametrize("path", ["/dashboard", "/dashboard/team", "/dashboard/audit"])
+def test_super_admin_phase_one_routes_render(client, path: str) -> None:
+    authenticated_client(client)
+
+    response = client.get(path)
+
+    assert response.status_code == 200
+    assert b"refinement.css" in response.data
+
+
+def test_view_only_role_hides_unavailable_navigation_and_actions(client, monkeypatch) -> None:
+    fake_staff = {
+        "id": "test-marketing-manager",
+        "public_id": "test-marketing-manager",
+        "username": "marketing.manager",
+        "email": "marketing.manager@example.test",
+        "full_name": "Marketing Manager",
+        "role": "MARKETING_MANAGER",
+        "status": "ACTIVE",
+        "password_hash": "unused",
+    }
+    monkeypatch.setattr(app_module, "fetch_staff_user", lambda _user_id: dict(fake_staff))
+    with client.session_transaction() as session:
+        session["staff_user_id"] = fake_staff["id"]
+
+    response = client.get("/dashboard/listings")
+
+    assert response.status_code == 200
+    assert b"New listing" not in response.data
+    assert b"Apply to selected" not in response.data
+    assert b">Edit<" not in response.data
+    assert b"Delete listing" not in response.data
+    assert b'href="/dashboard/finance"' not in response.data
+    assert client.get("/dashboard/inspections").status_code == 403
+
+
+def test_partner_marketing_share_message_contains_only_approved_public_context() -> None:
+    message = marketing_share_message(
+        {
+            "title": "Waterfront Residence",
+            "district": "Ikoyi",
+            "summary": "A private waterfront home with generous entertaining space.",
+            "internal_note": "Never expose this note",
+        },
+        "https://example.test/properties/1?ref=SB-TEST",
+        "NGN 250,000,000",
+    )
+
+    assert "Waterfront Residence" in message
+    assert "Ikoyi" in message
+    assert "NGN 250,000,000" in message
+    assert "https://example.test/properties/1?ref=SB-TEST" in message
+    assert "Never expose this note" not in message
+
+
+def test_partner_marketing_toolkit_tracks_real_actions_and_protects_media(client) -> None:
+    suffix = uuid.uuid4().hex[:8]
+    partner_id = ""
+    asset_ids = [f"asset-{suffix}", f"draft-{suffix}", f"inactive-{suffix}"]
+    with app.app_context():
+        partner_id = create_partner(
+            {
+                "full_name": "Marketing Toolkit Partner",
+                "email": f"marketing-{suffix}@example.test",
+                "phone": "08034567890",
+                "whatsapp": "08034567890",
+                "location": "Lagos",
+                "partner_type": "INDIVIDUAL",
+                "company_name": "",
+                "experience_notes": "",
+                "referral_source": "",
+            },
+            hash_password("HarborSunset2026!"),
+        )
+        app_module.update_partner_status(
+            partner_id, status="APPROVED", review_note="", reviewed_by="test"
+        )
+        now = app_module.utc_now_iso()
+        db = app_module.get_db()
+        db.executemany(
+            """INSERT INTO marketing_assets (
+                public_id, listing_id, asset_type, title, storage_kind, storage_key,
+                file_size, active, approved, created_by, created_at, updated_at
+            ) VALUES (?, '1', 'IMAGE', ?, 'local', 'images/ikoyi-penthouse-sample.webp',
+                      100, ?, ?, 'test', ?, ?)""",
+            [
+                (asset_ids[0], "Approved campaign image", 1, 1, now, now),
+                (asset_ids[1], "Unapproved internal draft", 1, 0, now, now),
+                (asset_ids[2], "Retired campaign image", 0, 1, now, now),
+            ],
+        )
+        db.commit()
+
+    try:
+        with client.session_transaction() as session:
+            session["partner_user_id"] = partner_id
+            session["_csrf_token"] = "test-token"
+
+        properties = client.get("/partner/properties")
+        materials = client.get("/partner/materials")
+        detail = client.get("/partner/marketing/1")
+
+        assert properties.status_code == materials.status_code == detail.status_code == 200
+        for label in (
+            b"View property",
+            b"Copy referral link",
+            b"Share to WhatsApp",
+            b"Marketing information",
+            b"Download image",
+        ):
+            assert label in properties.data
+        assert b"Approved campaign image" in detail.data
+        assert b"Unapproved internal draft" not in detail.data
+        assert b"Retired campaign image" not in detail.data
+        assert b"data-partner-marketing-actions" in detail.data
+        assert b"Internal notes" not in detail.data
+
+        invalid = client.post(
+            "/partner/marketing-events",
+            data={"csrf_token": "test-token", "listing_id": "1", "event_type": "IMPRESSIONS"},
+        )
+        copied = client.post(
+            "/partner/marketing-events",
+            data={"csrf_token": "test-token", "listing_id": "1", "event_type": "LINK_COPIED"},
+        )
+        whatsapp = client.post(
+            "/partner/marketing-events",
+            data={"csrf_token": "test-token", "listing_id": "1", "event_type": "WHATSAPP_SHARE"},
+        )
+        download = client.get("/partner/marketing-assets/primary:1/download")
+
+        assert invalid.status_code == 400
+        assert copied.status_code == whatsapp.status_code == 201
+        assert download.status_code == 200
+        assert download.headers["Content-Disposition"].startswith("attachment;")
+        with app.app_context():
+            performance = app_module.partner_performance_metrics(partner_id)
+        assert performance["links_copied"] == 1
+        assert performance["shares_initiated"] == 1
+        assert performance["media_downloads"] == 1
+
+        with client.session_transaction() as session:
+            session.clear()
+        protected = client.get("/partner/marketing-assets/primary:1/download")
+        assert protected.status_code == 302
+        assert "/partners/login" in protected.headers["Location"]
+    finally:
+        with app.app_context():
+            db = app_module.get_db()
+            db.execute("DELETE FROM partner_marketing_events WHERE partner_id = ?", (partner_id,))
+            db.execute(
+                "DELETE FROM marketing_assets WHERE public_id IN (?, ?, ?)", tuple(asset_ids)
+            )
+            db.execute(
+                "DELETE FROM activity_log WHERE entity_type = 'partner' AND entity_id = ?", (partner_id,)
+            )
+            db.execute("DELETE FROM partners WHERE public_id = ?", (partner_id,))
+            db.commit()
+
+
+def test_staff_invitation_is_single_use_and_creates_hashed_account(client) -> None:
+    suffix = uuid.uuid4().hex[:10]
+    email = f"qa-{suffix}@example.test"
+    username = f"qa_{suffix}"
+    with app.app_context():
+        inviter = fetch_staff_by_identifier(app.config["ADMIN_USERNAME"])
+        assert inviter is not None
+        invitation_id, token = create_staff_invitation(
+            full_name="Quality Reviewer",
+            email=email,
+            role="SALES_MANAGER",
+            invited_by=str(inviter["id"]),
+        )
+
+    created = None
+    try:
+        with client.session_transaction() as session:
+            session["_csrf_token"] = "test-token"
+        response = client.post(
+            f"/staff/accept/{token}",
+            data={
+                "csrf_token": "test-token",
+                "username": username,
+                "password": "HarborSunset2026!",
+                "password_confirmation": "HarborSunset2026!",
+            },
+            follow_redirects=False,
+        )
+        assert response.status_code == 302
+        assert response.headers["Location"] == "/dashboard"
+
+        with app.app_context():
+            created = fetch_staff_by_identifier(email)
+        assert created is not None
+        assert created["role"] == "SALES_MANAGER"
+        assert created["password_hash"] != "HarborSunset2026!"
+        assert client.get(f"/staff/accept/{token}").status_code == 410
+    finally:
+        with app.app_context():
+            if app_module.database_backend() == "mongodb":
+                app_module.get_mongo_staff_collection().delete_one({"email_key": email})
+                app_module.get_mongo_staff_invitations_collection().delete_one({"public_id": invitation_id})
+                if created is not None:
+                    app_module.get_mongo_activity_collection().delete_many(
+                        {"entity_type": "staff_user", "entity_id": str(created["id"])}
+                    )
+            else:
+                db = app_module.get_db()
+                db.execute("DELETE FROM staff_users WHERE email_key = ?", (email,))
+                db.execute("DELETE FROM staff_invitations WHERE public_id = ?", (invitation_id,))
+                db.execute(
+                    "DELETE FROM activity_log WHERE entity_type = 'staff_user' AND entity_id NOT IN (SELECT public_id FROM staff_users)"
+                )
+                db.commit()

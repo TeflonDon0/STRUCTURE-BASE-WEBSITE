@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Admin Login | {{ site_settings.site_name }}{% endblock %}
+{% block title %}Staff Login | {{ site_settings.site_name }}{% endblock %}
 {% block robots %}noindex,nofollow{% endblock %}
 {% block body_class %}login-page{% endblock %}
 
@@ -12,8 +12,8 @@
       </div>
 
       <div class="detail-copy">
-        <p class="eyebrow">Admin Sign In</p>
-        <h1>Sign in to the admin workspace.</h1>
+        <p class="eyebrow">Staff sign in</p>
+        <h1>Sign in to your workspace.</h1>
         <p class="page-intro">
           Use the admin workspace to update inventory, follow up leads, review tenant issues, and keep site information current.
         </p>
@@ -23,7 +23,7 @@
           <input type="hidden" name="next" value="{{ next_url }}">
 
           <div class="form-group">
-            <label for="username">Username</label>
+            <label for="username">Email or username</label>
             <input
               type="text"
               id="username"
@@ -83,7 +83,7 @@
                 {% endif %}
 
                 <p class="form-note">
-                  Visible on localhost for setup. Replace them in <code>.env</code> or your environment with <code>STRUCTUREBASE_ADMIN_USERNAME</code> and <code>STRUCTUREBASE_ADMIN_PASSWORD</code> before public deployment.
+                  Visible on localhost for initial setup. The first startup converts these values into an individual super-admin account with a hashed password.
                 </p>
               </div>
             </details>
