@@ -83,6 +83,11 @@
           </select>
         </div>
 
+        <div class="form-group">
+          <label for="max_price">Maximum price (NGN)</label>
+          <input type="number" id="max_price" name="max_price" min="100000" step="100000" inputmode="numeric" value="{{ filters.max_price }}" placeholder="150,000,000">
+        </div>
+
         <div class="filter-actions">
           <button type="submit" class="cta cta-small">Apply filters</button>
           <a href="{{ url_for('properties') }}" class="text-link">Reset</a>
@@ -115,7 +120,7 @@
       </div>
       <div class="property-grid-list">
         {% for listing in listings %}
-          <article class="property-card" id="listing-{{ listing.id }}">
+          <article class="property-card{% if listing.is_completed %} property-card-completed{% endif %}" id="listing-{{ listing.id }}">
             <a href="{{ url_for('property_detail', listing_id=listing.id) }}" class="property-media-link" aria-label="View {{ listing.title }}">
               <div class="property-media" style="--media-bg: url('{{ asset_url(listing_image_path(listing)) }}')">
                 <img src="{{ asset_url(listing_image_path(listing)) }}" alt="{{ listing.title }}" loading="{% if loop.index <= 4 %}eager{% else %}lazy{% endif %}" decoding="async">
@@ -137,7 +142,7 @@
                   <p class="property-location">{{ listing.district }}</p>
                   <p class="property-availability">{{ listing.availability }}</p>
                 </div>
-                <p class="property-price property-price-card">{{ listing.price | naira }}{{ listing.price_suffix }}</p>
+                <p class="property-price property-price-card">{% if listing.is_completed %}<span class="property-price-context">Last published</span>{% endif %}{{ listing.price | naira }}{{ listing.price_suffix }}</p>
                 <h2>{{ listing.title }}</h2>
                 <p class="property-summary">{{ listing.summary }}</p>
               </div>
@@ -159,9 +164,9 @@
                 <p class="property-note">{{ listing.address }}</p>
                 <div class="property-actions">
                   <a href="{{ url_for('property_detail', listing_id=listing.id) }}" class="cta cta-small">View details</a>
-                  <a href="{{ listing_whatsapp_url(listing) }}" class="cta cta-small cta-card-secondary" target="_blank" rel="noreferrer">Ask to view</a>
+                  <a href="{{ general_whatsapp_url if listing.is_completed else listing_whatsapp_url(listing) }}" class="cta cta-small cta-card-secondary" target="_blank" rel="noreferrer">{{ "Find similar" if listing.is_completed else "Ask to view" }}</a>
                 </div>
-                <p class="property-note property-reassurance">Ask about availability, fees, and viewing times before you travel.</p>
+                <p class="property-note property-reassurance">{% if listing.is_completed %}This property is no longer active; ask the team for comparable options.{% else %}Ask about availability, fees, and viewing times before you travel.{% endif %}</p>
               </div>
             </div>
           </article>

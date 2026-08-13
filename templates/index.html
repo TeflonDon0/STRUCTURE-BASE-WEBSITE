@@ -28,72 +28,105 @@
 
         <ul class="hero-trust-list" aria-label="Structurebase trust signals">{%- for signal in site_settings.homepage_trust_signals -%}<li>{{ signal }}</li>{%- endfor -%}</ul>
 
-        <div class="hero-actions stack-mobile">
-          <a href="{{ url_for('properties') }}" class="cta">
-            {{ site_settings.homepage_primary_cta }}
-          </a>
-          <a href="{{ general_whatsapp_url }}" class="cta cta-secondary" target="_blank" rel="noreferrer">
-            {{ site_settings.homepage_secondary_cta }}
-          </a>
+        <form method="get" action="{{ url_for('properties') }}" class="home-property-search" aria-label="Search available properties">
+          <div class="home-search-heading">
+            <strong>Find a property that fits</strong>
+            <span>Search the live catalogue</span>
+          </div>
+          <div class="home-search-fields">
+            <label>
+              <span>Location</span>
+              <select name="district">
+                <option value="">All districts</option>
+                {% for district in search_districts %}<option value="{{ district.district }}">{{ district.district }}</option>{% endfor %}
+              </select>
+            </label>
+            <label>
+              <span>Property type</span>
+              <select name="property_type">
+                <option value="">All types</option>
+                {% for item in search_property_types %}<option value="{{ item.property_type }}">{{ item.property_type }}</option>{% endfor %}
+              </select>
+            </label>
+            <label>
+              <span>Buy or rent</span>
+              <select name="status">
+                <option value="">Any purpose</option>
+                {% for option in status_options %}<option value="{{ option }}">{{ option }}</option>{% endfor %}
+              </select>
+            </label>
+            <label>
+              <span>Maximum price</span>
+              <input type="number" name="max_price" min="100000" step="100000" inputmode="numeric" placeholder="NGN budget">
+            </label>
+            <button type="submit" class="cta home-search-submit">Search properties</button>
+          </div>
+        </form>
+        <div class="home-hero-support-links">
+          <a href="{{ general_whatsapp_url }}" class="text-link" target="_blank" rel="noreferrer">Ask an advisor to shortlist</a>
+          <a href="{{ url_for('partner_register') }}" class="text-link">Earn through the partner programme</a>
         </div>
       </div>
 
+      {% if spotlight %}
       <aside class="hero-panel hero-panel-home" aria-label="Live listing preview">
         <div class="hero-card-stack hero-card-stack-back" aria-hidden="true"></div>
         <div class="hero-card-stack hero-card-stack-mid" aria-hidden="true"></div>
         <article class="hero-listing-card">
           <div class="hero-listing-media">
-            <img src="{{ static_asset_url('images/ikoyi-penthouse-sample.webp') }}" alt="Ikoyi apartment tower with balconies and palm trees" width="1536" height="1024" loading="eager" fetchpriority="high" decoding="async">
+            <img src="{{ asset_url(listing_image_path(spotlight)) }}" alt="{{ spotlight.title }}" width="1536" height="1024" loading="eager" fetchpriority="high" decoding="async">
           </div>
           <div class="hero-listing-body">
             <div class="hero-listing-head">
               <div>
-                <h2>Ikoyi Skyline Penthouse</h2>
+                <h2>{{ spotlight.title }}</h2>
                 <p class="hero-listing-location">
                   <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                     <path d="M12 22s7-6.23 7-12a7 7 0 1 0-14 0c0 5.77 7 12 7 12Zm0-9.3a2.7 2.7 0 1 1 0-5.4 2.7 2.7 0 0 1 0 5.4Z"/>
                   </svg>
-                  Ikoyi, Lagos
+                  {{ spotlight.district }}, Lagos
                 </p>
               </div>
               <div class="hero-listing-price">
-                <strong>&#8358;850,000,000</strong>
-                <span>For Sale</span>
+                <strong>{{ spotlight.price | naira }}{{ spotlight.price_suffix }}</strong>
+                <span>{{ spotlight.status }}</span>
               </div>
             </div>
             <dl class="hero-listing-meta">
               <div>
                 <dt>
                   <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 5h11v2H7v10h10v-5h2v7H5V5Zm13 0h1v1h-1V5Zm-3 3h6v2h-6V8Z"/></svg>
-                  <span>215</span>
+                  <span>{{ spotlight.area_sqm or '—' }}</span>
                 </dt>
                 <dd>SQM</dd>
               </div>
               <div>
                 <dt>
                   <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 12V7h2v3h12V7h2v11h-2v-3H6v3H4v-6Zm4-3a2 2 0 1 1 4 0v1H8V9Z"/></svg>
-                  <span>3</span>
+                  <span>{{ spotlight.bedrooms or '—' }}</span>
                 </dt>
                 <dd>Bedrooms</dd>
               </div>
               <div>
                 <dt>
                   <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M7 10V6a3 3 0 0 1 6 0v1h-2V6a1 1 0 0 0-2 0v4h10v3a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5v-3h3Z"/></svg>
-                  <span>3.5</span>
+                  <span>{{ spotlight.bathrooms or '—' }}</span>
                 </dt>
                 <dd>Bathrooms</dd>
               </div>
               <div>
                 <dt>
                   <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m6 8 1.2-3h9.6L18 8l2 2v7h-2v2h-2v-2H8v2H6v-2H4v-7l2-2Zm2.6-1-1 2h8.8l-1-2H8.6ZM7 14h3v-2H7v2Zm7 0h3v-2h-3v2Z"/></svg>
-                  <span>2</span>
+                  <span>{{ spotlight.availability }}</span>
                 </dt>
-                <dd>Parking</dd>
+                <dd>Status</dd>
               </div>
             </dl>
+            <a href="{{ url_for('property_detail', listing_id=spotlight.id) }}" class="hero-listing-link">View this property</a>
           </div>
         </article>
       </aside>
+      {% endif %}
     </div>
   </section>
 
@@ -144,6 +177,33 @@
                 <a href="{{ url_for('property_detail', listing_id=listing.id) }}" class="cta cta-small">View details</a>
                 <a href="{{ listing_whatsapp_url(listing) }}" class="text-link" target="_blank" rel="noreferrer">Chat about this property</a>
               </div>
+            </div>
+          </article>
+        {% endfor %}
+      </div>
+    </section>
+  {% endif %}
+
+  {% if completed %}
+    <section class="section shell completed-property-section" data-reveal aria-labelledby="completed-property-title">
+      <div class="section-heading section-heading-inline">
+        <div>
+          <p class="eyebrow">Completed transactions</p>
+          <h2 id="completed-property-title">A transparent record of properties no longer on the market.</h2>
+        </div>
+        <p class="section-support-copy">Sold, rented, and leased listings remain visible as a clear record—not as active inventory.</p>
+      </div>
+      <div class="completed-property-grid">
+        {% for listing in completed %}
+          <article class="completed-property-card">
+            <a href="{{ url_for('property_detail', listing_id=listing.id) }}" class="completed-property-media" aria-label="View completed listing {{ listing.title }}">
+              <img src="{{ asset_url(listing_image_path(listing)) }}" alt="{{ listing.title }}" loading="lazy" decoding="async">
+              <span>{{ listing.availability }}</span>
+            </a>
+            <div>
+              <p>{{ listing.district }} &middot; {{ listing.property_type }}</p>
+              <h3>{{ listing.title }}</h3>
+              <a href="{{ url_for('property_detail', listing_id=listing.id) }}" class="text-link text-link-strong">View completed property</a>
             </div>
           </article>
         {% endfor %}
@@ -260,8 +320,8 @@
   </section>
 
   <section class="section shell" data-reveal>
-    <div class="cta-banner">
-      <div><p class="eyebrow">Structure Base Partner Programme</p><h2>Know someone looking for the right property?</h2><p>Join a reviewed partner network, market approved listings, and keep your introduced opportunities traceable from first contact onward.</p></div>
+    <div class="cta-banner home-partner-banner">
+      <div><p class="eyebrow">Structure Base Partner Programme</p><h2>Turn trusted introductions into traceable opportunities.</h2><p>Join a reviewed partner network and share only approved property materials, with each introduction tracked from first click through commission review.</p><ul class="partner-benefit-list"><li>Personal referral links</li><li>Approved marketing assets</li><li>Clear commission status</li></ul></div>
       <div class="cta-banner-actions"><a href="{{ url_for('partner_dashboard') if is_partner_authenticated else url_for('partner_application_status') if has_partner_account else url_for('partner_register') }}" class="cta">{{ 'Open partner portal' if is_partner_authenticated else 'View application' if has_partner_account else 'Become a partner' }}</a><a href="{{ url_for('partner_login') }}" class="text-link">Partner sign in</a></div>
     </div>
   </section>

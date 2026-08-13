@@ -44,6 +44,8 @@ jobs:
           STRUCTUREBASE_STORAGE_BACKEND: local
           STRUCTUREBASE_ADMIN_USERNAME: admin
           STRUCTUREBASE_ADMIN_PASSWORD: ci-only-admin-password
+          STRUCTUREBASE_INITIAL_ADMIN_NAME: CI Deployment Owner
+          STRUCTUREBASE_INITIAL_ADMIN_EMAIL: ci-deployment@example.com
           STRUCTUREBASE_SESSION_COOKIE_SECURE: "1"
           STRUCTUREBASE_SESSION_HOURS: "12"
           STRUCTUREBASE_LOGIN_MAX_ATTEMPTS: "5"
@@ -54,3 +56,6 @@ jobs:
           STRUCTUREBASE_WHATSAPP_PHONE: "2348001234567"
           STRUCTUREBASE_SITE_NAME: Structurebase
         run: python scripts/deploy_smoke_check.py
+
+      - name: Test suite
+        run: python -m pytest -q

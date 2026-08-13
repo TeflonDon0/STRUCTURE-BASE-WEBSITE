@@ -168,6 +168,7 @@ ALLOWED_EXTENSIONS = {"jpg", "jpeg", "png", "webp"}
 ALLOWED_DOCUMENT_EXTENSIONS = {"pdf", "jpg", "jpeg", "png", "webp"}
 STATUS_OPTIONS = ("For Sale", "For Rent", "For Lease")
 AVAILABILITY_OPTIONS = ("Available", "Under Offer", "Sold", "Rented", "Leased", "Off Market")
+COMPLETED_AVAILABILITY_OPTIONS = ("Sold", "Rented", "Leased")
 SALE_AVAILABILITY_OPTIONS = {"Available", "Under Offer", "Sold", "Off Market"}
 RENT_AVAILABILITY_OPTIONS = {"Available", "Under Offer", "Rented", "Off Market"}
 LEASE_AVAILABILITY_OPTIONS = {"Available", "Under Offer", "Leased", "Off Market"}
@@ -663,7 +664,7 @@ def configure_logging() -> None:
 
 def sample_listings() -> list[dict[str, object]]:
     now = utc_now_iso()
-    return [
+    listings = [
         {
             "public_id": "ikoyi-skyline-penthouse",
             "title": "Ikoyi Skyline Penthouse",
@@ -815,6 +816,11 @@ def sample_listings() -> list[dict[str, object]]:
             "updated_at": now,
         },
     ]
+    for listing in listings:
+        listing.setdefault("documentation_summary", "")
+        listing.setdefault("documentation_verified", 0)
+        listing.setdefault("payment_plan_summary", "")
+    return listings
 
 
 def get_db() -> sqlite3.Connection:
@@ -980,6 +986,10 @@ def normalize_listing_record(record: Mapping[str, object] | sqlite3.Row) -> dict
     data["view_count"] = int(data.get("view_count") or 0)
     data["gallery_paths"] = normalize_string_list(data.get("gallery_paths"))
     data["virtual_tour_url"] = str(data.get("virtual_tour_url") or "").strip()
+    data["documentation_summary"] = str(data.get("documentation_summary") or "").strip()
+    data["documentation_verified"] = 1 if data.get("documentation_verified") else 0
+    data["payment_plan_summary"] = str(data.get("payment_plan_summary") or "").strip()
+    data["is_completed"] = 1 if data["availability"] in {"Sold", "Rented", "Leased"} else 0
     for key, _label in DISCOVERY_FEATURE_FIELDS + VERIFICATION_FIELDS:
         data[key] = 1 if data.get(key) else 0
     data["longitude"] = normalize_coordinate(data.get("longitude"), minimum=-180, maximum=180)
@@ -1330,6 +1340,9 @@ def init_sqlite_db() -> None:
             latitude REAL,
             gallery_paths TEXT NOT NULL DEFAULT '[]',
             virtual_tour_url TEXT NOT NULL DEFAULT '',
+            documentation_summary TEXT NOT NULL DEFAULT '',
+            documentation_verified INTEGER NOT NULL DEFAULT 0,
+            payment_plan_summary TEXT NOT NULL DEFAULT '',
             is_serviced INTEGER NOT NULL DEFAULT 0,
             has_power_24_7 INTEGER NOT NULL DEFAULT 0,
             is_flood_free INTEGER NOT NULL DEFAULT 0,
@@ -1753,6 +1766,13 @@ def init_sqlite_db() -> None:
     ensure_sqlite_column("listings", "latitude", "REAL")
     ensure_sqlite_column("listings", "gallery_paths", "TEXT NOT NULL DEFAULT '[]'")
     ensure_sqlite_column("listings", "virtual_tour_url", "TEXT NOT NULL DEFAULT ''")
+    ensure_sqlite_column("listings", "documentation_summary", "TEXT NOT NULL DEFAULT ''")
+    ensure_sqlite_column("listings", "documentation_verified", "INTEGER NOT NULL DEFAULT 0")
+    ensure_sqlite_column("listings", "payment_plan_summary", "TEXT NOT NULL DEFAULT ''")
+    db.execute(
+        "CREATE INDEX IF NOT EXISTS idx_listings_public_availability_updated "
+        "ON listings (published, availability, updated_at DESC)"
+    )
     ensure_sqlite_column("listings", "is_serviced", "INTEGER NOT NULL DEFAULT 0")
     ensure_sqlite_column("listings", "has_power_24_7", "INTEGER NOT NULL DEFAULT 0")
     ensure_sqlite_column("listings", "is_flood_free", "INTEGER NOT NULL DEFAULT 0")
@@ -1806,6 +1826,9 @@ def init_sqlite_db() -> None:
     db.execute("UPDATE listings SET view_count = 0 WHERE view_count IS NULL")
     db.execute("UPDATE listings SET gallery_paths = '[]' WHERE gallery_paths IS NULL OR gallery_paths = ''")
     db.execute("UPDATE listings SET virtual_tour_url = '' WHERE virtual_tour_url IS NULL")
+    db.execute("UPDATE listings SET documentation_summary = '' WHERE documentation_summary IS NULL")
+    db.execute("UPDATE listings SET documentation_verified = 0 WHERE documentation_verified IS NULL")
+    db.execute("UPDATE listings SET payment_plan_summary = '' WHERE payment_plan_summary IS NULL")
     db.execute("UPDATE enquiries SET assigned_to = '' WHERE assigned_to IS NULL")
     db.execute("UPDATE enquiries SET contact_id = '' WHERE contact_id IS NULL")
     db.execute("UPDATE enquiries SET source = 'WEBSITE' WHERE source IS NULL OR source = ''")
@@ -1868,6 +1891,9 @@ def seed_sqlite_listings() -> None:
             latitude,
             gallery_paths,
             virtual_tour_url,
+            documentation_summary,
+            documentation_verified,
+            payment_plan_summary,
             is_serviced,
             has_power_24_7,
             is_flood_free,
@@ -1900,6 +1926,9 @@ def seed_sqlite_listings() -> None:
             :latitude,
             :gallery_paths,
             :virtual_tour_url,
+            :documentation_summary,
+            :documentation_verified,
+            :payment_plan_summary,
             :is_serviced,
             :has_power_24_7,
             :is_flood_free,
@@ -1936,6 +1965,7 @@ def init_mongodb() -> None:
     collection.create_index([("property_type", ASCENDING)])
     collection.create_index([("status", ASCENDING)])
     collection.create_index([("availability", ASCENDING)])
+    collection.create_index([("published", ASCENDING), ("availability", ASCENDING), ("updated_at", DESCENDING)])
     collection.create_index([("verified_property", ASCENDING)])
     collection.create_index([("verified_landlord", ASCENDING)])
     collection.create_index([("is_serviced", ASCENDING)])
@@ -1953,6 +1983,9 @@ def init_mongodb() -> None:
         collection.update_many({"latitude": {"$exists": False}}, {"$set": {"latitude": None}})
         collection.update_many({"gallery_paths": {"$exists": False}}, {"$set": {"gallery_paths": []}})
         collection.update_many({"virtual_tour_url": {"$exists": False}}, {"$set": {"virtual_tour_url": ""}})
+        collection.update_many({"documentation_summary": {"$exists": False}}, {"$set": {"documentation_summary": ""}})
+        collection.update_many({"documentation_verified": {"$exists": False}}, {"$set": {"documentation_verified": 0}})
+        collection.update_many({"payment_plan_summary": {"$exists": False}}, {"$set": {"payment_plan_summary": ""}})
         for key, _label in DISCOVERY_FEATURE_FIELDS + VERIFICATION_FIELDS:
             collection.update_many({key: {"$exists": False}}, {"$set": {key: 0}})
 
@@ -2629,6 +2662,9 @@ def listing_defaults() -> dict[str, object]:
         "latitude": "",
         "gallery_paths": [],
         "virtual_tour_url": "",
+        "documentation_summary": "",
+        "documentation_verified": 0,
+        "payment_plan_summary": "",
         "is_serviced": 0,
         "has_power_24_7": 0,
         "is_flood_free": 0,
@@ -4621,6 +4657,9 @@ def validate_listing_form(form) -> tuple[dict[str, object], list[str]]:
         "longitude": form.get("longitude", "").strip(),
         "latitude": form.get("latitude", "").strip(),
         "virtual_tour_url": form.get("virtual_tour_url", "").strip(),
+        "documentation_summary": form.get("documentation_summary", "").strip(),
+        "documentation_verified": 1 if form.get("documentation_verified") else 0,
+        "payment_plan_summary": form.get("payment_plan_summary", "").strip(),
         "price": form.get("price", "").strip(),
         "price_suffix": form.get("price_suffix", "").strip(),
         "bedrooms": form.get("bedrooms", "").strip(),
@@ -4666,6 +4705,13 @@ def validate_listing_form(form) -> tuple[dict[str, object], list[str]]:
 
     if data["virtual_tour_url"] and not re.match(r"^https?://", data["virtual_tour_url"], re.I):
         errors.append("Virtual tour URL must start with http:// or https://.")
+
+    if len(str(data["documentation_summary"])) > 1200:
+        errors.append("Documentation summary must not exceed 1,200 characters.")
+    if data["documentation_verified"] and not data["documentation_summary"]:
+        errors.append("Add a documentation summary before marking it verified for public display.")
+    if len(str(data["payment_plan_summary"])) > 1200:
+        errors.append("Payment plan summary must not exceed 1,200 characters.")
 
     price, price_error = safe_int(str(data["price"]), "Price", minimum=1)
     bedrooms, bedrooms_error = safe_int(str(data["bedrooms"]), "Bedrooms", minimum=0)
@@ -6723,6 +6769,8 @@ def query_public_listings(filters: dict[str, str]) -> list[dict[str, object]]:
             query["property_type"] = filters["property_type"]
         if filters.get("verified_only"):
             query["verified_property"] = 1
+        if filters.get("max_price"):
+            query["price"] = {"$lte": int(filters["max_price"])}
         for key, _label in DISCOVERY_FEATURE_FIELDS:
             if filters.get(key):
                 query[key] = 1
@@ -6755,6 +6803,9 @@ def query_public_listings(filters: dict[str, str]) -> list[dict[str, object]]:
         params.append(filters["property_type"])
     if filters.get("verified_only"):
         sql += " AND verified_property = 1"
+    if filters.get("max_price"):
+        sql += " AND price <= ?"
+        params.append(int(filters["max_price"]))
     for key, _label in DISCOVERY_FEATURE_FIELDS:
         if filters.get(key):
             sql += f" AND {key} = 1"
@@ -6770,14 +6821,41 @@ def query_public_listings(filters: dict[str, str]) -> list[dict[str, object]]:
 
 def home_featured_listings(limit: int = 3) -> list[dict[str, object]]:
     if database_backend() == "mongodb":
-        cursor = get_mongo_collection().find({"published": 1}).sort(LISTING_SORT).limit(limit)
+        cursor = (
+            get_mongo_collection()
+            .find({"published": 1, "availability": {"$nin": list(COMPLETED_AVAILABILITY_OPTIONS)}})
+            .sort(LISTING_SORT)
+            .limit(limit)
+        )
         return [normalize_listing_record(document) for document in cursor]
 
     rows = get_db().execute(
         """
         SELECT * FROM listings
-        WHERE published = 1
+        WHERE published = 1 AND availability NOT IN ('Sold', 'Rented', 'Leased')
         ORDER BY featured DESC, updated_at DESC
+        LIMIT ?
+        """,
+        (limit,),
+    ).fetchall()
+    return [normalize_listing_record(row) for row in rows]
+
+
+def home_completed_listings(limit: int = 3) -> list[dict[str, object]]:
+    if database_backend() == "mongodb":
+        cursor = (
+            get_mongo_collection()
+            .find({"published": 1, "availability": {"$in": list(COMPLETED_AVAILABILITY_OPTIONS)}})
+            .sort([("updated_at", DESCENDING), ("created_at", DESCENDING)])
+            .limit(limit)
+        )
+        return [normalize_listing_record(document) for document in cursor]
+
+    rows = get_db().execute(
+        """
+        SELECT * FROM listings
+        WHERE published = 1 AND availability IN ('Sold', 'Rented', 'Leased')
+        ORDER BY updated_at DESC, created_at DESC
         LIMIT ?
         """,
         (limit,),
@@ -7003,6 +7081,7 @@ def related_listings(listing: Mapping[str, object], limit: int = 3) -> list[dict
                     "published": 1,
                     "public_id": {"$ne": listing["id"]},
                     "district": listing["district"],
+                    "availability": {"$nin": list(COMPLETED_AVAILABILITY_OPTIONS)},
                 }
             )
             .sort(LISTING_SORT)
@@ -7014,6 +7093,7 @@ def related_listings(listing: Mapping[str, object], limit: int = 3) -> list[dict
         """
         SELECT * FROM listings
         WHERE published = 1 AND id != ? AND district = ?
+          AND availability NOT IN ('Sold', 'Rented', 'Leased')
         ORDER BY featured DESC, updated_at DESC
         LIMIT ?
         """,
@@ -8101,6 +8181,9 @@ def create_listing_record(data: dict[str, object]) -> str:
             latitude,
             gallery_paths,
             virtual_tour_url,
+            documentation_summary,
+            documentation_verified,
+            payment_plan_summary,
             is_serviced,
             has_power_24_7,
             is_flood_free,
@@ -8134,6 +8217,9 @@ def create_listing_record(data: dict[str, object]) -> str:
             :latitude,
             :gallery_paths,
             :virtual_tour_url,
+            :documentation_summary,
+            :documentation_verified,
+            :payment_plan_summary,
             :is_serviced,
             :has_power_24_7,
             :is_flood_free,
@@ -8189,6 +8275,9 @@ def update_listing_record(listing_id: str, data: dict[str, object]) -> None:
             latitude = :latitude,
             gallery_paths = :gallery_paths,
             virtual_tour_url = :virtual_tour_url,
+            documentation_summary = :documentation_summary,
+            documentation_verified = :documentation_verified,
+            payment_plan_summary = :payment_plan_summary,
             is_serviced = :is_serviced,
             has_power_24_7 = :has_power_24_7,
             is_flood_free = :is_flood_free,
@@ -8495,21 +8584,33 @@ def home():
     if request.args.get("ref"):
         capture_referral(request.args.get("ref", ""))
     featured = home_featured_listings(limit=3)
+    completed = home_completed_listings(limit=3)
     stats = public_stats(include_district_count=True)
     districts = top_districts(limit=4)
-    return render_template("index.html", featured=featured, stats=stats, districts=districts)
+    return render_template(
+        "index.html",
+        featured=featured,
+        completed=completed,
+        stats=stats,
+        districts=districts,
+        search_districts=distinct_public_values("district"),
+        search_property_types=distinct_public_values("property_type"),
+    )
 
 
 @app.route("/properties")
 def properties():
     if request.args.get("ref"):
         capture_referral(request.args.get("ref", ""))
+    raw_max_price = request.args.get("max_price", "").strip().replace(",", "")
+    max_price = raw_max_price if raw_max_price.isdigit() and 0 < int(raw_max_price) <= 10_000_000_000_000 else ""
     filters = {
         "status": request.args.get("status", "").strip(),
         "availability": request.args.get("availability", "").strip(),
         "district": request.args.get("district", "").strip(),
         "property_type": request.args.get("property_type", "").strip(),
         "q": request.args.get("q", "").strip(),
+        "max_price": max_price,
         "verified_only": "1" if request.args.get("verified_only") else "",
     }
     for key, _label in DISCOVERY_FEATURE_FIELDS:

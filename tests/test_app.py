@@ -133,6 +133,101 @@ def test_public_footer_hides_unconfigured_placeholder_phone(client) -> None:
     assert b"+234 800 123 4567" not in response.data
 
 
+def test_home_search_and_budget_filter_reduce_discovery_friction(client) -> None:
+    home_response = client.get("/")
+
+    assert home_response.status_code == 200
+    assert b'Search properties' in home_response.data
+    assert b'name="district"' in home_response.data
+    assert b'name="property_type"' in home_response.data
+    assert b'name="status"' in home_response.data
+    assert b'name="max_price"' in home_response.data
+
+    filtered_response = client.get("/properties?max_price=70000000")
+
+    assert filtered_response.status_code == 200
+    assert b"Victoria Island Office Suite" in filtered_response.data
+    assert b"Yaba Income Duplex" in filtered_response.data
+    assert b"Ikoyi Skyline Penthouse" not in filtered_response.data
+    assert b"Lekki Phase 1 Detached Villa" not in filtered_response.data
+
+
+def test_documentation_is_public_only_after_explicit_verification(client) -> None:
+    private_summary = "QA private title review details"
+    with app.app_context():
+        db = app_module.get_db()
+        original = db.execute(
+            "SELECT documentation_summary, documentation_verified FROM listings WHERE id = 1"
+        ).fetchone()
+        db.execute(
+            "UPDATE listings SET documentation_summary = ?, documentation_verified = 0 WHERE id = 1",
+            (private_summary,),
+        )
+        db.commit()
+
+    try:
+        unverified_response = client.get("/properties/1")
+        assert unverified_response.status_code == 200
+        assert private_summary.encode() not in unverified_response.data
+        assert b"Documentation details are not yet published" in unverified_response.data
+
+        with app.app_context():
+            db = app_module.get_db()
+            db.execute("UPDATE listings SET documentation_verified = 1 WHERE id = 1")
+            db.commit()
+
+        verified_response = client.get("/properties/1")
+        assert private_summary.encode() in verified_response.data
+        assert b"Verified documentation summary" in verified_response.data
+    finally:
+        with app.app_context():
+            db = app_module.get_db()
+            db.execute(
+                "UPDATE listings SET documentation_summary = ?, documentation_verified = ? WHERE id = 1",
+                (original["documentation_summary"], original["documentation_verified"]),
+            )
+            db.commit()
+
+
+def test_completed_property_is_presented_as_proof_not_active_inventory(client) -> None:
+    with app.app_context():
+        db = app_module.get_db()
+        original = db.execute("SELECT availability FROM listings WHERE id = 4").fetchone()
+        db.execute("UPDATE listings SET availability = 'Leased' WHERE id = 4")
+        db.commit()
+
+    try:
+        home_response = client.get("/")
+        assert home_response.status_code == 200
+        assert b"Completed transactions" in home_response.data
+        assert b"Yaba Income Duplex" in home_response.data
+
+        detail_response = client.get("/properties/4")
+        assert detail_response.status_code == 200
+        assert b"Transaction completed" in detail_response.data
+        assert b'id="property-inspection"' not in detail_response.data
+        assert b"Browse active properties" in detail_response.data
+    finally:
+        with app.app_context():
+            db = app_module.get_db()
+            db.execute(
+                "UPDATE listings SET availability = ? WHERE id = 4",
+                (original["availability"],),
+            )
+            db.commit()
+
+
+def test_listing_editor_exposes_verified_purchase_readiness_fields(client) -> None:
+    authenticated_client(client)
+
+    response = client.get("/dashboard/listings/1/edit")
+
+    assert response.status_code == 200
+    assert b'name="documentation_summary"' in response.data
+    assert b'name="documentation_verified"' in response.data
+    assert b'name="payment_plan_summary"' in response.data
+
+
 def test_safe_redirect_target_rejects_external_redirects() -> None:
     with app.test_request_context("/login?next=https://evil.example.com"):
         assert safe_redirect_target("https://evil.example.com") == "/dashboard"

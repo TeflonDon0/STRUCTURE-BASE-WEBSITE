@@ -8,7 +8,7 @@
 {% block structured_data %}
   <script type="application/ld+json" nonce="{{ csp_nonce() }}">{{ structured_data | tojson }}</script>
 {% endblock %}
-{% block body_class %}detail-page{% endblock %}
+{% block body_class %}detail-page{% if listing.is_completed %} detail-completed-page{% endif %}{% endblock %}
 
 {% block content %}
   <section class="page-hero" data-reveal>
@@ -43,13 +43,17 @@
         </div>
       {% endif %}
 
-      <aside class="detail-media-support" aria-label="Listing viewing checklist">
-        <p class="eyebrow">Viewing checklist</p>
-        <ul>
-          <li>Confirm current availability before travel.</li>
-          <li>Ask for total move-in costs and service charges.</li>
-          <li>Request exact access timing and required documents.</li>
-        </ul>
+      <aside class="detail-media-support" aria-label="{{ 'Completed listing note' if listing.is_completed else 'Listing viewing checklist' }}">
+        <p class="eyebrow">{{ "Completed listing" if listing.is_completed else "Viewing checklist" }}</p>
+        {% if listing.is_completed %}
+          <p>This record is clearly separated from active inventory. Browse current listings or ask the team to source something similar.</p>
+        {% else %}
+          <ul>
+            <li>Confirm current availability before travel.</li>
+            <li>Ask for total move-in costs and service charges.</li>
+            <li>Request exact access timing and required documents.</li>
+          </ul>
+        {% endif %}
       </aside>
       </div>
 
@@ -71,16 +75,21 @@
 
         <section class="detail-decision-card" aria-label="Listing summary">
           <div>
-            <p class="detail-decision-label">Asking price</p>
+            <p class="detail-decision-label">{{ "Last published price" if listing.is_completed else "Asking price" }}</p>
             <div class="detail-price">{{ listing.price | naira }}{{ listing.price_suffix }}</div>
             <p class="page-hero-note detail-price-note">
-              Confirm agency fees, service charges, payment terms, and negotiation room with the advisor before booking a viewing.
+              {% if listing.is_completed %}This transaction is complete and the property is no longer being marketed.{% else %}Confirm agency fees, service charges, payment terms, and negotiation room with the advisor before booking a viewing.{% endif %}
             </p>
           </div>
           <div class="detail-decision-actions">
-            <a href="#property-enquiry" class="cta cta-accent">Send direct enquiry</a>
+            {% if listing.is_completed %}
+              <a href="{{ url_for('properties') }}" class="cta cta-accent">Browse active properties</a>
+            {% else %}
+              <a href="#property-inspection" class="cta cta-accent">Request an inspection</a>
+              <a href="#property-enquiry" class="cta cta-outline">Ask a question first</a>
+            {% endif %}
             <div class="detail-contact-links">
-              <a href="{{ listing_whatsapp_url(listing) }}" class="text-link text-link-strong" target="_blank" rel="noreferrer">Chat on WhatsApp</a>
+              <a href="{{ general_whatsapp_url if listing.is_completed else listing_whatsapp_url(listing) }}" class="text-link text-link-strong" target="_blank" rel="noreferrer">{{ "Ask for a similar property" if listing.is_completed else "Chat on WhatsApp" }}</a>
               {% if site_settings.contact_phone_configured %}
                 <a href="tel:{{ site_settings.contact_phone_raw }}" class="text-link">Call sales desk</a>
               {% endif %}
@@ -152,6 +161,25 @@
           </article>
         </div>
 
+        <section class="detail-purchase-grid" aria-label="Purchase readiness details">
+          <article class="detail-purchase-card{% if listing.documentation_verified %} is-verified{% endif %}">
+            <div class="detail-purchase-card-head">
+              <p class="eyebrow">Documentation</p>
+              <span>{{ "Reviewed" if listing.documentation_verified else "Confirm with advisor" }}</span>
+            </div>
+            <h2>{{ "Verified documentation summary" if listing.documentation_verified else "Documentation details are not yet published" }}</h2>
+            <p>{% if listing.documentation_verified and listing.documentation_summary %}{{ listing.documentation_summary }}{% else %}Request the current title and documentation position directly. Sensitive document numbers are never published on the listing page.{% endif %}</p>
+          </article>
+          <article class="detail-purchase-card">
+            <div class="detail-purchase-card-head">
+              <p class="eyebrow">Payment terms</p>
+              <span>{{ "Published" if listing.payment_plan_summary else "On request" }}</span>
+            </div>
+            <h2>{{ "Current payment structure" if listing.payment_plan_summary else "Ask for current commercial terms" }}</h2>
+            <p>{{ listing.payment_plan_summary if listing.payment_plan_summary else "The advisor will confirm the latest deposit, balance timeline, fees, and offer conditions before you proceed." }}</p>
+          </article>
+        </section>
+
         <section class="objection-strip objection-strip-detail detail-trust-panel" aria-label="Before enquiry reassurance">
           <div>
             <p class="eyebrow">Trust and viewing notes</p>
@@ -190,6 +218,7 @@
     </div>
   </section>
 
+  {% if not listing.is_completed %}
   <section class="section shell section-tight detail-enquiry-section" id="property-enquiry" data-reveal>
     <div class="detail-enquiry-surface contact-form">
       <div class="detail-enquiry-head">
@@ -260,6 +289,21 @@
       </form>
     </div>
   </section>
+  {% else %}
+  <section class="section shell section-tight completed-detail-next" data-reveal>
+    <div class="detail-enquiry-surface">
+      <div>
+        <p class="eyebrow">Transaction completed</p>
+        <h2>This property is kept here as part of our completed-property record.</h2>
+        <p>Tell an advisor what you liked about it and we will help you compare active options with a similar location, type, or budget.</p>
+      </div>
+      <div class="property-actions">
+        <a href="{{ url_for('properties') }}" class="cta">Browse active properties</a>
+        <a href="{{ general_whatsapp_url }}" class="cta cta-secondary" target="_blank" rel="noreferrer">Ask for similar options</a>
+      </div>
+    </div>
+  </section>
+  {% endif %}
 
   {% if related %}
     <section class="section shell" data-reveal>
@@ -305,5 +349,13 @@
         {% endfor %}
       </div>
     </section>
+  {% endif %}
+
+  {% if not listing.is_completed %}
+    <nav class="mobile-detail-actions" aria-label="Quick property actions">
+      <a href="{{ listing_whatsapp_url(listing) }}" target="_blank" rel="noreferrer">WhatsApp</a>
+      {% if site_settings.contact_phone_configured %}<a href="tel:{{ site_settings.contact_phone_raw }}">Call</a>{% else %}<a href="#property-enquiry">Enquire</a>{% endif %}
+      <a href="#property-inspection" class="mobile-detail-actions-primary">Request inspection</a>
+    </nav>
   {% endif %}
 {% endblock %}

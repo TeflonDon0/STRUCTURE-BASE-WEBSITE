@@ -96,6 +96,33 @@
       <section class="form-section">
         <div class="form-section-head">
           <div>
+            <p class="form-section-kicker">Purchase readiness</p>
+            <h2>Documentation and payment terms</h2>
+          </div>
+          <p class="form-note">Publish only details the team has confirmed. Keep uncertain terms private until an advisor verifies them.</p>
+        </div>
+
+        <div class="form-group">
+          <label for="documentation_summary">Documentation summary</label>
+          <textarea id="documentation_summary" name="documentation_summary" rows="4" maxlength="1200" placeholder="Example: Registered deed, approved survey plan, and building approval reviewed by the team.">{{ form_data.documentation_summary }}</textarea>
+          <p class="form-note">Describe the documents reviewed without publishing sensitive document numbers or personal data.</p>
+        </div>
+
+        <label class="checkbox listing-verification-check">
+          <input type="checkbox" name="documentation_verified" value="1" {% if form_data.documentation_verified %}checked{% endif %}>
+          <span>Documentation summary has been verified and may appear publicly</span>
+        </label>
+
+        <div class="form-group">
+          <label for="payment_plan_summary">Payment plan or commercial terms</label>
+          <textarea id="payment_plan_summary" name="payment_plan_summary" rows="4" maxlength="1200" placeholder="Example: 30% deposit, balance over six months, subject to final offer letter.">{{ form_data.payment_plan_summary }}</textarea>
+          <p class="form-note">State the latest confirmed structure and make any conditions explicit.</p>
+        </div>
+      </section>
+
+      <section class="form-section">
+        <div class="form-section-head">
+          <div>
             <p class="form-section-kicker">Location and pricing</p>
             <h2>Map accuracy and commercial terms</h2>
           </div>
