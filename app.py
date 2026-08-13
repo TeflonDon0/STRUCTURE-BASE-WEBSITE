@@ -30,6 +30,7 @@ if _cloudinary_url_env and not _cloudinary_url_env.startswith("cloudinary://"):
 
 import cloudinary
 import cloudinary.uploader
+from analytics import build_business_analytics
 from communication_templates import (
     communication_sample_payload,
     communication_template_choices,
@@ -8832,6 +8833,36 @@ def dashboard():
             "pending": sum(1 for item in partner_records if item.get("status") == "PENDING"),
             "approved": sum(1 for item in partner_records if item.get("status") == "APPROVED"),
         },
+    )
+
+
+@app.get("/dashboard/analytics")
+@permission_required("analytics.view")
+def admin_analytics():
+    show_properties = has_permission("properties.view")
+    show_leads = has_permission("leads.view")
+    show_inspections = has_permission("inspections.view")
+    show_partners = has_permission("partners.view")
+    show_referrals = has_permission("referrals.view")
+    show_commissions = has_permission("commissions.view")
+
+    analytics = build_business_analytics(
+        listings=dashboard_listings() if show_properties else [],
+        leads=all_enquiries() if show_leads else [],
+        inspections=all_inspections() if show_inspections else [],
+        partners=all_partners() if show_partners else [],
+        referrals=all_referrals() if show_referrals else [],
+        commissions=all_commissions() if show_commissions else [],
+    )
+    return render_template(
+        "admin_analytics.html",
+        analytics=analytics,
+        show_properties=show_properties,
+        show_leads=show_leads,
+        show_inspections=show_inspections,
+        show_partners=show_partners,
+        show_referrals=show_referrals,
+        show_commissions=show_commissions,
     )
 
 

@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+
+{% block title %}Business Analytics | {{ site_settings.site_name }}{% endblock %}
+{% block meta_description %}Permission-aware operational analytics for Structurebase staff.{% endblock %}
+{% block robots %}noindex,nofollow{% endblock %}
+{% block body_class %}dashboard-page admin-workspace-page admin-module-page analytics-page{% endblock %}
+
+{% block content %}
+{% set summary = analytics.summary %}
+<section class="page-hero admin-module-hero analytics-hero">
+  <div class="shell admin-module-hero-shell">
+    <div>
+      <p class="eyebrow">Business analytics</p>
+      <h1>See demand, pipeline, and partner contribution clearly.</h1>
+      <p class="page-intro">All figures come from recorded application activity. Each staff role sees only the operational areas it is permitted to access.</p>
+    </div>
+    <a href="{{ url_for('dashboard') }}" class="text-link">Back to overview</a>
+  </div>
+</section>
+
+<section class="section shell section-tight">
+  <div class="analytics-summary-grid">
+    {% if show_properties %}
+    <article class="analytics-summary-card">
+      <span>Property inventory</span>
+      <strong>{{ summary.total_properties }}</strong>
+      <p>{{ summary.available_properties }} available &middot; {{ summary.reserved_properties }} under offer &middot; {{ summary.completed_properties }} completed</p>
+    </article>
+    {% endif %}
+    {% if show_leads %}
+    <article class="analytics-summary-card analytics-summary-card-accent">
+      <span>Active leads</span>
+      <strong>{{ summary.active_leads }}</strong>
+      <p>{{ summary.new_leads }} new &middot; {{ summary.active_deals }} active deals &middot; {{ summary.closed_sales }} closed won</p>
+    </article>
+    {% endif %}
+    {% if show_inspections %}
+    <article class="analytics-summary-card">
+      <span>Inspections</span>
+      <strong>{{ summary.inspection_requests }}</strong>
+      <p>{{ summary.completed_inspections }} completed from recorded requests</p>
+    </article>
+    {% endif %}
+    {% if show_partners %}
+    <article class="analytics-summary-card">
+      <span>Approved partners</span>
+      <strong>{{ summary.approved_partners }}</strong>
+      <p>{{ summary.pending_partners }} application{{ '' if summary.pending_partners == 1 else 's' }} awaiting review</p>
+    </article>
+    {% endif %}
+    {% if show_commissions %}
+    <article class="analytics-summary-card analytics-summary-card-finance">
+      <span>Pending commissions</span>
+      <strong>{{ summary.pending_commissions }}</strong>
+      <p>{{ summary.pending_commission_value|naira }} across potential, pending, earned, and approved records</p>
+    </article>
+    <article class="analytics-summary-card analytics-summary-card-finance">
+      <span>Paid commissions</span>
+      <strong>{{ summary.paid_commissions }}</strong>
+      <p>{{ summary.paid_commission_value|naira }} recorded as paid</p>
+    </article>
+    {% endif %}
+  </div>
+</section>
+
+{% if show_leads %}
+<section class="section shell section-tight analytics-split">
+  <article class="analytics-panel">
+    <div class="dashboard-section-head">
+      <div><p class="dashboard-section-kicker">Sales pipeline</p><h2>Where active opportunities sit.</h2></div>
+      <a href="{{ url_for('admin_enquiries') }}" class="text-link">Open leads</a>
+    </div>
+    {% if analytics.pipeline %}
+    <div class="analytics-bars" aria-label="Lead pipeline by status">
+      {% for item in analytics.pipeline %}
+      <div class="analytics-bar-row">
+        <div class="analytics-bar-label"><span>{{ item.label }}</span><strong>{{ item.count }}</strong></div>
+        <div class="analytics-bar-track" aria-hidden="true"><span style="--bar-value: {{ item.share }}%"></span></div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state"><h2>No lead activity yet.</h2><p>Pipeline distribution will appear after enquiries or staff-created leads are recorded.</p></div>
+    {% endif %}
+  </article>
+
+  <article class="analytics-panel">
+    <div class="dashboard-section-head"><div><p class="dashboard-section-kicker">Lead sources</p><h2>Which channels create opportunities.</h2></div></div>
+    {% if analytics.sources %}
+    <div class="analytics-source-list">
+      {% for item in analytics.sources %}
+      <div><span><strong>{{ item.label }}</strong><small>{{ item.closed_deals }} closed won</small></span><strong>{{ item.count }}</strong></div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state"><h2>No source data yet.</h2><p>Source performance will use real lead records as they arrive.</p></div>
+    {% endif %}
+  </article>
+</section>
+{% endif %}
+
+{% if show_properties %}
+<section class="section shell section-tight">
+  <div class="dashboard-section-head">
+    <div><p class="dashboard-section-kicker">Property performance</p><h2>Demand signals by listing.</h2></div>
+    <a href="{{ url_for('admin_listings', sort='views_desc') }}" class="text-link">Open inventory</a>
+  </div>
+  {% if analytics.property_performance %}
+  <div class="analytics-table-wrap">
+    <table class="analytics-table">
+      <thead><tr><th scope="col">Property</th><th scope="col">Views</th>{% if show_leads %}<th scope="col">Enquiries</th><th scope="col">Partner leads</th><th scope="col">Closed won</th>{% endif %}{% if show_inspections %}<th scope="col">Inspections</th>{% endif %}</tr></thead>
+      <tbody>
+        {% for item in analytics.property_performance[:10] %}
+        <tr>
+          <th scope="row">{% if can('properties.edit') %}<a href="{{ url_for('edit_listing', listing_id=item.id, next=request.path) }}">{{ item.title }}</a>{% else %}<strong>{{ item.title }}</strong>{% endif %}<span>{{ item.district }} &middot; {{ item.availability }}{% if not item.published %} &middot; Draft{% endif %}</span></th>
+          <td data-label="Views">{{ item.views }}</td>
+          {% if show_leads %}<td data-label="Enquiries">{{ item.enquiries }}</td><td data-label="Partner leads">{{ item.referral_leads }}</td><td data-label="Closed won">{{ item.successful_deals }}</td>{% endif %}
+          {% if show_inspections %}<td data-label="Inspections">{{ item.inspections }}</td>{% endif %}
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty-state"><h2>No property data yet.</h2><p>Performance will appear when listings are added and receive recorded activity.</p></div>
+  {% endif %}
+  <p class="analytics-method-note">Views are cumulative property-page requests, not unique visitors. Enquiries, inspections, referrals, and closed deals come from their linked records.</p>
+</section>
+{% endif %}
+
+{% if show_partners %}
+<section class="section shell section-tight">
+  <div class="dashboard-section-head">
+    <div><p class="dashboard-section-kicker">Partner performance</p><h2>Contribution grounded in attributed records.</h2></div>
+    <a href="{{ url_for('admin_partners') }}" class="text-link">Open partners</a>
+  </div>
+  {% if analytics.partner_performance %}
+  <div class="analytics-table-wrap">
+    <table class="analytics-table">
+      <thead><tr><th scope="col">Partner</th>{% if show_referrals %}<th scope="col">Referral visits</th>{% endif %}{% if show_leads %}<th scope="col">Leads</th><th scope="col">Active deals</th><th scope="col">Closed deals</th>{% endif %}{% if show_inspections %}<th scope="col">Inspections</th>{% endif %}{% if show_commissions %}<th scope="col">Earned</th><th scope="col">Paid</th>{% endif %}</tr></thead>
+      <tbody>
+        {% for item in analytics.partner_performance[:10] %}
+        <tr>
+          <th scope="row"><a href="{{ url_for('admin_partner_detail', partner_id=item.id) }}">{{ item.name }}</a><span>{{ item.code }} &middot; {{ item.status|replace('_', ' ')|title }}</span></th>
+          {% if show_referrals %}<td data-label="Referral visits">{{ item.referral_visits }}</td>{% endif %}
+          {% if show_leads %}<td data-label="Leads">{{ item.leads }}</td><td data-label="Active deals">{{ item.active_deals }}</td><td data-label="Closed deals">{{ item.closed_deals }}</td>{% endif %}
+          {% if show_inspections %}<td data-label="Inspections">{{ item.inspections }}</td>{% endif %}
+          {% if show_commissions %}<td data-label="Earned">{{ item.earned_commission|naira }}</td><td data-label="Paid">{{ item.paid_commission|naira }}</td>{% endif %}
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty-state"><h2>No partner data yet.</h2><p>Approved applications and attributed activity will appear here without inventing performance figures.</p></div>
+  {% endif %}
+</section>
+{% endif %}
+{% endblock %}

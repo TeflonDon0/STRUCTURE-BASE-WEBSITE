@@ -6,6 +6,7 @@ import pytest
 from pathlib import Path
 
 import app as app_module
+from analytics import build_business_analytics
 from app import (
     app,
     all_documents,
@@ -399,6 +400,62 @@ def test_role_permissions_follow_least_privilege() -> None:
     assert role_has_permission("PROPERTY_MANAGER", "inspections.view")
     assert not role_has_permission("SALES_MANAGER", "finance.view")
     assert role_has_permission("FINANCE_MANAGER", "commissions.mark_paid")
+    assert role_has_permission("PROPERTY_MANAGER", "analytics.view")
+    assert role_has_permission("SALES_MANAGER", "analytics.view")
+
+
+def test_business_analytics_uses_linked_real_records() -> None:
+    analytics = build_business_analytics(
+        listings=[
+            {"id": "home-1", "title": "Harbour Home", "district": "Ikoyi", "availability": "Available", "published": 1, "view_count": 12},
+            {"id": "home-2", "title": "Garden Home", "district": "Yaba", "availability": "Sold", "published": 1, "view_count": 4},
+        ],
+        leads=[
+            {"id": "lead-1", "listing_id": "home-1", "partner_id": "partner-1", "source": "PARTNER", "status": "NEGOTIATION"},
+            {"id": "lead-2", "listing_id": "home-2", "partner_id": "partner-1", "source": "PARTNER", "status": "CLOSED_WON"},
+            {"id": "lead-3", "listing_id": "home-1", "partner_id": "", "source": "WEBSITE", "status": "NEW"},
+        ],
+        inspections=[
+            {"listing_id": "home-1", "partner_id": "partner-1", "status": "COMPLETED"},
+            {"listing_id": "home-2", "partner_id": "partner-1", "status": "CONFIRMED"},
+        ],
+        partners=[
+            {"id": "partner-1", "full_name": "Ada Partner", "partner_code": "SB1001", "status": "APPROVED"},
+        ],
+        referrals=[
+            {"listing_id": "home-1", "partner_id": "partner-1", "visit_count": 5},
+            {"listing_id": "home-2", "partner_id": "partner-1", "visit_count": 2},
+        ],
+        commissions=[
+            {"partner_id": "partner-1", "status": "APPROVED", "final_amount": 250000},
+            {"partner_id": "partner-1", "status": "PAID", "final_amount": 100000},
+        ],
+    )
+
+    summary = analytics["summary"]
+    assert summary["total_properties"] == 2
+    assert summary["active_leads"] == 2
+    assert summary["active_deals"] == 1
+    assert summary["closed_sales"] == 1
+    assert summary["completed_inspections"] == 1
+    assert summary["pending_commission_value"] == 250000
+    assert summary["paid_commission_value"] == 100000
+    assert analytics["property_performance"][0]["title"] == "Garden Home"
+    assert analytics["partner_performance"][0]["closed_deals"] == 1
+    assert analytics["partner_performance"][0]["earned_commission"] == 350000
+
+
+def test_admin_analytics_requires_staff_and_renders_real_data(client) -> None:
+    anonymous = client.get("/dashboard/analytics", follow_redirects=False)
+    assert anonymous.status_code == 302
+    assert anonymous.headers["Location"].startswith("/login?next=")
+
+    authenticated_client(client)
+    response = client.get("/dashboard/analytics")
+    assert response.status_code == 200
+    assert b"Business analytics" in response.data
+    assert b"Demand signals by listing" in response.data
+    assert b"Views are cumulative property-page requests, not unique visitors" in response.data
 
 
 def test_partner_registration_validation_requires_real_contact_and_company_name() -> None:
@@ -1153,9 +1210,14 @@ def test_backend_permissions_return_forbidden_for_wrong_role(client, monkeypatch
         session["staff_user_id"] = fake_staff["id"]
 
     allowed = client.get("/dashboard/listings")
+    analytics = client.get("/dashboard/analytics")
     forbidden = client.get("/dashboard/finance")
 
     assert allowed.status_code == 200
+    assert analytics.status_code == 200
+    assert b"Property inventory" in analytics.data
+    assert b"Pending commissions" not in analytics.data
+    assert b"Sales pipeline" not in analytics.data
     assert forbidden.status_code == 403
     assert b"Your staff role does not allow this action" in forbidden.data
 

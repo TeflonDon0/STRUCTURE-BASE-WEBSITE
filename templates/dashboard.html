@@ -183,6 +183,13 @@
         <p>Trace important staff, public, and system actions to accountable records.</p>
       </a>
       {% endif %}
+      {% if can('analytics.view') %}
+      <a href="{{ url_for('admin_analytics') }}" class="admin-domain-card">
+        <span class="admin-domain-label">Analytics</span>
+        <strong>Business performance</strong>
+        <p>Compare demand, pipeline progress, property engagement, and partner contribution using recorded activity.</p>
+      </a>
+      {% endif %}
       {% if can('settings.manage') %}
       <a href="{{ url_for('admin_settings') }}" class="admin-domain-card">
         <span class="admin-domain-label">Settings</span>

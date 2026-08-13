@@ -167,6 +167,9 @@
           {% if can('commissions.view') %}
           <li><a href="{{ url_for('admin_commissions') }}" {% if request.endpoint in ['admin_commissions', 'admin_commission_detail', 'admin_commission_rules', 'update_commission_rule_status', 'adjust_commission', 'decide_commission', 'mark_commission_paid'] %}aria-current="page"{% endif %}>Commissions</a></li>
           {% endif %}
+          {% if can('analytics.view') %}
+          <li><a href="{{ url_for('admin_analytics') }}" {% if request.endpoint == 'admin_analytics' %}aria-current="page"{% endif %}>Analytics</a></li>
+          {% endif %}
           {% if can('audit_logs.view') %}
           <li><a href="{{ url_for('admin_audit_log') }}" {% if request.endpoint == 'admin_audit_log' %}aria-current="page" {% endif %}>Audit</a></li>
           {% endif %}
