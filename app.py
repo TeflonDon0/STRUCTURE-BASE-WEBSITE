@@ -235,6 +235,7 @@ DOCUMENT_TYPE_OPTIONS = (
     "Other",
 )
 DOCUMENT_SOURCE_OPTIONS = ("upload", "generated")
+DOCUMENT_STATUS_OPTIONS = ("Final", "Filed")
 VIEW_DEDUP_WINDOW_SECONDS = 6 * 60 * 60
 SITE_SETTING_FIELDS = (
     "site_name",
@@ -7813,7 +7814,7 @@ def query_admin_financial_records(filters: Mapping[str, str]) -> list[dict[str, 
 
 
 def document_filter_defaults() -> dict[str, str]:
-    return {"q": "", "document_type": "", "sort": "newest"}
+    return {"q": "", "document_type": "", "source_kind": "", "document_status": "", "sort": "newest"}
 
 
 def document_filters_from_request() -> dict[str, str]:
@@ -7822,11 +7823,17 @@ def document_filters_from_request() -> dict[str, str]:
         {
             "q": request.args.get("q", "").strip(),
             "document_type": request.args.get("document_type", "").strip(),
+            "source_kind": request.args.get("source_kind", "").strip(),
+            "document_status": request.args.get("document_status", "").strip(),
             "sort": request.args.get("sort", "newest").strip(),
         }
     )
     if filters["document_type"] not in DOCUMENT_TYPE_OPTIONS:
         filters["document_type"] = ""
+    if filters["source_kind"] not in DOCUMENT_SOURCE_OPTIONS:
+        filters["source_kind"] = ""
+    if filters["document_status"] not in DOCUMENT_STATUS_OPTIONS:
+        filters["document_status"] = ""
     if filters["sort"] not in {value for value, _label in DOCUMENT_SORT_OPTIONS}:
         filters["sort"] = "newest"
     return filters
@@ -7851,6 +7858,11 @@ def query_admin_documents(filters: Mapping[str, str]) -> list[dict[str, object]]
         and (
             not filters.get("document_type")
             or record.get("document_type") == filters.get("document_type")
+        )
+        and (not filters.get("source_kind") or record.get("source_kind") == filters.get("source_kind"))
+        and (
+            not filters.get("document_status")
+            or record.get("document_status") == filters.get("document_status")
         )
     ]
 
@@ -9630,11 +9642,17 @@ def admin_documents():
         active_filter_labels.append(f'Search: "{filters["q"]}"')
     if filters.get("document_type"):
         active_filter_labels.append(str(filters["document_type"]))
+    if filters.get("source_kind"):
+        active_filter_labels.append("Generated" if filters["source_kind"] == "generated" else "Uploaded")
+    if filters.get("document_status"):
+        active_filter_labels.append(f"Status: {filters['document_status']}")
     return render_template(
         "admin_documents.html",
         documents=records,
         document_filters=filters,
         document_type_options=DOCUMENT_TYPE_OPTIONS,
+        document_source_options=DOCUMENT_SOURCE_OPTIONS,
+        document_status_options=DOCUMENT_STATUS_OPTIONS,
         document_sort_options=DOCUMENT_SORT_OPTIONS,
         document_total=len(all_records),
         document_summary=document_management_summary(all_records),
@@ -9684,29 +9702,40 @@ def generate_document_pdf():
     settings = site_settings()
     template_library = document_generator_catalog(settings)
     template_choices = template_options(settings)
-    selected_template = (
-        request.form.get("template_key", "").strip()
-        if request.method == "POST"
-        else request.args.get("template_key", "").strip()
-    )
+    source_document = None
+    source_payload: dict[str, object] | None = None
+    if request.method == "GET" and request.args.get("source_document_id", "").strip():
+        source_document = fetch_document_record(request.args["source_document_id"].strip())
+        source_template = str(source_document.get("template_key") or "").strip()
+        candidate_payload = source_document.get("payload_data")
+        if source_document.get("source_kind") != "generated" or source_template not in template_library or not isinstance(candidate_payload, dict):
+            abort(400, description="This document cannot be reused from the generator.")
+        selected_template = source_template
+        source_payload = candidate_payload
+    else:
+        selected_template = (
+            request.form.get("template_key", "").strip()
+            if request.method == "POST"
+            else request.args.get("template_key", "").strip()
+        )
     if selected_template not in template_library:
-        selected_template = template_choices[0][0]
+        selected_template = "billing" if "billing" in template_library else template_choices[0][0]
     guided_template = guided_document_blueprint(selected_template)
     guided_form_data = guided_form_data_from_payload(
         selected_template,
-        template_library[selected_template].get("sample_payload", {}),
+        source_payload or template_library[selected_template].get("sample_payload", {}),
         settings,
     )
 
     form_data = {
         "template_key": selected_template,
-        "title": f"{template_library[selected_template]['label']} - {settings['site_name']}",
-        "resident_name": "",
-        "unit_reference": "",
-        "property_title": "",
-        "note": "",
-        "payload_json": sample_payload_json(selected_template, settings),
-        "use_advanced_payload": "",
+        "title": f"Copy of {source_document['title']}" if source_document else f"{template_library[selected_template]['label']} - {settings['site_name']}",
+        "resident_name": source_document.get("resident_name", "") if source_document else "",
+        "unit_reference": source_document.get("unit_reference", "") if source_document else "",
+        "property_title": source_document.get("property_title", "") if source_document else "",
+        "note": source_document.get("note", "") if source_document else "",
+        "payload_json": json.dumps(source_payload, indent=2, ensure_ascii=False) if source_payload else sample_payload_json(selected_template, settings),
+        "use_advanced_payload": "1" if source_document and not guided_template else "",
     }
 
     if request.method == "POST":
@@ -9767,6 +9796,7 @@ def generate_document_pdf():
         show_advanced_payload=bool(form_data.get("use_advanced_payload")),
         active_template=template_library[selected_template],
         generator_spec=generator_spec(settings),
+        source_document=source_document,
         back_url=url_for("admin_documents"),
     )
 

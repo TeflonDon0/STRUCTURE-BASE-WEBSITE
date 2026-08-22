@@ -527,13 +527,137 @@ document.querySelectorAll("[data-selection-scope]").forEach((scope) => {
   syncSelectionCount();
 });
 
-document.querySelectorAll("[data-template-select-url]").forEach((select) => {
-  select.addEventListener("change", () => {
-    const targetUrl = select.getAttribute("data-template-select-url");
+document.querySelectorAll("[data-document-generator-form]").forEach((form) => {
+  const templateSelect = form.querySelector("[data-template-select-url]");
+  const previewButton = form.querySelector("[data-document-preview]");
+  const previewFeedback = form.querySelector("[data-document-preview-feedback]");
+  let hasUnsavedChanges = false;
+  let allowNavigation = false;
+  let previousTemplate = templateSelect?.value || "";
+
+  const markDirty = (event) => {
+    if (event.target !== templateSelect) {
+      hasUnsavedChanges = true;
+    }
+  };
+
+  const renderPreviewFeedback = (message, isError = false) => {
+    if (!previewFeedback) {
+      return;
+    }
+    previewFeedback.hidden = false;
+    previewFeedback.classList.toggle("is-error", isError);
+    previewFeedback.textContent = message;
+    if (isError) {
+      previewFeedback.setAttribute("role", "alert");
+      previewFeedback.focus({ preventScroll: false });
+    } else {
+      previewFeedback.setAttribute("role", "status");
+    }
+  };
+
+  form.addEventListener("input", markDirty);
+  form.addEventListener("change", markDirty);
+  form.addEventListener("submit", (event) => {
+    if (!event.defaultPrevented && event.submitter?.matches("[data-document-final-submit]")) {
+      allowNavigation = true;
+    }
+  });
+
+  templateSelect?.addEventListener("change", () => {
+    const targetUrl = templateSelect.getAttribute("data-template-select-url");
     if (!targetUrl) {
       return;
     }
-    window.location = `${targetUrl}?template_key=${encodeURIComponent(select.value)}`;
+    if (hasUnsavedChanges && !window.confirm("Changing the template clears the entries on this page. Continue?")) {
+      templateSelect.value = previousTemplate;
+      return;
+    }
+    allowNavigation = true;
+    previousTemplate = templateSelect.value;
+    window.location = `${targetUrl}?template_key=${encodeURIComponent(templateSelect.value)}`;
+  });
+
+  form.querySelectorAll("[data-document-discard-link]").forEach((link) => {
+    link.addEventListener("click", (event) => {
+      if (hasUnsavedChanges && !window.confirm("Leave this document and discard your unsaved entries?")) {
+        event.preventDefault();
+        return;
+      }
+      allowNavigation = true;
+    });
+  });
+
+  previewButton?.addEventListener("click", async (event) => {
+    if (!form.reportValidity()) {
+      return;
+    }
+    event.preventDefault();
+    const previewWindow = window.open("", "_blank");
+    if (previewWindow) {
+      previewWindow.document.title = "Preparing document preview";
+      const status = previewWindow.document.createElement("p");
+      status.textContent = "Preparing your PDF preview…";
+      status.style.cssText = "font: 600 16px system-ui; padding: 2rem; color: #102a43";
+      previewWindow.document.body.append(status);
+    }
+
+    previewButton.disabled = true;
+    previewButton.setAttribute("aria-busy", "true");
+    const originalLabel = previewButton.textContent;
+    previewButton.textContent = previewButton.dataset.loadingLabel || "Opening preview...";
+    renderPreviewFeedback("Preparing a review copy…");
+
+    try {
+      const response = await fetch(previewButton.formAction, {
+        method: "POST",
+        body: new FormData(form),
+        headers: { Accept: "application/pdf, application/json" },
+        credentials: "same-origin",
+      });
+      if (!response.ok) {
+        let message = "The preview could not be created. Review the required fields and try again.";
+        try {
+          const payload = await response.json();
+          if (Array.isArray(payload.errors) && payload.errors.length) {
+            message = payload.errors.join(" ");
+          }
+        } catch (_error) {
+          // Keep the safe fallback for non-JSON server errors.
+        }
+        previewWindow?.close();
+        renderPreviewFeedback(message, true);
+        return;
+      }
+
+      const previewUrl = URL.createObjectURL(await response.blob());
+      if (previewWindow) {
+        previewWindow.location.replace(previewUrl);
+      } else {
+        const fallbackLink = document.createElement("a");
+        fallbackLink.href = previewUrl;
+        fallbackLink.target = "_blank";
+        fallbackLink.rel = "noopener";
+        fallbackLink.click();
+      }
+      window.setTimeout(() => URL.revokeObjectURL(previewUrl), 60000);
+      renderPreviewFeedback("Preview opened in a new tab. Your entries remain here for editing.");
+    } catch (_error) {
+      previewWindow?.close();
+      renderPreviewFeedback("The preview service is unavailable right now. Your entries are still here; please try again.", true);
+    } finally {
+      previewButton.disabled = false;
+      previewButton.removeAttribute("aria-busy");
+      previewButton.textContent = originalLabel;
+    }
+  });
+
+  window.addEventListener("beforeunload", (event) => {
+    if (!hasUnsavedChanges || allowNavigation) {
+      return;
+    }
+    event.preventDefault();
+    event.returnValue = "";
   });
 });
 

@@ -67,6 +67,24 @@
           </select>
         </div>
         <div class="form-group">
+          <label for="document-source">Source</label>
+          <select id="document-source" name="source_kind">
+            <option value="">All sources</option>
+            {% for option in document_source_options %}
+              <option value="{{ option }}" {% if document_filters.source_kind == option %}selected{% endif %}>{{ 'Generated' if option == 'generated' else 'Uploaded' }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="document-status">Status</label>
+          <select id="document-status" name="document_status">
+            <option value="">All statuses</option>
+            {% for option in document_status_options %}
+              <option value="{{ option }}" {% if document_filters.document_status == option %}selected{% endif %}>{{ option }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
           <label for="document-sort">Sort</label>
           <select id="document-sort" name="sort">
             {% for value, label in document_sort_options %}
@@ -131,10 +149,20 @@
               {% endif %}
             </div>
 
+            <div class="admin-inline-actions document-record-primary-actions">
+              <a href="{{ url_for('download_document', document_id=document.id) }}" class="cta cta-small cta-outline">Download</a>
+              {% if can('documents.manage') and document.source_kind == 'generated' and document.template_key and document.payload_data %}
+                <a href="{{ url_for('generate_document_pdf', source_document_id=document.id) }}" class="cta cta-small">Use as new</a>
+              {% endif %}
+            </div>
+
             {% if can('documents.manage') %}
-            <form method="post" action="{{ url_for('update_document', document_id=document.id) }}" class="admin-inline-form">
+            <details class="admin-record-editor">
+              <summary>Edit archive details</summary>
+              <form method="post" action="{{ url_for('update_document', document_id=document.id) }}" class="admin-inline-form">
               <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
               <input type="hidden" name="next" value="{{ next_url }}">
+              <p class="form-note">These fields organize the archive only; they do not change the PDF itself.</p>
               <div class="admin-form-grid admin-form-grid-compact">
                 <div class="form-group">
                   <label for="document-title-{{ document.id }}">Title</label>
@@ -155,7 +183,6 @@
               </div>
               <div class="admin-inline-actions">
                 <button type="submit" class="cta cta-small" data-loading-label="Saving...">Save details</button>
-                <a href="{{ url_for('download_document', document_id=document.id) }}" class="cta cta-small cta-outline">Download</a>
                 <details class="admin-danger-zone">
                   <summary>More</summary>
                   <button
@@ -169,11 +196,8 @@
                   </button>
                 </details>
               </div>
-            </form>
-            {% else %}
-              <div class="admin-inline-actions">
-                <a href="{{ url_for('download_document', document_id=document.id) }}" class="cta cta-small cta-outline">Download</a>
-              </div>
+              </form>
+            </details>
             {% endif %}
           </article>
         {% endfor %}

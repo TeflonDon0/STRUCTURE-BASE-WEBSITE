@@ -519,6 +519,16 @@ def test_document_preview_returns_pdf_without_saving(client) -> None:
     assert after == before
 
 
+def test_document_generator_opens_on_guided_template(client) -> None:
+    authenticated_client(client)
+
+    response = client.get("/dashboard/documents/generate")
+
+    assert response.status_code == 200
+    assert b'<option value="billing" selected>' in response.data
+    assert b"Guided invoice fields" in response.data
+
+
 def test_generated_document_saves_as_final_and_cleans_up(client) -> None:
     authenticated_client(client)
     with app.app_context():
@@ -535,6 +545,16 @@ def test_generated_document_saves_as_final_and_cleans_up(client) -> None:
         assert created[0]["document_status"] == "Final"
         assert created[0]["source_kind"] == "generated"
         assert created[0]["payload_data"]["document_status"] == "Final"
+
+        archive_response = client.get("/dashboard/documents?source_kind=generated&document_status=Final")
+        assert archive_response.status_code == 200
+        assert b"Use as new" in archive_response.data
+
+        reuse_response = client.get(f"/dashboard/documents/generate?source_document_id={created[0]['id']}")
+        assert reuse_response.status_code == 200
+        assert b"Starting from" in reuse_response.data
+        assert b"Copy of QA Billing Document" in reuse_response.data
+        assert b"QA-INV-001" in reuse_response.data
     finally:
         with app.app_context():
             for document in created:

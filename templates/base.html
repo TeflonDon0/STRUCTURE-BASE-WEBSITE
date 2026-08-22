@@ -176,6 +176,12 @@
           <li><a href="{{ url_for('admin_documents') }}" {% if request.endpoint in ['admin_documents', 'create_document'
               , 'generate_document_pdf' ] %}aria-current="page" {% endif %}>Documents</a></li>
           {% endif %}
+          {% if can('staff.view') or can('partners.view') or can('referrals.view') or can('commissions.view') or can('analytics.view') or can('audit_logs.view') or can('settings.manage') %}
+          {% set admin_more_active = request.endpoint in ['admin_team', 'invite_staff', 'update_staff_member', 'revoke_staff_invitation', 'admin_partners', 'admin_partner_detail', 'review_partner', 'admin_referrals', 'admin_referral_detail', 'admin_commissions', 'admin_commission_detail', 'admin_commission_rules', 'update_commission_rule_status', 'adjust_commission', 'decide_commission', 'mark_commission_paid', 'admin_analytics', 'admin_audit_log', 'admin_settings', 'communication_preview', 'communication_preview_frame'] %}
+          <li class="admin-nav-more-item">
+            <details class="admin-nav-more" {% if admin_more_active %}data-active="true"{% endif %}>
+              <summary {% if admin_more_active %}aria-current="page"{% endif %}>More</summary>
+              <ul class="admin-nav-more-menu" aria-label="Additional admin modules">
           {% if can('staff.view') %}
           <li><a href="{{ url_for('admin_team') }}" {% if request.endpoint in ['admin_team', 'invite_staff', 'update_staff_member', 'revoke_staff_invitation'] %}aria-current="page" {% endif %}>Team</a></li>
           {% endif %}
@@ -198,6 +204,10 @@
           <li><a href="{{ url_for('admin_settings') }}" {% if request.endpoint in
               ['admin_settings', 'communication_preview' , 'communication_preview_frame' ] %}aria-current="page" {%
               endif %}>Settings</a></li>
+          {% endif %}
+              </ul>
+            </details>
+          </li>
           {% endif %}
         </ul>
 

@@ -23,8 +23,14 @@
 
   <section class="section shell section-tight">
     <div class="document-generator-layout">
-      <form method="post" class="contact-form listing-form document-generator-form">
+      <form method="post" class="contact-form listing-form document-generator-form" data-document-generator-form>
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        {% if source_document %}
+          <div class="admin-settings-note document-reuse-note" role="status">
+            Starting from <strong>{{ source_document.title }}</strong>. Saving creates a new archive record and leaves the original unchanged.
+          </div>
+        {% endif %}
 
         <section class="form-section">
           <div class="form-section-head">
@@ -199,16 +205,18 @@
             class="cta cta-outline"
             formaction="{{ url_for('preview_generated_document_pdf') }}"
             formtarget="_blank"
+            data-document-preview
             data-loading-label="Opening preview..."
           >
             Preview PDF
           </button>
-          <button type="submit" class="cta" data-loading-label="Saving final...">Save final PDF</button>
-          <a href="{{ url_for('generate_document_pdf', template_key=selected_template) }}" class="text-link">Reset</a>
-          <a href="{{ back_url }}" class="text-link">Back</a>
+          <button type="submit" class="cta" data-document-final-submit data-confirm-message="Save this reviewed PDF as a final document? This creates a new archive record." data-loading-label="Saving final...">Save final PDF</button>
+          <a href="{{ url_for('generate_document_pdf', template_key=selected_template) }}" class="text-link" data-document-discard-link>Reset</a>
+          <a href="{{ back_url }}" class="text-link" data-document-discard-link>Back</a>
         </div>
+        <div class="document-preview-feedback" data-document-preview-feedback role="status" aria-live="polite" tabindex="-1" hidden></div>
         <p class="form-note document-final-note">
-          Preview opens without saving. Save final PDF only after the content has been reviewed.
+          Preview opens without saving and keeps your entries on this page. Save final PDF only after the content has been reviewed.
         </p>
       </form>
 
