@@ -33,7 +33,11 @@
       </article>
       <article class="info-card">
         <h2>Contact</h2>
+        {% if site_settings.contact_email_configured %}
         <p>Questions about site use can be sent to <a href="mailto:{{ site_settings.contact_email }}">{{ site_settings.contact_email }}</a>.</p>
+        {% else %}
+        <p>The official site-use contact address is environment-managed and will be published before the final public launch.</p>
+        {% endif %}
       </article>
     </div>
   </section>

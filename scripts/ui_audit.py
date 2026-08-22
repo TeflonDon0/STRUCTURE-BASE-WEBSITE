@@ -10,7 +10,7 @@ from typing import Any
 
 
 DEFAULT_ROUTES = ("/", "/properties", "/tenant-services", "/login")
-AUTH_SHELL_ROUTES = {"/login", "/partners/login"}
+AUTH_SHELL_ROUTES = {"/login", "/partners/login", "/partner/status"}
 
 
 @dataclass(frozen=True)

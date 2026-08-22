@@ -57,16 +57,11 @@ def check_required_env() -> list[CheckResult]:
         "STRUCTUREBASE_SECRET",
         "STRUCTUREBASE_ADMIN_USERNAME",
         "STRUCTUREBASE_ADMIN_PASSWORD",
-        "STRUCTUREBASE_INITIAL_ADMIN_NAME",
-        "STRUCTUREBASE_INITIAL_ADMIN_EMAIL",
         "STRUCTUREBASE_SESSION_COOKIE_SECURE",
         "STRUCTUREBASE_DATABASE_BACKEND",
         "STRUCTUREBASE_STORAGE_BACKEND",
         "STRUCTUREBASE_SITE_NAME",
-        "STRUCTUREBASE_CONTACT_EMAIL",
-        "STRUCTUREBASE_CONTACT_PHONE",
-        "STRUCTUREBASE_CONTACT_PHONE_RAW",
-        "STRUCTUREBASE_WHATSAPP_PHONE",
+        "STRUCTUREBASE_PUBLIC_BASE_URL",
     ]
     missing = [key for key in required if not env_value(key)]
     placeholder = [key for key in required if is_placeholder(env_value(key))]
@@ -76,6 +71,42 @@ def check_required_env() -> list[CheckResult]:
         checks.append(result("required_env", "fail", f"Placeholder values: {', '.join(placeholder)}"))
     else:
         checks.append(result("required_env", "pass", "Required deployment env vars are present."))
+
+    acceptance_values = [
+        "STRUCTUREBASE_INITIAL_ADMIN_NAME",
+        "STRUCTUREBASE_INITIAL_ADMIN_EMAIL",
+        "STRUCTUREBASE_CONTACT_EMAIL",
+        "STRUCTUREBASE_CONTACT_PHONE",
+        "STRUCTUREBASE_CONTACT_PHONE_RAW",
+        "STRUCTUREBASE_WHATSAPP_PHONE",
+    ]
+    incomplete_acceptance_values = [
+        key for key in acceptance_values if is_placeholder(env_value(key))
+    ]
+    indexing_enabled = env_value("STRUCTUREBASE_SEARCH_INDEXING_ENABLED").lower() in {
+        "1", "true", "yes", "on"
+    }
+    if incomplete_acceptance_values:
+        status = "fail" if indexing_enabled else "warn"
+        checks.append(
+            result(
+                "client_identity",
+                status,
+                "Replace before public launch: " + ", ".join(incomplete_acceptance_values),
+            )
+        )
+    else:
+        checks.append(result("client_identity", "pass", "Client identity and contact values are configured."))
+
+    checks.append(
+        result(
+            "search_indexing",
+            "pass" if indexing_enabled else "warn",
+            "Search indexing is enabled for the final public domain."
+            if indexing_enabled
+            else "Search indexing is disabled for client acceptance.",
+        )
+    )
 
     if env_value("STRUCTUREBASE_ENV") != "production":
         checks.append(result("environment", "warn", "STRUCTUREBASE_ENV is not production."))

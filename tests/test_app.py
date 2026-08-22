@@ -111,6 +111,44 @@ def test_public_routes_render_with_refinement_layer(client, path: str) -> None:
     assert b"refinement.css" in response.data
 
 
+def test_public_navigation_exposes_location_and_long_page_recovery(client) -> None:
+    detail = client.get("/properties/1")
+    privacy = client.get("/privacy")
+
+    assert detail.status_code == privacy.status_code == 200
+    assert b'id="page-top" tabindex="-1"' in detail.data
+    assert b'class="breadcrumbs" aria-label="Breadcrumb"' in detail.data
+    assert b'href="/properties">Listings</a>' in detail.data
+    assert b'href="/properties" aria-current="page"' in detail.data
+    assert b'class="footer-top-link"' in detail.data
+    assert b'id="back-to-top"' in detail.data
+    assert b'aria-hidden="true" tabindex="-1"' in detail.data
+    assert b'href="/privacy" aria-current="page"' in privacy.data
+
+
+def test_property_map_preserves_marker_interaction_contract(client) -> None:
+    response = client.get("/properties")
+    site_script = Path(app.root_path, "static", "site.js").read_text(encoding="utf-8")
+
+    assert response.status_code == 200
+    assert b'aria-describedby="map-instructions"' in response.data
+    assert b'Markers remain selectable at every zoom level.' in response.data
+    assert "mapElement.replaceChildren();" in site_script
+    assert "const hitRadius = 22;" in site_script
+
+
+def test_property_purchase_cards_preserve_light_surface_contrast(client) -> None:
+    response = client.get("/properties/1")
+    refinement_css = Path(app.root_path, "static", "refinement.css").read_text(encoding="utf-8")
+
+    assert response.status_code == 200
+    assert b'class="detail-purchase-grid"' in response.data
+    assert ".detail-purchase-card h2 {" in refinement_css
+    assert "color: #201913;" in refinement_css
+    assert "white-space: nowrap;" in refinement_css
+    assert "@media (max-width: 460px)" in refinement_css
+
+
 def test_not_found_page_is_branded_and_recoverable(client) -> None:
     response = client.get("/not-a-current-page")
 
@@ -163,6 +201,66 @@ def test_production_metadata_forces_https_and_uses_optimized_social_image(client
     assert b"https://structurebase.example/static/images/structurbhero2.webp" in response.data
 
 
+def test_client_acceptance_defaults_prevent_search_indexing(client) -> None:
+    original = app.config["SEARCH_INDEXING_ENABLED"]
+    app.config["SEARCH_INDEXING_ENABLED"] = False
+    try:
+        response = client.get("/")
+        robots = client.get("/robots.txt")
+    finally:
+        app.config["SEARCH_INDEXING_ENABLED"] = original
+
+    assert response.status_code == 200
+    assert b'<meta name="robots" content="noindex,nofollow">' in response.data
+    assert robots.status_code == 200
+    assert robots.mimetype == "text/plain"
+    assert robots.data == b"User-agent: *\nDisallow: /\n"
+
+
+def test_public_sitemap_lists_public_pages_and_properties(client) -> None:
+    response = client.get("/sitemap.xml", base_url="https://acceptance.structurebase.example")
+
+    assert response.status_code == 200
+    assert response.mimetype == "application/xml"
+    assert b"https://acceptance.structurebase.example/properties" in response.data
+    assert b"https://acceptance.structurebase.example/properties/1" in response.data
+    assert b"/dashboard" not in response.data
+    assert b"/login" not in response.data
+
+
+def test_public_base_url_controls_canonical_urls_without_rewriting_external_media(client) -> None:
+    original = app.config["PUBLIC_BASE_URL"]
+    app.config["PUBLIC_BASE_URL"] = "https://client-test.structurebase.example"
+    try:
+        response = client.get("/properties/1", base_url="http://untrusted-host.example")
+    finally:
+        app.config["PUBLIC_BASE_URL"] = original
+
+    assert response.status_code == 200
+    assert b'<link rel="canonical" href="https://client-test.structurebase.example/properties/1">' in response.data
+    assert b'"@type": "RealEstateAgent"' in response.data
+
+
+def test_legal_pages_do_not_publish_placeholder_contact_addresses(client) -> None:
+    for path in ("/privacy", "/terms"):
+        response = client.get(path)
+        assert response.status_code == 200
+        assert b"info@example.com" not in response.data
+        assert b"owner@example.com" not in response.data
+
+
+def test_production_healthcheck_does_not_expose_configuration(client) -> None:
+    original = app.config["IS_PRODUCTION"]
+    app.config["IS_PRODUCTION"] = True
+    try:
+        response = client.get("/healthz")
+    finally:
+        app.config["IS_PRODUCTION"] = original
+
+    assert response.status_code == 200
+    assert response.get_json() == {"status": "ok"}
+
+
 def test_partner_application_explains_review_process_before_the_form(client) -> None:
     response = client.get("/partners/register")
 
@@ -192,7 +290,57 @@ def test_home_search_and_budget_filter_reduce_discovery_friction(client) -> None
     assert b"Lekki Phase 1 Detached Villa" not in filtered_response.data
 
 
-def test_catalogue_supports_market_relevant_filters_sorting_and_contact_fallback(client) -> None:
+def test_tenant_maintenance_request_creates_a_receipt_and_persisted_ticket(client) -> None:
+    unit_reference = f"QA-{uuid.uuid4().hex[:8]}"
+    with client.session_transaction() as session:
+        session["_csrf_token"] = "test-token"
+
+    try:
+        response = client.post(
+            "/tenant-services",
+            data={
+                "csrf_token": "test-token",
+                "resident_name": "QA Resident",
+                "unit_reference": unit_reference,
+                "property_title": "QA Acceptance Property",
+                "email": "resident@example.net",
+                "phone": "",
+                "issue_category": "Plumbing",
+                "priority": "Medium",
+                "description": "Kitchen tap is leaking during the acceptance test.",
+            },
+        )
+
+        assert response.status_code == 302
+        receipt = client.get(response.headers["Location"])
+        assert receipt.status_code == 200
+        assert b"Request received" in receipt.data
+        assert unit_reference.encode() in receipt.data
+
+        with app.app_context():
+            row = app_module.get_db().execute(
+                "SELECT public_id, status FROM maintenance_tickets WHERE unit_reference = ?",
+                (unit_reference,),
+            ).fetchone()
+        assert row is not None
+        assert row["status"] == "New"
+    finally:
+        with app.app_context():
+            db = app_module.get_db()
+            rows = db.execute(
+                "SELECT public_id FROM maintenance_tickets WHERE unit_reference = ?",
+                (unit_reference,),
+            ).fetchall()
+            for row in rows:
+                db.execute(
+                    "DELETE FROM activity_log WHERE entity_type = 'maintenance_ticket' AND entity_id = ?",
+                    (row["public_id"],),
+                )
+            db.execute("DELETE FROM maintenance_tickets WHERE unit_reference = ?", (unit_reference,))
+            db.commit()
+
+
+def test_catalogue_supports_market_relevant_filters_sorting_and_safe_contact_states(client) -> None:
     filtered = client.get(
         "/properties?status=For+Sale&min_price=400000000&min_bedrooms=5&sort=price_asc"
     )
@@ -212,7 +360,7 @@ def test_catalogue_supports_market_relevant_filters_sorting_and_contact_fallback
         b"Victoria Island Office Suite"
     )
     assert b"Annual asking price" in sorted_response.data
-    assert b"Email property desk" in sorted_response.data
+    assert b"mailto:info@structurebase.com" not in sorted_response.data
     assert b"For landlords and appointed agents" in sorted_response.data
     assert b"Agent partner programme" in sorted_response.data
 

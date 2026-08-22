@@ -7,7 +7,7 @@
   <title>{% block title %}{{ site_settings.site_name }}{% endblock %}</title>
   <meta name="description"
     content="{% block meta_description %}{{ site_settings.site_name }} handles property listings, enquiries, and operations support from Lagos across key markets in Nigeria.{% endblock %}">
-  <meta name="robots" content="{% block robots %}index,follow{% endblock %}">
+  <meta name="robots" content="{% block robots %}{{ 'index,follow' if search_indexing_enabled else 'noindex,nofollow' }}{% endblock %}">
   <meta name="theme-color" content="#421820">
   <link rel="canonical" href="{% block canonical_url %}{{ canonical_request_url() }}{% endblock %}">
   <meta property="og:title" content="{% block og_title %}{{ self.title() | striptags | trim }}{% endblock %}">
@@ -37,6 +37,9 @@
   <link rel="stylesheet" href="{{ static_asset_url('refinement.css') }}">
   {% block head_extras %}{% endblock %}
   <script src="{{ static_asset_url('site.js') }}" defer></script>
+  {% if not request.path.startswith('/dashboard') and request.endpoint not in ['login', 'partner_login', 'partner_application_status', 'accept_staff_invitation', 'communication_preview_frame'] %}
+  <script type="application/ld+json" nonce="{{ csp_nonce() }}">{{ organization_structured_data() | tojson }}</script>
+  {% endif %}
   {% block structured_data %}{% endblock %}
 </head>
 
@@ -123,7 +126,7 @@
     {% set public_primary_href = url_for('properties') %}
   {% endif %}
 
-  <header class="site-header{% if admin_shell or partner_shell %} site-header-admin{% elif auth_shell %} site-header-auth{% endif %}">
+  <header id="page-top" tabindex="-1" class="site-header{% if admin_shell or partner_shell %} site-header-admin{% elif auth_shell %} site-header-auth{% endif %}">
     <div class="shell header-shell{% if auth_shell %} header-shell-auth{% endif %}">
       <a href="{{ url_for('dashboard' if admin_shell else 'partner_dashboard' if partner_shell else 'home') }}" class="brand"
         aria-label="{{ site_settings.site_name }} home">
@@ -349,11 +352,11 @@
       <nav class="footer-nav" aria-label="Footer navigation">
         <p class="footer-heading">Navigate</p>
         <ul>
-          <li><a href="{{ url_for('home') }}">Home</a></li>
-          <li><a href="{{ url_for('properties') }}">Listings</a></li>
-          <li><a href="{{ url_for('tenant_services') }}">Tenant services</a></li>
-          <li><a href="{{ url_for('about') }}">About</a></li>
-          <li><a href="{{ url_for('partner_register') }}">Partner programme</a></li>
+          <li><a href="{{ url_for('home') }}" {% if request.endpoint == 'home' %}aria-current="page"{% endif %}>Home</a></li>
+          <li><a href="{{ url_for('properties') }}" {% if request.endpoint in ['properties', 'property_detail'] %}aria-current="page"{% endif %}>Listings</a></li>
+          <li><a href="{{ url_for('tenant_services') }}" {% if request.endpoint == 'tenant_services' %}aria-current="page"{% endif %}>Tenant services</a></li>
+          <li><a href="{{ url_for('about') }}" {% if request.endpoint == 'about' %}aria-current="page"{% endif %}>About</a></li>
+          <li><a href="{{ url_for('partner_register') }}" {% if request.endpoint in ['partner_register', 'partner_application_status', 'partner_login'] %}aria-current="page"{% endif %}>Partner programme</a></li>
           {% if is_authenticated %}
           <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
           {% endif %}
@@ -382,8 +385,9 @@
     <div class="shell footer-bottom">
       <span>&copy; {{ current_year }} {{ site_settings.site_name }}. All rights reserved.</span>
       <div class="footer-legal">
-        <a href="{{ url_for('privacy') }}">Privacy</a>
-        <a href="{{ url_for('terms') }}">Terms</a>
+        <a href="#page-top" class="footer-top-link">Back to top <span aria-hidden="true">&uarr;</span></a>
+        <a href="{{ url_for('privacy') }}" {% if request.endpoint == 'privacy' %}aria-current="page"{% endif %}>Privacy</a>
+        <a href="{{ url_for('terms') }}" {% if request.endpoint == 'terms' %}aria-current="page"{% endif %}>Terms</a>
       </div>
     </div>
   </footer>
@@ -394,7 +398,7 @@
   </a>
   {% endif %}
   {% endif %}
-  <button type="button" class="back-to-top" id="back-to-top" aria-label="Back to top">
+  <button type="button" class="back-to-top" id="back-to-top" aria-label="Back to top" aria-hidden="true" tabindex="-1">
     <span aria-hidden="true">&uarr;</span>
   </button>
   {% if is_production %}

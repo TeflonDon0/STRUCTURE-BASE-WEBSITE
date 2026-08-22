@@ -99,3 +99,13 @@ services:
         sync: false
       - key: STRUCTUREBASE_SITE_NAME
         value: Structurebase
+      - key: STRUCTUREBASE_PUBLIC_BASE_URL
+        sync: false
+      - key: STRUCTUREBASE_SEARCH_INDEXING_ENABLED
+        value: "0"
+      - key: STRUCTUREBASE_OFFICE_ADDRESS
+        value: Lagos, Nigeria
+      - key: STRUCTUREBASE_COVERAGE_AREA
+        value: Lagos, Abuja, Port Harcourt, and selected markets across Nigeria
+      - key: STRUCTUREBASE_FOOTER_SUMMARY
+        value: Property listings, enquiries, and operations support from a team based in Lagos and active across Nigeria.

@@ -12,6 +12,8 @@ const detailMainImage = document.getElementById("detail-main-image");
 const prioritySelect = document.getElementById("priority");
 const emergencyNote = document.getElementById("emergency-note");
 const backToTop = document.getElementById("back-to-top");
+const pageTop = document.getElementById("page-top");
+const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 
 document.querySelectorAll("[data-home-filters]").forEach((filters) => {
   const mobileFilters = window.matchMedia("(max-width: 760px)");
@@ -34,6 +36,42 @@ document.querySelectorAll("[data-home-filters]").forEach((filters) => {
   syncHomeFilters();
 });
 
+document.querySelectorAll("[data-listing-filters]").forEach((filters) => {
+  const compactFilters = window.matchMedia("(max-width: 860px)");
+  const hasActiveFilters = filters.dataset.hasActiveFilters === "true";
+  const syncListingFilters = () => {
+    if (compactFilters.matches && !hasActiveFilters && !filters.dataset.userOpened) {
+      filters.removeAttribute("open");
+      return;
+    }
+    if (!compactFilters.matches || hasActiveFilters) {
+      filters.setAttribute("open", "");
+    }
+  };
+
+  filters.addEventListener("toggle", () => {
+    if (compactFilters.matches && filters.open) {
+      filters.dataset.userOpened = "true";
+    }
+  });
+  compactFilters.addEventListener?.("change", syncListingFilters);
+  syncListingFilters();
+});
+
+document.querySelectorAll("[data-open-filter]").forEach((trigger) => {
+  trigger.addEventListener("click", () => {
+    const filters = document.querySelector("[data-listing-filters]");
+    if (filters) {
+      filters.dataset.userOpened = "true";
+      filters.setAttribute("open", "");
+      window.requestAnimationFrame(() => {
+        const firstField = filters.querySelector("input, select, button, a");
+        firstField?.focus({ preventScroll: true });
+      });
+    }
+  });
+});
+
 const PUBLIC_HEADER_SCROLL_THRESHOLD = 40;
 let scrollStateFrame = null;
 
@@ -43,6 +81,7 @@ const setScrollState = () => {
     const showBackToTop = window.scrollY > 520;
     backToTop.classList.toggle("is-visible", showBackToTop);
     backToTop.tabIndex = showBackToTop ? 0 : -1;
+    backToTop.setAttribute("aria-hidden", String(!showBackToTop));
   }
 };
 
@@ -62,9 +101,29 @@ window.addEventListener("scroll", requestScrollState, { passive: true });
 
 if (backToTop) {
   backToTop.addEventListener("click", () => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    window.scrollTo({ top: 0, behavior: reducedMotion.matches ? "auto" : "smooth" });
+    window.setTimeout(() => {
+      pageTop?.focus({ preventScroll: true });
+    }, reducedMotion.matches ? 0 : 320);
   });
 }
+
+document.querySelectorAll('a[href^="#"]:not([href="#"])').forEach((link) => {
+  link.addEventListener("click", () => {
+    const targetId = link.hash.slice(1);
+    const target = targetId ? document.getElementById(targetId) : null;
+    if (!target) {
+      return;
+    }
+    if (!target.hasAttribute("tabindex")) {
+      target.setAttribute("tabindex", "-1");
+      target.dataset.anchorFocusTarget = "true";
+    }
+    window.setTimeout(() => {
+      target.focus({ preventScroll: true });
+    }, reducedMotion.matches ? 0 : 320);
+  });
+});
 
 const copyTextToClipboard = async (value) => {
   if (navigator.clipboard && window.isSecureContext) {
@@ -505,36 +564,6 @@ document.querySelectorAll("[data-advanced-payload-toggle]").forEach((toggle) => 
 
 const mapElement = document.getElementById("map");
 const mapDataElement = document.getElementById("map-data");
-const filterPanel = document.querySelector(".filter-panel");
-const filterOpenTriggers = document.querySelectorAll("[data-open-filter]");
-
-if (filterPanel) {
-  const syncFilterPanel = () => {
-    if (window.innerWidth <= 700 && !filterPanel.dataset.userOpened) {
-      filterPanel.removeAttribute("open");
-      return;
-    }
-    filterPanel.setAttribute("open", "");
-  };
-
-  syncFilterPanel();
-  window.addEventListener("resize", syncFilterPanel);
-}
-
-filterOpenTriggers.forEach((trigger) => {
-  trigger.addEventListener("click", () => {
-    if (!filterPanel) {
-      return;
-    }
-
-    filterPanel.dataset.userOpened = "true";
-    filterPanel.setAttribute("open", "");
-    window.requestAnimationFrame(() => {
-      const firstField = filterPanel.querySelector("input, select, button, a");
-      firstField?.focus({ preventScroll: true });
-    });
-  });
-});
 
 const escapeHtml = (value) =>
   String(value ?? "").replace(/[&<>"']/g, (character) => {
@@ -596,8 +625,8 @@ const buildMapPopupNode = (properties) => {
       </div>
     </div>
     <div class="map-popup-actions">
-      <a href="${detailUrl}" class="map-popup-link map-popup-link-primary">View full listing</a>
-      <a href="${resultsAnchor}" class="map-popup-link map-popup-link-secondary">Jump to result card</a>
+      <a href="${detailUrl}" class="map-popup-link map-popup-link-primary">View listing</a>
+      <a href="${resultsAnchor}" class="map-popup-link map-popup-link-secondary">Find result</a>
     </div>
   `;
 
@@ -676,6 +705,10 @@ if (mapElement) {
     mapElement.dataset.mapInitialized = "true";
     window.mapboxgl.accessToken = token;
 
+    // Mapbox requires an empty container. Keeping the loading state in the
+    // element allows the map to render but can prevent layer pointer events.
+    mapElement.replaceChildren();
+
     const map = new window.mapboxgl.Map({
       container: "map",
       style: "mapbox://styles/mapbox/light-v11",
@@ -703,9 +736,10 @@ if (mapElement) {
 
       const popupNode = buildMapPopupNode(feature.properties);
       const popup = new window.mapboxgl.Popup({
+        anchor: window.matchMedia("(max-width: 560px)").matches ? "top" : "bottom",
         closeButton: false,
         offset: 18,
-        maxWidth: "304px",
+        maxWidth: "320px",
       })
         .setLngLat(coordinates)
         .setDOMContent(popupNode)
@@ -720,7 +754,7 @@ if (mapElement) {
         if (activePopup === popup) {
           activePopup = null;
         }
-        map.getCanvas().focus();
+        map.getCanvas().focus({ preventScroll: true });
       });
 
       activePopup = popup;
@@ -811,7 +845,17 @@ if (mapElement) {
             "#a16f36",
             "#7b3327",
           ],
-          "circle-radius": 8,
+          "circle-radius": [
+            "interpolate",
+            ["linear"],
+            ["zoom"],
+            10,
+            8,
+            14,
+            10,
+            18,
+            12,
+          ],
           "circle-stroke-width": 2,
           "circle-stroke-color": "#fffdf9",
           "circle-opacity": 0.96,
@@ -836,39 +880,47 @@ if (mapElement) {
         }
       }
 
-      map.on("click", "clusters", (event) => {
-        const feature = map.queryRenderedFeatures(event.point, { layers: ["clusters"] })[0];
-        if (!feature) {
-          return;
-        }
-        const clusterId = feature.properties.cluster_id;
-        map.getSource("listings").getClusterExpansionZoom(clusterId, (error, expansionZoom) => {
-          if (error) {
-            return;
-          }
-          map.easeTo({
-            center: feature.geometry.coordinates,
-            zoom: expansionZoom,
-            duration: 700,
-          });
-        });
-      });
+      const interactiveLayers = ["clusters", "unclustered-point"];
+      const interactiveFeaturesAt = (point) => {
+        const hitRadius = 22;
+        return map.queryRenderedFeatures(
+          [
+            [point.x - hitRadius, point.y - hitRadius],
+            [point.x + hitRadius, point.y + hitRadius],
+          ],
+          { layers: interactiveLayers }
+        );
+      };
 
-      map.on("click", "unclustered-point", (event) => {
-        const feature = event.features?.[0];
+      map.on("click", (event) => {
+        const feature = interactiveFeaturesAt(event.point)[0];
         if (!feature) {
           return;
         }
+
+        if (feature.properties?.cluster_id !== undefined) {
+          const clusterId = feature.properties.cluster_id;
+          map.getSource("listings").getClusterExpansionZoom(clusterId, (error, expansionZoom) => {
+            if (error) {
+              return;
+            }
+            map.easeTo({
+              center: feature.geometry.coordinates,
+              zoom: expansionZoom,
+              duration: 700,
+            });
+          });
+          return;
+        }
+
         openFeaturePopup(feature);
       });
 
-      ["clusters", "unclustered-point"].forEach((layerId) => {
-        map.on("mouseenter", layerId, () => {
-          map.getCanvas().style.cursor = "pointer";
-        });
-        map.on("mouseleave", layerId, () => {
-          map.getCanvas().style.cursor = "";
-        });
+      map.on("mousemove", (event) => {
+        map.getCanvas().style.cursor = interactiveFeaturesAt(event.point).length ? "pointer" : "";
+      });
+      map.on("mouseout", () => {
+        map.getCanvas().style.cursor = "";
       });
     });
   };

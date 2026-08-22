@@ -667,7 +667,7 @@ body.has-scrolled .site-header {
       rgba(15, 12, 10, 0.14) 72%,
       rgba(15, 12, 10, 0.04) 100%
     ),
-    url("images/structurbhero2.png");
+    url("images/structurbhero2.webp");
   background-size: 100% auto;
   background-position: center top;
   background-repeat: no-repeat;
@@ -689,7 +689,7 @@ body.has-scrolled .site-header {
     linear-gradient(90deg, rgba(8, 8, 7, 0.96) 0%, rgba(12, 10, 9, 0.86) 36%, rgba(18, 15, 13, 0.58) 64%, rgba(18, 15, 13, 0.76) 100%),
     radial-gradient(circle at 74% 22%, rgba(255, 207, 153, 0.28), transparent 19rem),
     radial-gradient(circle at 22% 68%, rgba(192, 106, 59, 0.22), transparent 22rem),
-    url("images/structurbhero2.png") center top / cover no-repeat;
+    url("images/structurbhero2.webp") center top / cover no-repeat;
 }
 
 .hero-section-cinematic::before,
@@ -1121,6 +1121,19 @@ body.detail-page {
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.26);
 }
 
+.listing-map.mapboxgl-map {
+  overflow: visible;
+}
+
+.listing-map .mapboxgl-canvas-container {
+  overflow: hidden;
+  border-radius: inherit;
+}
+
+.listing-map .mapboxgl-popup {
+  z-index: 5;
+}
+
 .listing-map .mapboxgl-canvas {
   outline: none;
 }
@@ -1173,7 +1186,28 @@ body.detail-page {
   font-size: var(--step--1);
 }
 
+.map-interaction-guide {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.45rem 1rem;
+  color: var(--text-muted);
+  font-size: var(--step--1);
+  line-height: 1.5;
+}
+
+.map-interaction-guide p,
+.map-interaction-guide span {
+  margin: 0;
+}
+
+.map-interaction-guide strong {
+  color: var(--text);
+}
+
 .mapboxgl-popup-content {
+  max-height: min(22rem, calc(100vh - 8rem));
   padding: 0;
   border-radius: 1.1rem;
   border: 1px solid rgba(24, 32, 40, 0.08);
@@ -1182,7 +1216,8 @@ body.detail-page {
 }
 
 .map-popup-card {
-  width: min(17.25rem, 100%);
+  width: 17.25rem;
+  max-width: calc(100vw - 2rem);
   background: var(--surface);
 }
 
@@ -1192,7 +1227,7 @@ body.detail-page {
 
 .map-popup-image {
   width: 100%;
-  height: 7.15rem;
+  height: 5rem;
   object-fit: cover;
   background: var(--surface-alt);
 }
@@ -1221,8 +1256,8 @@ body.detail-page {
 
 .map-popup-copy {
   display: grid;
-  gap: 0.7rem;
-  padding: 0.95rem 1rem 0.75rem;
+  gap: 0.45rem;
+  padding: 0.7rem 0.8rem 0.55rem;
 }
 
 .map-popup-head {
@@ -1291,8 +1326,8 @@ body.detail-page {
   color: var(--text-muted);
   line-height: 1.5;
   display: -webkit-box;
-  -webkit-line-clamp: 2;
-  line-clamp: 2;
+  -webkit-line-clamp: 1;
+  line-clamp: 1;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
@@ -1307,25 +1342,27 @@ body.detail-page {
 }
 
 .map-popup-trust {
-  display: grid;
-  gap: 0.3rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.6rem;
 }
 
 .map-popup-actions {
   display: grid;
-  gap: 0.55rem;
-  padding: 0 1rem 1rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.4rem;
+  padding: 0 0.8rem 0.8rem;
 }
 
 .map-popup-link {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 2.7rem;
+  min-height: 2.5rem;
   width: 100%;
   padding: 0.72rem 0.95rem;
   border-radius: 0.95rem;
-  font-size: 0.84rem;
+  font-size: 0.78rem;
   font-weight: 700;
   text-decoration: none;
 }
@@ -2887,7 +2924,7 @@ body.admin-workspace-page .back-to-top:focus-visible {
   background: #f3efe9;
 }
 
-body:not(.home-page):not(.properties-page):not(.detail-page):not(.about-page):not(.dashboard-page):not(.form-page):not(.login-page):not(.legal-page):not(.offline-page) .floating-whatsapp + .back-to-top {
+body .floating-whatsapp + .back-to-top {
   bottom: 5.15rem;
 }
 
@@ -4093,7 +4130,7 @@ button[aria-busy="true"]::after {
     background:
       linear-gradient(180deg, rgba(8, 8, 7, 0.96) 0%, rgba(12, 10, 9, 0.8) 54%, rgba(8, 8, 7, 0.94) 100%),
       radial-gradient(circle at 75% 16%, rgba(255, 207, 153, 0.2), transparent 18rem),
-      url("images/structurbhero2.png") center top / cover no-repeat;
+      url("images/structurbhero2.webp") center top / cover no-repeat;
   }
 
   .hero-shell-home {
@@ -4952,16 +4989,27 @@ button[aria-busy="true"]::after {
     height: 18.5rem;
   }
 
+  .map-popup-copy {
+    gap: 0.35rem;
+    padding: 0.55rem 0.7rem 0.45rem;
+  }
+
+  .map-popup-pill {
+    min-height: 1.5rem;
+    padding: 0.16rem 0.45rem;
+    font-size: 0.66rem;
+  }
+
   .map-popup-actions {
-    flex-direction: column;
+    padding: 0 0.7rem 0.7rem;
   }
 
   .map-popup-card {
-    width: min(14rem, 100%);
+    width: min(16.5rem, calc(100vw - 2rem));
   }
 
   .map-popup-image {
-    height: 6.4rem;
+    height: 4rem;
   }
 
   .map-popup-close {
@@ -9340,7 +9388,7 @@ body.has-scrolled .site-header {
     linear-gradient(90deg, rgba(8, 8, 7, 0.95) 0%, rgba(14, 8, 10, 0.88) 38%, rgba(13, 21, 18, 0.62) 70%, rgba(12, 12, 10, 0.84) 100%),
     radial-gradient(circle at 76% 22%, rgba(31, 122, 79, 0.28), transparent 20rem),
     radial-gradient(circle at 20% 66%, rgba(228, 182, 83, 0.22), transparent 23rem),
-    url("images/structurbhero2.png") center top / cover no-repeat;
+    url("images/structurbhero2.webp") center top / cover no-repeat;
 }
 
 .hero-shell-home .hero-copy h1 {
@@ -13210,10 +13258,12 @@ body.detail-page .detail-tour-card .text-link {
 }
 
 @media (max-width: 860px) {
-  body.detail-page .back-to-top,
-  body.tenant-services-page .back-to-top,
   body.form-page .back-to-top {
     display: none;
+  }
+
+  body.detail-page .back-to-top {
+    display: inline-grid;
   }
 
   body.detail-page .detail-enquiry-surface .form-actions {
@@ -13238,5 +13288,11 @@ body.detail-page .detail-tour-card .text-link {
     border: 1px solid var(--admin-line, rgba(148, 163, 184, 0.2));
     border-radius: 0.5rem;
     text-decoration: none;
+  }
+}
+
+@media (max-width: 760px) {
+  body.detail-page .back-to-top {
+    bottom: calc(5.35rem + env(safe-area-inset-bottom));
   }
 }

@@ -25,7 +25,12 @@
   </section>
 
   <section class="section shell section-tight" data-reveal>
-    <details class="filter-panel catalogue-filter-panel" open>
+    <details
+      class="filter-panel catalogue-filter-panel"
+      data-listing-filters
+      data-has-active-filters="{{ 'true' if active_filter_count else 'false' }}"
+      {% if active_filter_count %}open{% endif %}
+    >
       <summary>
         <span>Filters</span>
         <strong>{{ listings|length }} result{% if listings|length != 1 %}s{% endif %}{% if active_filter_count %} · {{ active_filter_count }} filter{% if active_filter_count != 1 %}s{% endif %}{% endif %}</strong>
@@ -295,11 +300,16 @@
         data-latitude="6.5244"
         data-zoom="12"
         aria-label="Interactive property map"
+        aria-describedby="map-instructions"
       >
         <div class="map-loading" role="status">
           <strong>Preparing the catalogue map</strong>
           <span>Property cards remain available while location data loads.</span>
         </div>
+      </div>
+      <div class="map-interaction-guide" id="map-instructions">
+        <p><strong>Select a marker</strong> to preview its price, location, verification status, and full listing.</p>
+        <span>Use the map controls to zoom. Markers remain selectable at every zoom level.</span>
       </div>
       <script id="map-data" type="application/json" nonce="{{ csp_nonce() }}">{{ map_feature_collection | tojson }}</script>
     </article>

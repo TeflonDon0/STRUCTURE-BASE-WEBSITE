@@ -2,7 +2,7 @@
 
 Flask property listing app for sale, rent, and operations workflows across Nigeria, prepared for a starter production stack:
 
-- `Railway` for app hosting
+- `Render` for the current client-acceptance web service
 - `MongoDB Atlas` for the primary database
 - `Cloudinary` for image storage when you are ready
 - local SQLite and local uploads still available for fallback development
@@ -85,12 +85,17 @@ Core:
 - `STRUCTUREBASE_CONTACT_PHONE_RAW`
 - `STRUCTUREBASE_WHATSAPP_PHONE`
 - `STRUCTUREBASE_SITE_NAME`
+- `STRUCTUREBASE_PUBLIC_BASE_URL`
+- `STRUCTUREBASE_SEARCH_INDEXING_ENABLED` (keep `0` for client acceptance; set `1` only on the final public domain)
+- `STRUCTUREBASE_OFFICE_ADDRESS`
+- `STRUCTUREBASE_COVERAGE_AREA`
+- `STRUCTUREBASE_FOOTER_SUMMARY`
 
 Database:
 
 - `STRUCTUREBASE_DATABASE_BACKEND`
   - use `auto` locally
-  - use `mongodb` on Railway when Atlas is ready
+  - use `mongodb` on Render when Atlas is ready
 - `STRUCTUREBASE_MONGODB_URI`
 - `STRUCTUREBASE_MONGODB_DB_NAME`
 - `STRUCTUREBASE_MONGODB_COLLECTION`
@@ -132,7 +137,7 @@ Your part:
 
 - Create an Atlas cluster
 - Create a database user
-- Allow Railway outbound access in Atlas network settings
+- Allow the Render service to reach Atlas through the selected Atlas network-access policy
 - Copy the connection string
 - Set:
   - `STRUCTUREBASE_DATABASE_BACKEND=mongodb`
@@ -164,21 +169,21 @@ Your part:
 
 If these are not present, uploads continue using local disk.
 
-### 3. Railway
+### 3. Render
 
 Your part:
 
 - Push this repo to GitHub
-- Create a new Railway service from the GitHub repo
-- Railway will detect `railway.json`
+- Create a new Render Blueprint or web service from the GitHub repo
+- Render will detect `render.yaml` when using the Blueprint flow
 - Confirm the start command is:
   - `waitress-serve --listen=0.0.0.0:$PORT wsgi:app`
-- Add the environment variables from `RAILWAY_ENVIRONMENT.txt`
+- Add every `sync: false` value listed in `render.yaml`
 - Health check path: `/healthz`
 
 Notes:
 
-- You will get a Railway URL until you connect a custom domain
+- You will get an `onrender.com` URL until you connect a custom domain
 - Keep the client test service separate from the future production service
 
 ## Migrating Existing SQLite Data To MongoDB
@@ -199,9 +204,8 @@ This reads `data/structurebase.db` and upserts each row into MongoDB using `publ
 
 ## Recommended Next Steps After Starter Stack
 
-- Replace single shared admin login with real user accounts and roles
-- Move login rate limiting to a durable shared store
-- Add real server-side enquiry handling before you rely on Gmail
+- Replace acceptance inventory and representative media with client-approved live records
+- Add the final public domain and enable search indexing only after launch approval
 - Add error monitoring and database backups
 - Add background job processing for email delivery and retries
 - Add a staging environment before public launch

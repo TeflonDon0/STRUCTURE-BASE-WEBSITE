@@ -21,7 +21,8 @@ from email.message import EmailMessage
 from email.utils import formataddr, parseaddr
 from functools import wraps
 from pathlib import Path
-from urllib.parse import quote
+from urllib.parse import quote, urlsplit, urlunsplit
+from xml.sax.saxutils import escape as xml_escape
 
 # Prevent Cloudinary import failure if CLOUDINARY_URL is set but invalid.
 _cloudinary_url_env = os.environ.get("CLOUDINARY_URL", "").strip()
@@ -38,6 +39,7 @@ from communication_templates import (
 )
 from flask import (
     Flask,
+    Response,
     abort,
     flash,
     g,
@@ -447,6 +449,9 @@ app.config.update(
     CONTACT_PHONE_RAW=os.environ.get("STRUCTUREBASE_CONTACT_PHONE_RAW", DEFAULT_PHONE_RAW),
     WHATSAPP_PHONE=os.environ.get("STRUCTUREBASE_WHATSAPP_PHONE", DEFAULT_WHATSAPP_PHONE),
     SITE_NAME=os.environ.get("STRUCTUREBASE_SITE_NAME", DEFAULT_SITE_NAME),
+    PUBLIC_BASE_URL=os.environ.get("STRUCTUREBASE_PUBLIC_BASE_URL", "").strip().rstrip("/"),
+    SEARCH_INDEXING_ENABLED=os.environ.get("STRUCTUREBASE_SEARCH_INDEXING_ENABLED", "").strip().lower()
+    in {"1", "true", "yes", "on"},
     OFFICE_ADDRESS=os.environ.get("STRUCTUREBASE_OFFICE_ADDRESS", DEFAULT_OFFICE_ADDRESS),
     COVERAGE_AREA=os.environ.get("STRUCTUREBASE_COVERAGE_AREA", DEFAULT_COVERAGE_AREA),
     FOOTER_SUMMARY=os.environ.get("STRUCTUREBASE_FOOTER_SUMMARY", DEFAULT_FOOTER_SUMMARY),
@@ -2725,6 +2730,8 @@ def is_placeholder_email(value: str) -> bool:
     email = normalized_email_address(value)
     if not email:
         return True
+    if email == DEFAULT_CONTACT_EMAIL.strip().lower():
+        return True
     local, _separator, domain = email.partition("@")
     if domain in {"example.com", "example.org", "example.net"}:
         return True
@@ -3049,6 +3056,29 @@ def startup_validation_issues() -> tuple[list[str], list[str]]:
     if app.config["IS_PRODUCTION"] and app.config["TRUST_PROXY_COUNT"] < 1:
         warnings.append(
             "Trusted proxy count is zero in production; client IP and scheme detection may be inaccurate."
+        )
+
+    public_base_url = str(app.config.get("PUBLIC_BASE_URL") or "").strip()
+    if public_base_url:
+        parsed_public_url = urlsplit(public_base_url)
+        if (
+            parsed_public_url.scheme not in {"http", "https"}
+            or not parsed_public_url.netloc
+            or parsed_public_url.path not in {"", "/"}
+            or parsed_public_url.query
+            or parsed_public_url.fragment
+        ):
+            blocking_errors.append(
+                "STRUCTUREBASE_PUBLIC_BASE_URL must be an http(s) origin without a path, query, or fragment."
+            )
+    elif app.config["SEARCH_INDEXING_ENABLED"]:
+        warnings.append(
+            "Search indexing is enabled without STRUCTUREBASE_PUBLIC_BASE_URL; canonical URLs will use the request host."
+        )
+
+    if app.config["IS_PRODUCTION"] and not app.config["SEARCH_INDEXING_ENABLED"]:
+        warnings.append(
+            "Search indexing is disabled. Keep this for client acceptance and enable it only on the final public domain."
         )
 
     if is_placeholder_email(str(app.config["CONTACT_EMAIL"] or "")):
@@ -8467,7 +8497,8 @@ def absolute_asset_url(asset_path: str | None) -> str:
     if not url:
         return ""
     if not url.startswith(("http://", "https://")):
-        url = request.url_root.rstrip("/") + url
+        origin = configured_public_origin() or request.url_root.rstrip("/")
+        url = origin + "/" + url.lstrip("/")
     return canonical_external_url(url)
 
 
@@ -8477,8 +8508,60 @@ def canonical_external_url(url: str) -> str:
     return url
 
 
+def configured_public_origin() -> str:
+    value = str(app.config.get("PUBLIC_BASE_URL") or "").strip().rstrip("/")
+    if not value:
+        return ""
+    parsed = urlsplit(value)
+    if parsed.scheme not in {"http", "https"} or not parsed.netloc:
+        return ""
+    return urlunsplit((parsed.scheme, parsed.netloc, "", "", ""))
+
+
 def canonical_request_url() -> str:
+    origin = configured_public_origin()
+    if origin:
+        return origin + (request.path if request.path.startswith("/") else f"/{request.path}")
     return canonical_external_url(request.base_url)
+
+
+def organization_structured_data() -> dict[str, object]:
+    settings = site_settings()
+    data: dict[str, object] = {
+        "@context": "https://schema.org",
+        "@type": "RealEstateAgent",
+        "name": str(settings["site_name"]),
+        "url": canonical_external_url((configured_public_origin() or request.url_root.rstrip("/")) + "/"),
+        "logo": absolute_asset_url("images/logo-mark.webp"),
+        "address": {
+            "@type": "PostalAddress",
+            "streetAddress": str(settings["office_address"]),
+            "addressCountry": "NG",
+        },
+        "areaServed": str(settings["coverage_area"]),
+    }
+    contact_points: list[dict[str, str]] = []
+    if settings["contact_phone_configured"]:
+        contact_points.append(
+            {
+                "@type": "ContactPoint",
+                "telephone": str(settings["contact_phone_raw"]),
+                "contactType": "sales",
+                "areaServed": "NG",
+            }
+        )
+    if settings["contact_email_configured"]:
+        contact_points.append(
+            {
+                "@type": "ContactPoint",
+                "email": str(settings["contact_email"]),
+                "contactType": "customer service",
+                "areaServed": "NG",
+            }
+        )
+    if contact_points:
+        data["contactPoint"] = contact_points
+    return data
 
 
 def static_asset_version(filename: str) -> str:
@@ -8621,11 +8704,13 @@ def inject_globals() -> dict[str, object]:
         "asset_url": asset_url,
         "absolute_asset_url": absolute_asset_url,
         "canonical_request_url": canonical_request_url,
+        "organization_structured_data": organization_structured_data,
         "static_asset_url": static_asset_url,
         "service_worker_url": service_worker_url(),
         "database_backend": database_backend(),
         "storage_backend": storage_backend(),
         "is_production": app.config["IS_PRODUCTION"],
+        "search_indexing_enabled": bool(app.config["SEARCH_INDEXING_ENABLED"]),
         "csrf_token": csrf_token,
         "csp_nonce": lambda: getattr(g, "csp_nonce", ""),
         "availability_options": AVAILABILITY_OPTIONS,
@@ -10984,6 +11069,65 @@ def terms():
     return render_template("terms.html")
 
 
+@app.get("/robots.txt")
+def robots_txt():
+    if not app.config["SEARCH_INDEXING_ENABLED"]:
+        return Response("User-agent: *\nDisallow: /\n", mimetype="text/plain")
+
+    lines = [
+        "User-agent: *",
+        "Allow: /",
+        "Disallow: /dashboard",
+        "Disallow: /login",
+        "Disallow: /partners/login",
+        "Disallow: /partner",
+        "Disallow: /staff",
+        f"Sitemap: {canonical_external_url((configured_public_origin() or request.url_root.rstrip('/')) + url_for('sitemap_xml'))}",
+        "",
+    ]
+    return Response("\n".join(lines), mimetype="text/plain")
+
+
+@app.get("/sitemap.xml")
+def sitemap_xml():
+    filters = {
+        "status": "",
+        "availability": "",
+        "district": "",
+        "property_type": "",
+        "q": "",
+        "min_price": "",
+        "max_price": "",
+        "min_bedrooms": "",
+        "sort": "recommended",
+        "verified_only": "",
+    }
+    for key, _label in DISCOVERY_FEATURE_FIELDS:
+        filters[key] = ""
+    listings = query_public_listings(filters)
+    paths = [
+        url_for("home"),
+        url_for("properties"),
+        url_for("about"),
+        url_for("tenant_services"),
+        url_for("partner_register"),
+        url_for("privacy"),
+        url_for("terms"),
+        *(url_for("property_detail", listing_id=str(listing["id"])) for listing in listings),
+    ]
+    origin = configured_public_origin() or request.url_root.rstrip("/")
+    entries = "".join(
+        f"<url><loc>{xml_escape(canonical_external_url(origin + path))}</loc></url>"
+        for path in dict.fromkeys(paths)
+    )
+    payload = (
+        '<?xml version="1.0" encoding="UTF-8"?>'
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'
+        f"{entries}</urlset>"
+    )
+    return Response(payload, mimetype="application/xml")
+
+
 @app.get("/healthz")
 def healthcheck():
     payload = {
@@ -11004,7 +11148,11 @@ def healthcheck():
             get_mongo_client().admin.command("ping")
         except PyMongoError:
             payload["status"] = "degraded"
+            if app.config["IS_PRODUCTION"]:
+                return jsonify({"status": payload["status"]}), 503
             return jsonify(payload), 503
+    if app.config["IS_PRODUCTION"]:
+        return jsonify({"status": payload["status"]})
     return jsonify(payload)
 
 
