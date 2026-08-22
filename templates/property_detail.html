@@ -16,7 +16,7 @@
       {% set gallery = listing_media_gallery(listing) %}
       <div class="detail-media-column">
       <div class="detail-media-card">
-        <img src="{{ asset_url(gallery[0] if gallery else listing_image_path(listing)) }}" alt="{{ listing.title }}" class="detail-image" id="detail-main-image" loading="eager" fetchpriority="high" decoding="async">
+        <img src="{{ asset_url(gallery[0] if gallery else listing_image_path(listing)) }}" alt="{{ listing.title }}" class="detail-image" id="detail-main-image" width="1536" height="1024" loading="eager" fetchpriority="high" decoding="async">
         <div class="detail-media-overlay">
           <span>{{ gallery|length if gallery else 1 }} photo{% if (gallery|length if gallery else 1) != 1 %}s{% endif %}</span>
           {% if not listing_has_uploaded_image(listing) %}
@@ -37,7 +37,7 @@
               data-gallery-target="{{ asset_url(image_path) }}"
               aria-label="Show gallery image {{ loop.index }}"
             >
-              <img src="{{ asset_url(image_path) }}" alt="{{ listing.title }} image {{ loop.index }}" loading="lazy" decoding="async">
+              <img src="{{ asset_url(image_path) }}" alt="{{ listing.title }} image {{ loop.index }}" width="480" height="320" loading="lazy" decoding="async">
             </button>
           {% endfor %}
         </div>
@@ -319,7 +319,7 @@
           <article class="property-card">
             <a href="{{ url_for('property_detail', listing_id=item.id) }}" class="property-media-link" aria-label="View {{ item.title }}">
               <div class="property-media">
-                <img src="{{ asset_url(listing_image_path(item)) }}" alt="{{ item.title }}" loading="lazy" decoding="async">
+                <img src="{{ asset_url(listing_image_path(item)) }}" alt="{{ item.title }}" width="1536" height="1024" loading="lazy" decoding="async">
                 <span class="property-badge">{{ item.status }}</span>
                 {% if item.verified_property %}
                   <span class="property-badge property-badge-verified" title="Availability, price, and basic listing details reviewed before publishing.">Verified</span>

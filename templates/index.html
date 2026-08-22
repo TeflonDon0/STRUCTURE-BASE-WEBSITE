@@ -181,7 +181,7 @@
         {% for listing in editorial %}
           <article class="editorial-card">
             <a href="{{ url_for('property_detail', listing_id=listing.id) }}" class="editorial-media-link" aria-label="View {{ listing.title }}">
-              <img src="{{ asset_url(listing_image_path(listing)) }}" alt="{{ listing.title }}" class="editorial-image" loading="lazy" decoding="async">
+              <img src="{{ asset_url(listing_image_path(listing)) }}" alt="{{ listing.title }}" class="editorial-image" width="1536" height="1024" loading="lazy" decoding="async">
             </a>
             <div class="editorial-copy">
               <p class="editorial-kicker">{{ listing.district }} &middot; {{ listing.property_type }}</p>
@@ -214,7 +214,7 @@
         {% for listing in completed %}
           <article class="completed-property-card">
             <a href="{{ url_for('property_detail', listing_id=listing.id) }}" class="completed-property-media" aria-label="View completed listing {{ listing.title }}">
-              <img src="{{ asset_url(listing_image_path(listing)) }}" alt="{{ listing.title }}" loading="lazy" decoding="async">
+              <img src="{{ asset_url(listing_image_path(listing)) }}" alt="{{ listing.title }}" width="1536" height="1024" loading="lazy" decoding="async">
               <span>{{ listing.availability }}</span>
             </a>
             <div>

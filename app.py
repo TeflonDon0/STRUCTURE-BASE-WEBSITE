@@ -547,6 +547,24 @@ if app.config["TRUST_PROXY_COUNT"] > 0:
 
 
 LISTING_SORT = [("featured", DESCENDING), ("updated_at", DESCENDING), ("created_at", DESCENDING)]
+PUBLIC_LISTING_SORT_OPTIONS = (
+    ("recommended", "Recommended"),
+    ("newest", "Recently updated"),
+    ("price_asc", "Price: low to high"),
+    ("price_desc", "Price: high to low"),
+)
+PUBLIC_LISTING_SORT_DEFINITIONS = {
+    "recommended": LISTING_SORT,
+    "newest": [("updated_at", DESCENDING), ("created_at", DESCENDING)],
+    "price_asc": [("price", ASCENDING), ("updated_at", DESCENDING)],
+    "price_desc": [("price", DESCENDING), ("updated_at", DESCENDING)],
+}
+PUBLIC_LISTING_SORT_SQL = {
+    "recommended": "featured DESC, updated_at DESC, created_at DESC",
+    "newest": "updated_at DESC, created_at DESC",
+    "price_asc": "price ASC, updated_at DESC",
+    "price_desc": "price DESC, updated_at DESC",
+}
 DASHBOARD_SORT = [("updated_at", DESCENDING), ("created_at", DESCENDING)]
 DASHBOARD_SORT_OPTIONS = (
     ("updated_desc", "Recently updated"),
@@ -6783,8 +6801,15 @@ def query_public_listings(filters: dict[str, str]) -> list[dict[str, object]]:
             query["property_type"] = filters["property_type"]
         if filters.get("verified_only"):
             query["verified_property"] = 1
+        price_query: dict[str, int] = {}
+        if filters.get("min_price"):
+            price_query["$gte"] = int(filters["min_price"])
         if filters.get("max_price"):
-            query["price"] = {"$lte": int(filters["max_price"])}
+            price_query["$lte"] = int(filters["max_price"])
+        if price_query:
+            query["price"] = price_query
+        if filters.get("min_bedrooms"):
+            query["bedrooms"] = {"$gte": int(filters["min_bedrooms"])}
         for key, _label in DISCOVERY_FEATURE_FIELDS:
             if filters.get(key):
                 query[key] = 1
@@ -6796,7 +6821,9 @@ def query_public_listings(filters: dict[str, str]) -> list[dict[str, object]]:
                 {"district": {"$regex": pattern, "$options": "i"}},
                 {"address": {"$regex": pattern, "$options": "i"}},
             ]
-        cursor = get_mongo_collection().find(query).sort(LISTING_SORT)
+        cursor = get_mongo_collection().find(query).sort(
+            PUBLIC_LISTING_SORT_DEFINITIONS.get(filters.get("sort", "recommended"), LISTING_SORT)
+        )
         return [normalize_listing_record(document) for document in cursor]
 
     db = get_db()
@@ -6817,9 +6844,15 @@ def query_public_listings(filters: dict[str, str]) -> list[dict[str, object]]:
         params.append(filters["property_type"])
     if filters.get("verified_only"):
         sql += " AND verified_property = 1"
+    if filters.get("min_price"):
+        sql += " AND price >= ?"
+        params.append(int(filters["min_price"]))
     if filters.get("max_price"):
         sql += " AND price <= ?"
         params.append(int(filters["max_price"]))
+    if filters.get("min_bedrooms"):
+        sql += " AND bedrooms >= ?"
+        params.append(int(filters["min_bedrooms"]))
     for key, _label in DISCOVERY_FEATURE_FIELDS:
         if filters.get(key):
             sql += f" AND {key} = 1"
@@ -6828,7 +6861,7 @@ def query_public_listings(filters: dict[str, str]) -> list[dict[str, object]]:
         sql += " AND (title LIKE ? OR summary LIKE ? OR district LIKE ? OR address LIKE ?)"
         params.extend([pattern, pattern, pattern, pattern])
 
-    sql += " ORDER BY featured DESC, updated_at DESC, created_at DESC"
+    sql += f" ORDER BY {PUBLIC_LISTING_SORT_SQL.get(filters.get('sort', 'recommended'), PUBLIC_LISTING_SORT_SQL['recommended'])}"
     rows = db.execute(sql, params).fetchall()
     return [normalize_listing_record(row) for row in rows]
 
@@ -8500,6 +8533,12 @@ def format_naira(value: int | None) -> str:
     return f"NGN {value:,.0f}"
 
 
+@app.template_filter("grouped_number")
+def format_grouped_number(value: object) -> str:
+    raw = str(value or "").strip().replace(",", "")
+    return f"{int(raw):,}" if raw.isdigit() else ""
+
+
 @app.template_filter("filesize")
 def format_filesize(value: int | None) -> str:
     size = float(value or 0)
@@ -8627,20 +8666,38 @@ def home():
 def properties():
     if request.args.get("ref"):
         capture_referral(request.args.get("ref", ""))
+    raw_min_price = request.args.get("min_price", "").strip().replace(",", "")
     raw_max_price = request.args.get("max_price", "").strip().replace(",", "")
+    raw_min_bedrooms = request.args.get("min_bedrooms", "").strip()
+    min_price = raw_min_price if raw_min_price.isdigit() and 0 < int(raw_min_price) <= 10_000_000_000_000 else ""
     max_price = raw_max_price if raw_max_price.isdigit() and 0 < int(raw_max_price) <= 10_000_000_000_000 else ""
+    min_bedrooms = raw_min_bedrooms if raw_min_bedrooms.isdigit() and 0 < int(raw_min_bedrooms) <= 20 else ""
+    sort = request.args.get("sort", "recommended").strip()
+    if sort not in PUBLIC_LISTING_SORT_DEFINITIONS:
+        sort = "recommended"
     filters = {
         "status": request.args.get("status", "").strip(),
         "availability": request.args.get("availability", "").strip(),
         "district": request.args.get("district", "").strip(),
         "property_type": request.args.get("property_type", "").strip(),
         "q": request.args.get("q", "").strip(),
+        "min_price": min_price,
         "max_price": max_price,
+        "min_bedrooms": min_bedrooms,
+        "sort": sort,
         "verified_only": "1" if request.args.get("verified_only") else "",
     }
     for key, _label in DISCOVERY_FEATURE_FIELDS:
         filters[key] = "1" if request.args.get(key) else ""
     listings = query_public_listings(filters)
+    active_filter_count = sum(
+        bool(filters.get(key))
+        for key in (
+            "status", "availability", "district", "property_type", "q",
+            "min_price", "max_price", "min_bedrooms", "verified_only",
+            *(key for key, _label in DISCOVERY_FEATURE_FIELDS),
+        )
+    )
 
     districts = distinct_public_values("district")
     property_types = distinct_public_values("property_type")
@@ -8657,6 +8714,8 @@ def properties():
         map_feature_collection=map_feature_collection,
         map_summary=map_summary,
         feature_filter_fields=DISCOVERY_FEATURE_FIELDS,
+        public_sort_options=PUBLIC_LISTING_SORT_OPTIONS,
+        active_filter_count=active_filter_count,
     )
 
 

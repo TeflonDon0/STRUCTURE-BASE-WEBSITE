@@ -192,6 +192,31 @@ def test_home_search_and_budget_filter_reduce_discovery_friction(client) -> None
     assert b"Lekki Phase 1 Detached Villa" not in filtered_response.data
 
 
+def test_catalogue_supports_market_relevant_filters_sorting_and_contact_fallback(client) -> None:
+    filtered = client.get(
+        "/properties?status=For+Sale&min_price=400000000&min_bedrooms=5&sort=price_asc"
+    )
+
+    assert filtered.status_code == 200
+    assert b"Lekki Phase 1 Detached Villa" in filtered.data
+    assert b"Ikoyi Skyline Penthouse" not in filtered.data
+    assert b'name="min_price"' in filtered.data
+    assert b'name="min_bedrooms"' in filtered.data
+    assert b'name="sort"' in filtered.data
+    assert b'value="400,000,000"' in filtered.data
+    assert b">Purpose</label>" in filtered.data
+
+    sorted_response = client.get("/properties?sort=price_asc")
+    assert sorted_response.status_code == 200
+    assert sorted_response.data.index(b"Yaba Income Duplex") < sorted_response.data.index(
+        b"Victoria Island Office Suite"
+    )
+    assert b"Annual asking price" in sorted_response.data
+    assert b"Email property desk" in sorted_response.data
+    assert b"For landlords and appointed agents" in sorted_response.data
+    assert b"Agent partner programme" in sorted_response.data
+
+
 def test_documentation_is_public_only_after_explicit_verification(client) -> None:
     private_summary = "QA private title review details"
     with app.app_context():

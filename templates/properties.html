@@ -28,7 +28,7 @@
     <details class="filter-panel catalogue-filter-panel" open>
       <summary>
         <span>Filters</span>
-        <strong>{{ listings|length }} result{% if listings|length != 1 %}s{% endif %}</strong>
+        <strong>{{ listings|length }} result{% if listings|length != 1 %}s{% endif %}{% if active_filter_count %} · {{ active_filter_count }} filter{% if active_filter_count != 1 %}s{% endif %}{% endif %}</strong>
       </summary>
       <form method="get" action="{{ url_for('properties') }}" class="listing-filters" id="listing-filters" aria-label="Filter property listings">
         <div class="catalogue-filter-head">
@@ -36,7 +36,11 @@
             <p class="eyebrow">Current view</p>
             <p><strong>{{ listings|length }} listing{% if listings|length != 1 %}s{% endif %}</strong> in the live catalogue.</p>
           </div>
-          {% if site_settings.whatsapp_configured %}<a href="{{ general_whatsapp_url }}" class="text-link text-link-strong catalogue-advisor-link" target="_blank" rel="noreferrer">Need help shortlisting?</a>{% endif %}
+          {% if site_settings.whatsapp_configured %}
+            <a href="{{ general_whatsapp_url }}" class="text-link text-link-strong catalogue-advisor-link" target="_blank" rel="noreferrer">Need help shortlisting?</a>
+          {% elif site_settings.contact_email_configured %}
+            <a href="mailto:{{ site_settings.contact_email }}?subject=Structurebase%20property%20shortlist" class="text-link text-link-strong catalogue-advisor-link">Email the property desk</a>
+          {% endif %}
         </div>
         <div class="form-group">
           <label for="q">Search</label>
@@ -44,9 +48,9 @@
         </div>
 
         <div class="form-group">
-          <label for="status">Status</label>
+          <label for="status">Purpose</label>
           <select id="status" name="status">
-            <option value="">All</option>
+            <option value="">Sale, rent, or lease</option>
             {% for option in status_options %}
               <option value="{{ option }}" {% if filters.status == option %}selected{% endif %}>{{ option }}</option>
             {% endfor %}
@@ -84,8 +88,32 @@
         </div>
 
         <div class="form-group">
+          <label for="min_price">Minimum price (NGN)</label>
+          <input type="text" id="min_price" name="min_price" inputmode="numeric" pattern="[0-9,]*" autocomplete="off" value="{{ filters.min_price | grouped_number }}" placeholder="10,000,000">
+        </div>
+
+        <div class="form-group">
           <label for="max_price">Maximum price (NGN)</label>
-          <input type="number" id="max_price" name="max_price" min="100000" step="100000" inputmode="numeric" value="{{ filters.max_price }}" placeholder="150,000,000">
+          <input type="text" id="max_price" name="max_price" inputmode="numeric" pattern="[0-9,]*" autocomplete="off" value="{{ filters.max_price | grouped_number }}" placeholder="150,000,000">
+        </div>
+
+        <div class="form-group">
+          <label for="min_bedrooms">Minimum bedrooms</label>
+          <select id="min_bedrooms" name="min_bedrooms">
+            <option value="">Any bedrooms</option>
+            {% for count in range(1, 7) %}
+              <option value="{{ count }}" {% if filters.min_bedrooms == count|string %}selected{% endif %}>{{ count }}{% if count == 6 %}+{% endif %} bedroom{% if count != 1 %}s{% endif %}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="sort">Sort results</label>
+          <select id="sort" name="sort">
+            {% for value, label in public_sort_options %}
+              <option value="{{ value }}" {% if filters.sort == value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
         </div>
 
         <div class="filter-actions">
@@ -117,7 +145,11 @@
           <h2>{{ listings|length }} property option{% if listings|length != 1 %}s{% endif %}</h2>
           <p class="catalogue-results-note">Review location, asking price, availability, and essential features before opening the full property record.</p>
         </div>
-        {% if site_settings.whatsapp_configured %}<a href="{{ general_whatsapp_url }}" class="text-link text-link-strong" target="_blank" rel="noreferrer">Ask for a shortlist</a>{% endif %}
+        {% if site_settings.whatsapp_configured %}
+          <a href="{{ general_whatsapp_url }}" class="text-link text-link-strong" target="_blank" rel="noreferrer">Ask for a shortlist</a>
+        {% elif site_settings.contact_email_configured %}
+          <a href="mailto:{{ site_settings.contact_email }}?subject=Structurebase%20property%20shortlist" class="text-link text-link-strong">Request a shortlist</a>
+        {% endif %}
       </div>
       <div class="property-grid-list">
         {% for listing in listings %}
@@ -145,7 +177,12 @@
                   <p class="property-availability">{{ listing.availability }}</p>
                 </div>
                 <h2><a href="{{ url_for('property_detail', listing_id=listing.id) }}" class="property-title-link">{{ listing.title }}</a></h2>
-                <p class="property-price property-price-card">{% if listing.is_completed %}<span class="property-price-context">Last published</span>{% endif %}{{ listing.price | naira }}{{ listing.price_suffix }}</p>
+                <p class="property-price property-price-card">
+                  <span class="property-price-context">
+                    {% if listing.is_completed %}Last published price{% elif listing.price_suffix == '/ year' %}Annual asking price{% elif listing.price_suffix == '/ month' %}Monthly asking price{% else %}Asking price{% endif %}
+                  </span>
+                  {{ listing.price | naira }}{{ listing.price_suffix }}
+                </p>
                 <p class="property-summary">{{ listing.summary }}</p>
               </div>
               <ul class="property-meta">
@@ -166,7 +203,11 @@
                 <p class="property-note">{{ listing.address }}</p>
                 <div class="property-actions">
                   <a href="{{ url_for('property_detail', listing_id=listing.id) }}" class="cta cta-small">View details</a>
-                  {% if site_settings.whatsapp_configured %}<a href="{{ general_whatsapp_url if listing.is_completed else listing_whatsapp_url(listing) }}" class="cta cta-small cta-card-secondary" target="_blank" rel="noreferrer">{{ "Find similar" if listing.is_completed else "Ask to view" }}</a>{% endif %}
+                  {% if site_settings.whatsapp_configured %}
+                    <a href="{{ general_whatsapp_url if listing.is_completed else listing_whatsapp_url(listing) }}" class="cta cta-small cta-card-secondary" target="_blank" rel="noreferrer">{{ "Find similar" if listing.is_completed else "Ask to view" }}</a>
+                  {% elif site_settings.contact_email_configured %}
+                    <a href="mailto:{{ site_settings.contact_email }}?subject={{ ('Enquiry about ' ~ listing.title) | urlencode }}" class="cta cta-small cta-card-secondary">{{ "Find similar" if listing.is_completed else "Email property desk" }}</a>
+                  {% endif %}
                 </div>
                 <p class="property-note property-reassurance">{% if listing.is_completed %}This property is no longer active; ask the team for comparable options.{% else %}Ask about availability, fees, and viewing times before you travel.{% endif %}</p>
               </div>
@@ -181,7 +222,12 @@
           {% if is_authenticated %}
             <a href="{{ url_for('create_listing') }}" class="cta cta-small">Post a new listing</a>
           {% else %}
-            {% if site_settings.whatsapp_configured %}<a href="{{ general_whatsapp_url }}" class="cta cta-small" target="_blank" rel="noreferrer">Ask the team to source options</a>{% else %}<a href="{{ url_for('properties') }}" class="cta cta-small">Reset filters</a>{% endif %}
+            {% if site_settings.whatsapp_configured %}
+              <a href="{{ general_whatsapp_url }}" class="cta cta-small" target="_blank" rel="noreferrer">Ask the team to source options</a>
+            {% elif site_settings.contact_email_configured %}
+              <a href="mailto:{{ site_settings.contact_email }}?subject=Property%20sourcing%20request" class="cta cta-small">Email a sourcing request</a>
+            {% endif %}
+            <a href="{{ url_for('properties') }}" class="cta cta-small cta-card-secondary">Reset filters</a>
           {% endif %}
         </div>
       </div>
@@ -202,6 +248,24 @@
         <strong>Listing confidence</strong>
         <p>Verified badges mean core listing details have been reviewed.</p>
       </article>
+    </div>
+  </section>
+
+  <section class="section shell section-tight" data-reveal>
+    <div class="cta-banner catalogue-owner-cta">
+      <div>
+        <p class="eyebrow">For landlords and appointed agents</p>
+        <h2>Have a property that should be assessed for the catalogue?</h2>
+        <p>Send the property type, location, current asking terms, ownership authority, and available media. The team will review fit and next steps before anything is published.</p>
+      </div>
+      <div class="cta-banner-actions">
+        {% if site_settings.whatsapp_configured %}
+          <a href="{{ general_whatsapp_url }}" class="cta">Discuss a listing</a>
+        {% elif site_settings.contact_email_configured %}
+          <a href="mailto:{{ site_settings.contact_email }}?subject=Property%20listing%20review" class="cta">Email property details</a>
+        {% endif %}
+        <a href="{{ url_for('partner_register') }}" class="cta cta-card-secondary">Agent partner programme</a>
+      </div>
     </div>
   </section>
 

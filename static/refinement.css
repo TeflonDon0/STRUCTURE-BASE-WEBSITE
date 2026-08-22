@@ -55,6 +55,7 @@
 
 html {
   overflow-x: clip;
+  scroll-padding-top: 6.5rem;
 }
 
 body {
@@ -267,7 +268,6 @@ svg {
   background: var(--sb-ink);
 }
 
-.error-page .site-header,
 .error-page .site-footer {
   background: #160b0e;
 }
@@ -428,6 +428,18 @@ textarea {
   box-shadow: 0 10px 30px rgba(39, 28, 24, 0.06);
   color: var(--sb-ink);
   backdrop-filter: blur(20px);
+  transition:
+    background-color var(--sb-motion-base) var(--sb-ease),
+    border-color var(--sb-motion-base) var(--sb-ease),
+    box-shadow var(--sb-motion-base) var(--sb-ease);
+}
+
+/* Override legacy page-specific dark scroll states with one public-header contract. */
+body.has-scrolled .site-header:not(.site-header-admin):not(.site-header-auth) {
+  border-bottom-color: rgba(67, 47, 39, 0.15);
+  background: rgba(255, 253, 249, 0.985);
+  box-shadow: 0 12px 34px rgba(39, 28, 24, 0.09);
+  color: var(--sb-ink);
 }
 
 .site-header:not(.site-header-admin):not(.site-header-auth) .header-shell {
@@ -524,6 +536,13 @@ textarea {
   transform: translateY(-1px);
 }
 
+main section[id],
+main article[id],
+main form[id],
+main details[id] {
+  scroll-margin-top: 6.5rem;
+}
+
 .cta:focus-visible,
 .text-link:focus-visible,
 button:focus-visible,
@@ -596,6 +615,17 @@ textarea:disabled {
 
 /* Public navigation: one deterministic mobile implementation. */
 @media (max-width: 860px) {
+  html {
+    scroll-padding-top: 5.5rem;
+  }
+
+  main section[id],
+  main article[id],
+  main form[id],
+  main details[id] {
+    scroll-margin-top: 5.5rem;
+  }
+
   body:not(.admin-workspace-page):not(.dashboard-page):not(.form-page):not(.login-page) .site-header {
     overflow: visible;
   }
@@ -2348,8 +2378,38 @@ textarea:disabled {
   border-left: 3px solid var(--sb-burgundy);
 }
 
+.catalogue-filter-panel > summary {
+  gap: 1rem;
+}
+
+.catalogue-filter-panel > summary span,
+.catalogue-filter-panel > summary strong {
+  min-width: 0;
+}
+
+.catalogue-filter-panel > summary strong {
+  flex: 0 1 auto;
+  margin-left: auto;
+  text-align: right;
+}
+
 .properties-page .listing-filters {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   background: transparent;
+}
+
+.properties-page .catalogue-filter-head,
+.properties-page .filter-chip-row {
+  grid-column: 1 / -1;
+}
+
+.properties-page .listing-filters > .form-group:first-of-type {
+  grid-column: span 2;
+}
+
+.properties-page .filter-actions {
+  align-self: end;
+  min-height: 3rem;
 }
 
 .properties-page .listing-filters label {
@@ -2574,6 +2634,19 @@ textarea:disabled {
   border-radius: 0.35rem var(--sb-radius-md) var(--sb-radius-md) 0.35rem;
   background: var(--sb-white);
   box-shadow: var(--sb-shadow-soft);
+}
+
+.catalogue-owner-cta {
+  border-left: 4px solid var(--sb-burgundy);
+  border-radius: 0.35rem var(--sb-radius-md) var(--sb-radius-md) 0.35rem;
+}
+
+.catalogue-owner-cta > div:first-child {
+  max-width: 48rem;
+}
+
+.catalogue-owner-cta h2 {
+  max-width: 22ch;
 }
 
 @media (min-width: 1101px) {
@@ -2866,6 +2939,10 @@ button[aria-busy="true"]::after,
 }
 
 @media (max-width: 980px) {
+  .properties-page .listing-filters {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .partner-process-list {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -2884,6 +2961,16 @@ button[aria-busy="true"]::after,
 }
 
 @media (max-width: 760px) {
+  .catalogue-filter-panel > summary {
+    padding-inline: 1rem;
+  }
+
+  .catalogue-filter-panel > summary strong {
+    max-width: 55%;
+    font-size: 0.78rem;
+    line-height: 1.35;
+  }
+
   .properties-page .page-hero,
   .about-page .page-hero,
   .tenant-services-page .page-hero,
@@ -2904,6 +2991,34 @@ button[aria-busy="true"]::after,
 
   .properties-page .property-grid-list {
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  .properties-page .listing-filters {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .properties-page .listing-filters > .form-group:first-of-type {
+    grid-column: auto;
+  }
+
+  .detail-page .detail-media-card {
+    min-height: 0;
+    aspect-ratio: 4 / 3;
+  }
+
+  .detail-page .detail-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .detail-page .detail-gallery-strip {
+    display: flex;
+    gap: 0.65rem;
+  }
+
+  .detail-page .gallery-thumb {
+    flex: 0 0 5.75rem;
   }
 
   .properties-page .property-card {

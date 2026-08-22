@@ -34,8 +34,11 @@ document.querySelectorAll("[data-home-filters]").forEach((filters) => {
   syncHomeFilters();
 });
 
+const PUBLIC_HEADER_SCROLL_THRESHOLD = 40;
+let scrollStateFrame = null;
+
 const setScrollState = () => {
-  body.classList.toggle("has-scrolled", window.scrollY > 16);
+  body.classList.toggle("has-scrolled", window.scrollY > PUBLIC_HEADER_SCROLL_THRESHOLD);
   if (backToTop) {
     const showBackToTop = window.scrollY > 520;
     backToTop.classList.toggle("is-visible", showBackToTop);
@@ -43,8 +46,19 @@ const setScrollState = () => {
   }
 };
 
+const requestScrollState = () => {
+  if (scrollStateFrame !== null) {
+    return;
+  }
+
+  scrollStateFrame = window.requestAnimationFrame(() => {
+    setScrollState();
+    scrollStateFrame = null;
+  });
+};
+
 setScrollState();
-window.addEventListener("scroll", setScrollState, { passive: true });
+window.addEventListener("scroll", requestScrollState, { passive: true });
 
 if (backToTop) {
   backToTop.addEventListener("click", () => {
