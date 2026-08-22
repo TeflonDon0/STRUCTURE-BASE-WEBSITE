@@ -344,7 +344,7 @@
 
   <section class="section shell" data-reveal>
     <div class="cta-banner home-partner-banner">
-      <div><p class="eyebrow">Structure Base Partner Programme</p><h2>Turn trusted introductions into traceable opportunities.</h2><p>Join a reviewed partner network and share only approved property materials, with each introduction tracked from first click through commission review.</p><ul class="partner-benefit-list"><li>Personal referral links</li><li>Approved marketing assets</li><li>Clear commission status</li></ul></div>
+      <div><p class="eyebrow">SB / Partner programme</p><h2>Turn trusted introductions into traceable opportunities.</h2><p>Join a reviewed partner network and share only approved property materials, with each introduction tracked from first click through commission review.</p><ul class="partner-benefit-list"><li>Personal referral links</li><li>Approved marketing assets</li><li>Clear commission status</li></ul></div>
       <div class="cta-banner-actions"><a href="{{ url_for('partner_dashboard') if is_partner_authenticated else url_for('partner_application_status') if has_partner_account else url_for('partner_register') }}" class="cta">{{ 'Open partner portal' if is_partner_authenticated else 'View application' if has_partner_account else 'Become a partner' }}</a><a href="{{ url_for('partner_login') }}" class="text-link">Partner sign in</a></div>
     </div>
   </section>

@@ -3073,6 +3073,217 @@ button[aria-busy="true"]::after,
   }
 }
 
+/* Brand system: property intelligence, proof-led decisions, and clear next steps. */
+:is(
+  .properties-page,
+  .detail-page,
+  .about-page,
+  .tenant-services-page,
+  .partner-public-page,
+  .legal-page,
+  .offline-page,
+  .error-page
+) .page-hero {
+  position: relative;
+  isolation: isolate;
+  overflow: clip;
+}
+
+:is(
+  .properties-page,
+  .detail-page,
+  .about-page,
+  .tenant-services-page,
+  .partner-public-page,
+  .legal-page,
+  .offline-page,
+  .error-page
+) .page-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background-image:
+    linear-gradient(rgba(216, 189, 131, 0.055) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(216, 189, 131, 0.055) 1px, transparent 1px);
+  background-size: 38px 38px;
+  pointer-events: none;
+}
+
+:is(
+  .properties-page,
+  .detail-page,
+  .about-page,
+  .tenant-services-page,
+  .partner-public-page,
+  .legal-page,
+  .offline-page,
+  .error-page
+) .page-hero :is(.page-hero-shell, .detail-shell, .narrow-shell) {
+  position: relative;
+  z-index: 1;
+}
+
+:is(
+  .properties-page,
+  .detail-page,
+  .about-page,
+  .tenant-services-page,
+  .partner-public-page,
+  .legal-page,
+  .offline-page,
+  .error-page,
+  .login-page
+) .page-hero .eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  color: var(--sb-gold);
+  letter-spacing: 0.16em;
+}
+
+:is(
+  .properties-page,
+  .about-page,
+  .tenant-services-page,
+  .partner-public-page,
+  .legal-page,
+  .offline-page
+) .page-hero .cta:not(.cta-outline):not(.cta-secondary) {
+  border-color: var(--sb-gold);
+  background: var(--sb-gold);
+  background-image: none;
+  color: var(--sb-ink) !important;
+  box-shadow: 0 14px 32px rgba(216, 189, 131, 0.2);
+}
+
+:is(
+  .properties-page,
+  .about-page,
+  .tenant-services-page,
+  .partner-public-page,
+  .legal-page,
+  .offline-page
+) .page-hero .cta:not(.cta-outline):not(.cta-secondary):hover,
+:is(
+  .properties-page,
+  .about-page,
+  .tenant-services-page,
+  .partner-public-page,
+  .legal-page,
+  .offline-page
+) .page-hero .cta:not(.cta-outline):not(.cta-secondary):focus-visible {
+  border-color: color-mix(in srgb, var(--sb-gold) 82%, #fff);
+  background: color-mix(in srgb, var(--sb-gold) 82%, #fff);
+  color: var(--sb-ink) !important;
+  box-shadow: 0 16px 38px rgba(216, 189, 131, 0.26);
+}
+
+.detail-page .detail-decision-card .cta-accent {
+  border-color: var(--sb-gold);
+  background: var(--sb-gold);
+  background-image: none;
+  color: var(--sb-ink) !important;
+}
+
+:is(
+  .home-page,
+  .properties-page,
+  .detail-page,
+  .about-page,
+  .tenant-services-page,
+  .partner-public-page,
+  .legal-page,
+  .offline-page,
+  .error-page
+) main .cta {
+  border-radius: 0.35rem 0.9rem 0.9rem 0.35rem;
+}
+
+.properties-page .listing-filters .cta,
+.tenant-services-page .service-form .cta,
+.tenant-services-page .tenant-emergency-strip .cta,
+.partner-public-page .partner-application-form .cta,
+.detail-page .detail-enquiry-surface .cta {
+  border-color: var(--sb-burgundy);
+  background: var(--sb-burgundy);
+  background-image: none;
+  color: #fffaf2 !important;
+  box-shadow: 0 10px 24px rgba(66, 24, 32, 0.14);
+}
+
+:is(
+  .home-page,
+  .properties-page,
+  .detail-page,
+  .about-page,
+  .tenant-services-page,
+  .partner-public-page,
+  .legal-page,
+  .offline-page,
+  .error-page
+) main :is(.info-card, .contact-form, .cta-banner, .inner-summary-strip, .objection-strip) {
+  border-radius: 0.35rem var(--sb-radius-md) var(--sb-radius-md) 0.35rem;
+}
+
+:is(.properties-page, .about-page, .tenant-services-page) .masthead-signal-row span,
+.partner-public-page .partner-hero-signals li {
+  border-radius: 0.3rem 999px 999px 0.3rem;
+}
+
+.site-header:not(.site-header-admin):not(.site-header-auth) .nav a[aria-current="page"] {
+  border-radius: 0.3rem 1rem 0.3rem 0.3rem;
+}
+
+.detail-page .dashboard-badge-accent {
+  border-color: color-mix(in srgb, var(--sb-success) 30%, transparent);
+  background: color-mix(in srgb, var(--sb-success) 12%, #fff);
+  color: var(--sb-success);
+  box-shadow: none;
+}
+
+/* Keep property media in a deterministic paint layer below its legibility overlay. */
+.detail-page .detail-media-card > .detail-image {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  opacity: 1;
+  object-fit: cover;
+}
+
+.detail-page .detail-media-card::after {
+  z-index: 1;
+}
+
+.detail-page .gallery-thumb img {
+  display: block;
+  opacity: 1;
+}
+
+@media (min-width: 1005px) {
+  body.properties-page .page-hero .page-hero-shell h1,
+  body.tenant-services-page .page-hero .page-hero-shell h1,
+  body.legal-page .page-hero .page-hero-shell h1,
+  body.offline-page .page-hero .page-hero-shell h1 {
+    font-size: clamp(3.35rem, 5vw, 4.6rem);
+    line-height: 0.95;
+    letter-spacing: -0.04em;
+  }
+}
+
+@media (min-width: 761px) and (max-width: 1004px) {
+  body.properties-page .page-hero .page-hero-shell h1,
+  body.tenant-services-page .page-hero .page-hero-shell h1,
+  body.legal-page .page-hero .page-hero-shell h1,
+  body.offline-page .page-hero .page-hero-shell h1 {
+    font-size: clamp(3rem, 6vw, 3.65rem);
+    line-height: 0.98;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   button[aria-busy="true"]::after,
   .cta[aria-busy="true"]::after {
