@@ -8,15 +8,15 @@
   <meta name="description"
     content="{% block meta_description %}{{ site_settings.site_name }} handles property listings, enquiries, and operations support from Lagos across key markets in Nigeria.{% endblock %}">
   <meta name="robots" content="{% block robots %}index,follow{% endblock %}">
-  <meta name="theme-color" content="#171717">
-  <link rel="canonical" href="{% block canonical_url %}{{ request.base_url }}{% endblock %}">
+  <meta name="theme-color" content="#421820">
+  <link rel="canonical" href="{% block canonical_url %}{{ canonical_request_url() }}{% endblock %}">
   <meta property="og:title" content="{% block og_title %}{{ self.title() | striptags | trim }}{% endblock %}">
   <meta property="og:description"
     content="{% block og_description %}{{ self.meta_description() | striptags | trim }}{% endblock %}">
   <meta property="og:type" content="{% block og_type %}website{% endblock %}">
-  <meta property="og:url" content="{{ request.base_url }}">
+  <meta property="og:url" content="{{ canonical_request_url() }}">
   <meta property="og:image"
-    content="{% block meta_image %}{{ absolute_asset_url('images/structurbhero2.png') }}{% endblock %}">
+    content="{% block meta_image %}{{ absolute_asset_url('images/structurbhero2.webp') }}{% endblock %}">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="{{ self.title() | striptags | trim }}">
   <meta name="twitter:description" content="{{ self.meta_description() | striptags | trim }}">
@@ -33,7 +33,7 @@
   <link rel="icon" type="image/png" sizes="192x192" href="{{ static_asset_url('images/icon-192.png') }}">
   <link rel="shortcut icon" href="{{ static_asset_url('images/icon-192.png') }}">
   <link rel="apple-touch-icon" href="{{ static_asset_url('images/apple-touch-icon.png') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=1.4">
+  <link rel="stylesheet" href="{{ static_asset_url('style.css') }}">
   <link rel="stylesheet" href="{{ static_asset_url('refinement.css') }}">
   {% block head_extras %}{% endblock %}
   <script src="{{ static_asset_url('site.js') }}" defer></script>
@@ -104,6 +104,24 @@
   'active_endpoints': ['about']
   }
   ] %}
+  {% set public_primary_label = 'Browse listings' %}
+  {% set public_primary_href = url_for('properties') %}
+  {% if request.endpoint in ['properties'] %}
+    {% set public_primary_label = 'How we verify' %}
+    {% set public_primary_href = url_for('about') + '#confidence-checks' %}
+  {% elif request.endpoint in ['property_detail'] %}
+    {% set public_primary_label = 'Book an inspection' %}
+    {% set public_primary_href = '#property-inspection' %}
+  {% elif request.endpoint == 'tenant_services' %}
+    {% set public_primary_label = 'Report an issue' %}
+    {% set public_primary_href = '#maintenance-request' %}
+  {% elif request.endpoint in ['partner_register', 'partner_application_status'] %}
+    {% set public_primary_label = 'Partner sign in' %}
+    {% set public_primary_href = url_for('partner_login') %}
+  {% elif request.endpoint == 'about' %}
+    {% set public_primary_label = 'Browse listings' %}
+    {% set public_primary_href = url_for('properties') %}
+  {% endif %}
 
   <header class="site-header{% if admin_shell or partner_shell %} site-header-admin{% elif auth_shell %} site-header-auth{% endif %}">
     <div class="shell header-shell{% if auth_shell %} header-shell-auth{% endif %}">
@@ -221,6 +239,8 @@
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <button type="submit" class="cta cta-small cta-outline" data-loading-label="Signing out...">Logout</button>
           </form>
+          {% else %}
+          <a href="{{ public_primary_href }}" class="cta cta-small">{{ public_primary_label }}</a>
           {% endif %}
         </div>
         {% endif %}
@@ -249,7 +269,7 @@
       <div class="header-auth"><a href="{{ url_for('partner_application_status') }}" class="cta cta-small header-cta">Application status</a></div>
       {% elif not is_authenticated and not is_partner_authenticated %}
       <div class="header-auth header-auth-home">
-        <a href="{{ url_for('partner_register') }}" class="cta cta-small header-cta home-header-cta">Become a partner</a>
+        <a href="{{ public_primary_href }}" class="cta cta-small header-cta home-header-cta">{{ public_primary_label }}</a>
       </div>
       {% elif is_partner_authenticated %}
       <div class="header-auth"><a href="{{ url_for('partner_dashboard') }}" class="cta cta-small header-cta">Partner portal</a></div>
@@ -343,15 +363,17 @@
       <div class="footer-contact" id="site-contact">
         <p class="footer-heading">Contact</p>
         <ul class="contact-list">
-          <li><strong>Email:</strong> <a href="mailto:{{ site_settings.contact_email }}">{{ site_settings.contact_email
-              }}</a></li>
+          {% if site_settings.contact_email_configured %}
+          <li><strong>Email:</strong> <a href="mailto:{{ site_settings.contact_email }}">{{ site_settings.contact_email }}</a></li>
+          {% endif %}
           {% if site_settings.contact_phone_configured %}
           <li><strong>Phone:</strong> <a href="tel:{{ site_settings.contact_phone_raw }}">{{
               site_settings.contact_phone_display }}</a></li>
           {% endif %}
           {% if is_partner_authenticated %}<li><a href="{{ url_for('partner_dashboard') }}">Partner portal</a></li>{% endif %}
-          <li><strong>WhatsApp:</strong> <a href="{{ general_whatsapp_url }}" target="_blank" rel="noreferrer">Chat with
-              sales desk</a></li>
+          {% if site_settings.whatsapp_configured %}
+          <li><strong>WhatsApp:</strong> <a href="{{ general_whatsapp_url }}" target="_blank" rel="noreferrer">Chat with sales desk</a></li>
+          {% endif %}
           <li><strong>Coverage:</strong> {{ site_settings.coverage_area }}</li>
         </ul>
       </div>
@@ -365,7 +387,7 @@
       </div>
     </div>
   </footer>
-  {% if request.endpoint not in ['login', 'privacy', 'terms', 'offline', 'tenant_services'] %}
+  {% if site_settings.whatsapp_configured and request.endpoint not in ['login', 'privacy', 'terms', 'offline', 'tenant_services'] %}
   <a href="{% if listing is defined %}{{ listing_whatsapp_url(listing) }}{% else %}{{ general_whatsapp_url }}{% endif %}"
     class="floating-whatsapp" target="_blank" rel="noreferrer" aria-label="Open WhatsApp enquiry">
     Enquire on WhatsApp

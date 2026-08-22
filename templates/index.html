@@ -12,6 +12,10 @@
     <div class="hero-atmosphere" aria-hidden="true"></div>
     <div class="shell hero-shell hero-shell-home">
       <div class="hero-copy">
+        <div class="hero-edition-note" aria-label="Structurebase property desk coverage">
+          <span>SB / Property intelligence</span>
+          <span>Lagos &middot; Nigeria</span>
+        </div>
         <p class="hero-kicker">The Lagos property desk</p>
         {% set hero_heading_parts = site_settings.homepage_hero_heading.split('. ') %}
         <h1>
@@ -42,28 +46,37 @@
               </select>
             </label>
             <label>
-              <span>Property type</span>
-              <select name="property_type">
-                <option value="">All types</option>
-                {% for item in search_property_types %}<option value="{{ item.property_type }}">{{ item.property_type }}</option>{% endfor %}
-              </select>
-            </label>
-            <label>
               <span>Buy or rent</span>
               <select name="status">
                 <option value="">Any purpose</option>
                 {% for option in status_options %}<option value="{{ option }}">{{ option }}</option>{% endfor %}
               </select>
             </label>
-            <label>
-              <span>Maximum price</span>
-              <input type="number" name="max_price" min="100000" step="100000" inputmode="numeric" placeholder="NGN budget">
-            </label>
-            <button type="submit" class="cta home-search-submit">Search properties</button>
+            <details class="home-search-more" data-home-filters open>
+              <summary>More filters</summary>
+              <div class="home-search-more-fields">
+                <label>
+                  <span>Property type</span>
+                  <select name="property_type">
+                    <option value="">All types</option>
+                    {% for item in search_property_types %}<option value="{{ item.property_type }}">{{ item.property_type }}</option>{% endfor %}
+                  </select>
+                </label>
+                <label>
+                  <span>Maximum price</span>
+                  <input type="number" name="max_price" min="100000" step="100000" inputmode="numeric" placeholder="NGN budget">
+                </label>
+              </div>
+            </details>
+            <button type="submit" class="cta home-search-submit" data-loading-label="Searching...">Search properties</button>
           </div>
         </form>
         <div class="home-hero-support-links">
+          {% if site_settings.whatsapp_configured %}
           <a href="{{ general_whatsapp_url }}" class="text-link" target="_blank" rel="noreferrer">Ask an advisor to shortlist</a>
+          {% else %}
+          <a href="{{ url_for('about') }}#confidence-checks" class="text-link">See how shortlisting works</a>
+          {% endif %}
           <a href="{{ url_for('partner_register') }}" class="text-link">Earn through the partner programme</a>
         </div>
       </div>
@@ -75,6 +88,7 @@
         <article class="hero-listing-card">
           <div class="hero-listing-media">
             <img src="{{ asset_url(listing_image_path(spotlight)) }}" alt="{{ spotlight.title }}" width="1536" height="1024" loading="eager" fetchpriority="high" decoding="async">
+            <span class="hero-live-pill"><span aria-hidden="true"></span>{{ spotlight.availability }}</span>
           </div>
           <div class="hero-listing-body">
             <div class="hero-listing-head">
@@ -132,21 +146,22 @@
 
   <section class="home-standard shell" aria-labelledby="home-standard-title" data-reveal>
     <div class="home-standard-intro">
-      <p class="eyebrow">The Structurebase standard</p>
-      <h2 id="home-standard-title">A focused catalogue, reviewed with care.</h2>
+      <p class="eyebrow">SB / Proof ledger</p>
+      <h2 id="home-standard-title">Proof before pressure.</h2>
+      <p class="home-proof-note">A practical record of what is known, what still needs confirmation, and what happens next.</p>
       <a href="{{ url_for('about') }}#confidence-checks" class="text-link text-link-strong">See how confidence is built</a>
     </div>
     <ol class="home-standard-list">
       <li>
-        <strong>Reviewed before publishing</strong>
-        <span>Price, status, location context, and the core listing details come first.</span>
+        <strong>Core details recorded</strong>
+        <span>Price, status, location context, and the available listing facts come first.</span>
       </li>
       <li>
-        <strong>Questions surfaced early</strong>
+        <strong>Unknowns surfaced early</strong>
         <span>Fees, access, timing, and representative media are called out before travel.</span>
       </li>
       <li>
-        <strong>Advisor-led handoff</strong>
+        <strong>Context stays attached</strong>
         <span>Your selected property stays attached when the conversation moves to the team.</span>
       </li>
     </ol>
@@ -157,7 +172,7 @@
       <div class="section-heading section-heading-inline">
         <div>
           <p class="eyebrow">Featured properties</p>
-          <h2>Start with verified homes and investment-ready spaces.</h2>
+          <h2>A focused edit of current homes and investment-ready spaces.</h2>
         </div>
         <a href="{{ url_for('properties') }}" class="text-link text-link-strong">View the full selection</a>
       </div>
@@ -175,7 +190,9 @@
               <p class="editorial-summary">{{ listing.summary }}</p>
               <div class="editorial-actions stack-mobile">
                 <a href="{{ url_for('property_detail', listing_id=listing.id) }}" class="cta cta-small">View details</a>
+                {% if site_settings.whatsapp_configured %}
                 <a href="{{ listing_whatsapp_url(listing) }}" class="text-link" target="_blank" rel="noreferrer">Chat about this property</a>
+                {% endif %}
               </div>
             </div>
           </article>
@@ -221,22 +238,26 @@
 
     <div class="card-grid route-grid">
       <article class="info-card">
-        <h2>Buying</h2>
+        <p class="route-index">01 / Buy</p>
+        <h3>Buying</h3>
         <p>Confirm price, title context, viewing windows, and fit before committing time to an inspection.</p>
         <a href="{{ url_for('properties', status='For Sale') }}" class="text-link text-link-strong">Browse sale listings</a>
       </article>
       <article class="info-card">
-        <h2>Renting</h2>
+        <p class="route-index">02 / Rent</p>
+        <h3>Renting</h3>
         <p>Compare districts, rent status, access timing, and likely terms before shortlisting homes.</p>
         <a href="{{ url_for('properties', status='For Rent') }}" class="text-link text-link-strong">Browse rentals</a>
       </article>
       <article class="info-card">
-        <h2>Listing support</h2>
+        <p class="route-index">03 / List</p>
+        <h3>Listing support</h3>
         <p>Landlords and operators can route interest through direct enquiry paths with listing context attached.</p>
-        <a href="{{ general_whatsapp_url }}" class="text-link text-link-strong" target="_blank" rel="noreferrer">Talk to an advisor</a>
+        {% if site_settings.whatsapp_configured %}<a href="{{ general_whatsapp_url }}" class="text-link text-link-strong" target="_blank" rel="noreferrer">Talk to an advisor</a>{% else %}<a href="{{ url_for('about') }}" class="text-link text-link-strong">Understand our approach</a>{% endif %}
       </article>
       <article class="info-card">
-        <h2>Tenant maintenance</h2>
+        <p class="route-index">04 / Support</p>
+        <h3>Tenant maintenance</h3>
         <p>Residents can log issues with contact details, priority, and photos so the team can triage faster.</p>
         <a href="{{ url_for('tenant_services') }}" class="text-link text-link-strong">Open tenant services</a>
       </article>
@@ -291,29 +312,31 @@
 
   <section class="section shell" data-reveal>
     <div class="home-faq-grid">
-      <article class="home-faq-media">
-        <img src="{{ static_asset_url('images/lekki-villa-sample.webp') }}" alt="Modern residential home exterior" width="1536" height="1024" loading="lazy" decoding="async">
+      <article class="home-faq-index" aria-label="Structurebase decision principle">
+        <span>SB / 04</span>
+        <blockquote>“Clarity first. Then the viewing.”</blockquote>
+        <p>Use the listing to narrow fit. Use the conversation to confirm what the page cannot.</p>
       </article>
       <article class="home-faq-copy">
         <p class="eyebrow">Common Questions</p>
         <h2>What clients usually want to confirm before they book a viewing.</h2>
         <div class="faq-stack">
-          <article class="faq-item">
-            <h3>Are prices and availability current?</h3>
+          <details class="faq-item" open>
+            <summary>Are prices and availability current?</summary>
             <p>The catalogue is maintained for current price, sale or rent status, and availability. Confirm agency fees, service charges, payment terms, and negotiation room before viewing.</p>
-          </article>
-          <article class="faq-item">
-            <h3>Can I ask questions before I visit?</h3>
+          </details>
+          <details class="faq-item">
+            <summary>Can I ask questions before I visit?</summary>
             <p>Yes. Share your budget, preferred district, and timing. The advisor can help confirm fit, viewing windows, and next steps before you travel.</p>
-          </article>
-          <article class="faq-item">
-            <h3>What does verified mean?</h3>
+          </details>
+          <details class="faq-item">
+            <summary>What does verified mean?</summary>
             <p>Verified signals mean the team has reviewed availability, price, and basic listing details before publishing or follow-up.</p>
-          </article>
-          <article class="faq-item">
-            <h3>How will my details be used?</h3>
+          </details>
+          <details class="faq-item">
+            <summary>How will my details be used?</summary>
             <p>Your contact details are used to respond to your enquiry or service request, not to make the page public.</p>
-          </article>
+          </details>
         </div>
       </article>
     </div>
@@ -348,7 +371,11 @@
           <p>Browse live listings, open the map, or speak with the team directly if you want help narrowing the right fit.</p>
           <div class="hero-actions stack-mobile">
             <a href="{{ url_for('properties') }}" class="cta">Browse listings</a>
+            {% if site_settings.whatsapp_configured %}
             <a href="{{ general_whatsapp_url }}" class="cta cta-secondary" target="_blank" rel="noreferrer">Talk to an advisor</a>
+            {% else %}
+            <a href="{{ url_for('about') }}#confidence-checks" class="cta cta-secondary">How we work</a>
+            {% endif %}
           </div>
         </div>
       </div>

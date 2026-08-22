@@ -19,7 +19,7 @@
         <div class="page-hero-card-actions">
           <a href="{{ url_for('properties') }}" class="cta cta-small">Browse live listings</a>
           <a href="{{ url_for('home') }}" class="text-link text-link-strong">Return home</a>
-          <a href="{{ general_whatsapp_url }}" class="text-link" target="_blank" rel="noreferrer">Ask an advisor</a>
+          {% if site_settings.whatsapp_configured %}<a href="{{ general_whatsapp_url }}" class="text-link" target="_blank" rel="noreferrer">Ask an advisor</a>{% else %}<a href="{{ url_for('about') }}#confidence-checks" class="text-link">How we review listings</a>{% endif %}
         </div>
       </aside>
     </div>

@@ -8,9 +8,9 @@
     <div class="shell page-hero-shell">
       <div>
         <p class="eyebrow">Live Catalogue</p>
-        <h1>Browse properties.</h1>
+        <h1>Current properties. Clearer decisions.</h1>
         <p class="page-intro">
-          Filter the live inventory by district, type, sale, rent, or lease status, and keyword.
+          Compare the live inventory by district, type, sale, rent, or lease status, with the core facts visible before you enquire.
         </p>
         <div class="masthead-signal-row" aria-label="Catalogue signals">
           <span>{{ listings|length }} live listing{% if listings|length != 1 %}s{% endif %}</span>
@@ -36,7 +36,7 @@
             <p class="eyebrow">Current view</p>
             <p><strong>{{ listings|length }} listing{% if listings|length != 1 %}s{% endif %}</strong> in the live catalogue.</p>
           </div>
-          <a href="{{ general_whatsapp_url }}" class="text-link text-link-strong catalogue-advisor-link" target="_blank" rel="noreferrer">Need help shortlisting?</a>
+          {% if site_settings.whatsapp_configured %}<a href="{{ general_whatsapp_url }}" class="text-link text-link-strong catalogue-advisor-link" target="_blank" rel="noreferrer">Need help shortlisting?</a>{% endif %}
         </div>
         <div class="form-group">
           <label for="q">Search</label>
@@ -89,7 +89,7 @@
         </div>
 
         <div class="filter-actions">
-          <button type="submit" class="cta cta-small">Apply filters</button>
+          <button type="submit" class="cta cta-small" data-loading-label="Applying...">Apply filters</button>
           <a href="{{ url_for('properties') }}" class="text-link">Reset</a>
         </div>
 
@@ -115,15 +115,17 @@
         <div>
           <p class="eyebrow">Results</p>
           <h2>{{ listings|length }} property option{% if listings|length != 1 %}s{% endif %}</h2>
+          <p class="catalogue-results-note">Review location, asking price, availability, and essential features before opening the full property record.</p>
         </div>
-        <a href="{{ general_whatsapp_url }}" class="text-link text-link-strong" target="_blank" rel="noreferrer">Ask for a shortlist</a>
+        {% if site_settings.whatsapp_configured %}<a href="{{ general_whatsapp_url }}" class="text-link text-link-strong" target="_blank" rel="noreferrer">Ask for a shortlist</a>{% endif %}
       </div>
       <div class="property-grid-list">
         {% for listing in listings %}
           <article class="property-card{% if listing.is_completed %} property-card-completed{% endif %}" id="listing-{{ listing.id }}">
+            <p class="property-card-reference">SB / {{ '%02d' | format(loop.index) }}</p>
             <a href="{{ url_for('property_detail', listing_id=listing.id) }}" class="property-media-link" aria-label="View {{ listing.title }}">
               <div class="property-media" style="--media-bg: url('{{ asset_url(listing_image_path(listing)) }}')">
-                <img src="{{ asset_url(listing_image_path(listing)) }}" alt="{{ listing.title }}" loading="{% if loop.index <= 4 %}eager{% else %}lazy{% endif %}" decoding="async">
+                <img src="{{ asset_url(listing_image_path(listing)) }}" alt="{{ listing.title }}" width="1536" height="1024" loading="{% if loop.index <= 2 %}eager{% else %}lazy{% endif %}" decoding="async">
                 <span class="property-badge">{{ listing.status }}</span>
                 {% if listing.verified_property %}
                   <span class="property-badge property-badge-verified" title="Availability, price, and basic listing details reviewed before publishing.">Verified</span>
@@ -142,8 +144,8 @@
                   <p class="property-location">{{ listing.district }}</p>
                   <p class="property-availability">{{ listing.availability }}</p>
                 </div>
+                <h2><a href="{{ url_for('property_detail', listing_id=listing.id) }}" class="property-title-link">{{ listing.title }}</a></h2>
                 <p class="property-price property-price-card">{% if listing.is_completed %}<span class="property-price-context">Last published</span>{% endif %}{{ listing.price | naira }}{{ listing.price_suffix }}</p>
-                <h2>{{ listing.title }}</h2>
                 <p class="property-summary">{{ listing.summary }}</p>
               </div>
               <ul class="property-meta">
@@ -164,7 +166,7 @@
                 <p class="property-note">{{ listing.address }}</p>
                 <div class="property-actions">
                   <a href="{{ url_for('property_detail', listing_id=listing.id) }}" class="cta cta-small">View details</a>
-                  <a href="{{ general_whatsapp_url if listing.is_completed else listing_whatsapp_url(listing) }}" class="cta cta-small cta-card-secondary" target="_blank" rel="noreferrer">{{ "Find similar" if listing.is_completed else "Ask to view" }}</a>
+                  {% if site_settings.whatsapp_configured %}<a href="{{ general_whatsapp_url if listing.is_completed else listing_whatsapp_url(listing) }}" class="cta cta-small cta-card-secondary" target="_blank" rel="noreferrer">{{ "Find similar" if listing.is_completed else "Ask to view" }}</a>{% endif %}
                 </div>
                 <p class="property-note property-reassurance">{% if listing.is_completed %}This property is no longer active; ask the team for comparable options.{% else %}Ask about availability, fees, and viewing times before you travel.{% endif %}</p>
               </div>
@@ -179,7 +181,7 @@
           {% if is_authenticated %}
             <a href="{{ url_for('create_listing') }}" class="cta cta-small">Post a new listing</a>
           {% else %}
-            <a href="{{ general_whatsapp_url }}" class="cta cta-small" target="_blank" rel="noreferrer">Ask the team to source options</a>
+            {% if site_settings.whatsapp_configured %}<a href="{{ general_whatsapp_url }}" class="cta cta-small" target="_blank" rel="noreferrer">Ask the team to source options</a>{% else %}<a href="{{ url_for('properties') }}" class="cta cta-small">Reset filters</a>{% endif %}
           {% endif %}
         </div>
       </div>

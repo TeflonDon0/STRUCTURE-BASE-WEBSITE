@@ -10,6 +10,7 @@ from typing import Any
 
 
 DEFAULT_ROUTES = ("/", "/properties", "/tenant-services", "/login")
+AUTH_SHELL_ROUTES = {"/login", "/partners/login"}
 
 
 @dataclass(frozen=True)
@@ -42,7 +43,7 @@ def audit_html(route: str, html: str, status_code: int) -> RouteAudit:
         issues.append("Client-visible internal wording detected.")
     if "todo" in lower:
         issues.append("TODO wording detected.")
-    if "aria-label=\"open navigation\"" not in lower and route != "/login":
+    if "aria-label=\"open navigation\"" not in lower and route not in AUTH_SHELL_ROUTES:
         issues.append("Navigation toggle label not found.")
 
     metrics = {

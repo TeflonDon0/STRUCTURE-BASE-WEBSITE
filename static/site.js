@@ -13,6 +13,27 @@ const prioritySelect = document.getElementById("priority");
 const emergencyNote = document.getElementById("emergency-note");
 const backToTop = document.getElementById("back-to-top");
 
+document.querySelectorAll("[data-home-filters]").forEach((filters) => {
+  const mobileFilters = window.matchMedia("(max-width: 760px)");
+  const syncHomeFilters = () => {
+    if (mobileFilters.matches && !filters.dataset.userOpened) {
+      filters.removeAttribute("open");
+      return;
+    }
+    if (!mobileFilters.matches) {
+      filters.setAttribute("open", "");
+    }
+  };
+
+  filters.addEventListener("toggle", () => {
+    if (mobileFilters.matches && filters.open) {
+      filters.dataset.userOpened = "true";
+    }
+  });
+  mobileFilters.addEventListener?.("change", syncHomeFilters);
+  syncHomeFilters();
+});
+
 const setScrollState = () => {
   body.classList.toggle("has-scrolled", window.scrollY > 16);
   if (backToTop) {

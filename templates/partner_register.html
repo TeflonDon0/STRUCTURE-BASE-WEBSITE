@@ -1,20 +1,102 @@
 {% extends "base.html" %}
+
 {% block title %}Become a Structure Base Partner | {{ site_settings.site_name }}{% endblock %}
 {% block meta_description %}Apply to join the Structure Base Realtor and Marketing Partner Programme.{% endblock %}
 {% block body_class %}partner-public-page{% endblock %}
+
 {% block content %}
-<section class="page-hero"><div class="shell detail-shell"><div class="detail-copy"><p class="eyebrow">Structure Base Partner Programme</p><h1>Turn your property network into a professional sales channel.</h1><p class="page-intro">Apply to market approved Structure Base properties, manage your opportunities, and build a traceable record of the business you introduce.</p><div class="hero-trust-list"><span>Verified partner identity</span><span>Approved property inventory</span><span>Traceable sales workflow</span></div></div><div class="detail-media-card detail-media-card-promo"><img src="{{ static_asset_url('images/login-promo-lagos.webp') }}" alt="Modern Lagos residential district" width="1536" height="1024"></div></div></section>
-<section class="section shell section-tight"><div class="section-heading"><p class="eyebrow">Application</p><h2>Tell us about your marketing experience.</h2><p>Applications are reviewed before portal access is activated. Partners never receive access to the internal staff workspace.</p></div>
-  <form method="post" class="contact-form partner-application-form"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-    {% if errors %}<div class="login-feedback" role="alert"><strong>Please correct the following:</strong><ul>{% for error in errors %}<li>{{ error }}</li>{% endfor %}</ul></div>{% endif %}
-    <div class="form-row"><div class="form-group"><label for="full-name">Full name</label><input id="full-name" name="full_name" value="{{ form_data.full_name }}" autocomplete="name" required></div><div class="form-group"><label for="email">Email</label><input id="email" type="email" name="email" value="{{ form_data.email }}" autocomplete="email" required></div></div>
-    <div class="form-row"><div class="form-group"><label for="phone">Phone</label><input id="phone" type="tel" name="phone" value="{{ form_data.phone }}" autocomplete="tel" required></div><div class="form-group"><label for="whatsapp">WhatsApp</label><input id="whatsapp" type="tel" name="whatsapp" value="{{ form_data.whatsapp }}" autocomplete="tel"></div></div>
-    <div class="form-row"><div class="form-group"><label for="location">City or location</label><input id="location" name="location" value="{{ form_data.location }}" autocomplete="address-level2" required></div><div class="form-group"><label for="partner-type">Registering as</label><select id="partner-type" name="partner_type">{% for option in partner_types %}<option value="{{ option }}" {% if form_data.partner_type == option %}selected{% endif %}>{{ partner_type_labels[option] }}</option>{% endfor %}</select></div></div>
-    <div class="form-group"><label for="company">Company name <span class="form-note">Required for companies</span></label><input id="company" name="company_name" value="{{ form_data.company_name }}" autocomplete="organization"></div>
-    <div class="form-group"><label for="experience">Experience and marketing channels</label><textarea id="experience" name="experience_notes" rows="4" maxlength="1500" placeholder="Tell us about your property experience, audience, or sales channels.">{{ form_data.experience_notes }}</textarea></div>
-    <div class="form-group"><label for="source">How did you hear about the programme?</label><input id="source" name="referral_source" value="{{ form_data.referral_source }}" maxlength="120"></div>
-    <div class="form-row"><div class="form-group"><label for="partner-password">Create password</label><input id="partner-password" type="password" name="password" autocomplete="new-password" minlength="12" required><p class="form-hint">Use at least 12 characters with letters and numbers.</p></div><div class="form-group"><label for="partner-password-confirm">Confirm password</label><input id="partner-password-confirm" type="password" name="password_confirmation" autocomplete="new-password" minlength="12" required></div></div>
-    <div class="form-actions"><button class="cta" data-loading-label="Submitting...">Submit application</button><a href="{{ url_for('partner_login') }}" class="text-link">Already applied? Sign in</a></div>
-  </form>
-</section>
+  <section class="page-hero partner-hero" data-reveal>
+    <div class="shell detail-shell partner-hero-shell">
+      <div class="detail-copy">
+        <p class="eyebrow">Structure Base Partner Programme</p>
+        <h1>Turn trusted property introductions into traceable opportunities.</h1>
+        <p class="page-intro">Apply to market approved Structure Base properties, manage your opportunities, and build a clear record of the business you introduce.</p>
+        <ul class="partner-hero-signals" aria-label="Partner programme benefits">
+          <li>Reviewed partner identity</li>
+          <li>Approved property materials</li>
+          <li>Traceable referral workflow</li>
+        </ul>
+        <div class="hero-actions masthead-actions">
+          <a href="#partner-application" class="cta">Start application</a>
+          <a href="{{ url_for('partner_login') }}" class="cta cta-secondary">Partner sign in</a>
+        </div>
+      </div>
+      <div class="detail-media-card detail-media-card-promo partner-hero-media">
+        <img src="{{ static_asset_url('images/login-promo-lagos.webp') }}" alt="Modern Lagos residential district" width="1536" height="1024" loading="eager" fetchpriority="high" decoding="async">
+        <div class="partner-hero-media-note">
+          <span>SB / Partner desk</span>
+          <strong>Approved inventory. Clear attribution.</strong>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section shell section-tight" data-reveal aria-labelledby="partner-process-title">
+    <div class="section-heading section-heading-inline">
+      <div>
+        <p class="eyebrow">How it works</p>
+        <h2 id="partner-process-title">A reviewed route from application to commission.</h2>
+      </div>
+      <p>Access is activated only after review. Approved partners receive the tools needed for external marketing—not the internal staff workspace.</p>
+    </div>
+    <ol class="partner-process-list">
+      <li><span>01</span><strong>Apply</strong><p>Share your identity, location, experience, and marketing channels.</p></li>
+      <li><span>02</span><strong>Get reviewed</strong><p>The team checks fit and confirms whether portal access can be activated.</p></li>
+      <li><span>03</span><strong>Share responsibly</strong><p>Use approved property assets and personal referral links so activity remains attributable.</p></li>
+      <li><span>04</span><strong>Track outcomes</strong><p>Follow lead and commission status from the partner portal as opportunities progress.</p></li>
+    </ol>
+  </section>
+
+  <section class="section shell section-tight" id="partner-application" data-reveal>
+    <div class="partner-application-layout">
+      <aside class="partner-application-aside">
+        <p class="eyebrow">Application</p>
+        <h2>Tell us how you reach serious property clients.</h2>
+        <p>The clearest applications explain the audience, channels, locations, and experience behind their introductions.</p>
+        <div class="partner-review-note">
+          <strong>What the review looks for</strong>
+          <ul>
+            <li>Accurate identity and contact details</li>
+            <li>A clear, responsible marketing approach</li>
+            <li>Fit with available locations and inventory</li>
+          </ul>
+        </div>
+        <p class="form-note">Already applied? <a href="{{ url_for('partner_login') }}" class="text-link text-link-strong">Sign in to check your status</a>.</p>
+      </aside>
+
+      <form method="post" class="contact-form partner-application-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        {% if errors %}
+          <div class="login-feedback" role="alert">
+            <strong>Please correct the following:</strong>
+            <ul>{% for error in errors %}<li>{{ error }}</li>{% endfor %}</ul>
+          </div>
+        {% endif %}
+
+        <div class="form-row">
+          <div class="form-group"><label for="full-name">Full name</label><input id="full-name" name="full_name" value="{{ form_data.full_name }}" autocomplete="name" required></div>
+          <div class="form-group"><label for="email">Email</label><input id="email" type="email" name="email" value="{{ form_data.email }}" autocomplete="email" required></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label for="phone">Phone</label><input id="phone" type="tel" name="phone" value="{{ form_data.phone }}" autocomplete="tel" required></div>
+          <div class="form-group"><label for="whatsapp">WhatsApp <span class="form-note">(optional)</span></label><input id="whatsapp" type="tel" name="whatsapp" value="{{ form_data.whatsapp }}" autocomplete="tel"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label for="location">City or location</label><input id="location" name="location" value="{{ form_data.location }}" autocomplete="address-level2" required></div>
+          <div class="form-group"><label for="partner-type">Registering as</label><select id="partner-type" name="partner_type">{% for option in partner_types %}<option value="{{ option }}" {% if form_data.partner_type == option %}selected{% endif %}>{{ partner_type_labels[option] }}</option>{% endfor %}</select></div>
+        </div>
+        <div class="form-group"><label for="company">Company name <span class="form-note">(required for companies)</span></label><input id="company" name="company_name" value="{{ form_data.company_name }}" autocomplete="organization"></div>
+        <div class="form-group"><label for="experience">Experience and marketing channels</label><textarea id="experience" name="experience_notes" rows="4" maxlength="1500" placeholder="Tell us about your property experience, audience, or sales channels.">{{ form_data.experience_notes }}</textarea></div>
+        <div class="form-group"><label for="source">How did you hear about the programme? <span class="form-note">(optional)</span></label><input id="source" name="referral_source" value="{{ form_data.referral_source }}" maxlength="120"></div>
+        <div class="form-row">
+          <div class="form-group"><label for="partner-password">Create password</label><input id="partner-password" type="password" name="password" autocomplete="new-password" minlength="12" required><p class="form-hint">Use at least 12 characters with letters and numbers.</p></div>
+          <div class="form-group"><label for="partner-password-confirm">Confirm password</label><input id="partner-password-confirm" type="password" name="password_confirmation" autocomplete="new-password" minlength="12" required></div>
+        </div>
+        <div class="form-actions">
+          <button type="submit" class="cta" data-loading-label="Submitting...">Submit application</button>
+          <span class="form-note">Submitting creates an application for review; it does not activate access immediately.</span>
+        </div>
+      </form>
+    </div>
+  </section>
 {% endblock %}

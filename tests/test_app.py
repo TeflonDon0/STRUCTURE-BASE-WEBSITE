@@ -117,6 +117,7 @@ def test_not_found_page_is_branded_and_recoverable(client) -> None:
     assert response.status_code == 404
     assert b"This address does not lead to a current page" in response.data
     assert b"Browse live listings" in response.data
+    assert b"2348001234567" not in response.data
 
 
 def test_login_does_not_prefill_default_username(client) -> None:
@@ -132,6 +133,44 @@ def test_public_footer_hides_unconfigured_placeholder_phone(client) -> None:
 
     assert response.status_code == 200
     assert b"+234 800 123 4567" not in response.data
+
+
+def test_unconfigured_contact_channels_do_not_create_public_placeholder_links(client) -> None:
+    with app.app_context():
+        settings = site_settings()
+
+    assert settings["contact_phone_configured"] is False
+    assert settings["whatsapp_configured"] is False
+
+    for path in ("/", "/properties", "/properties/1", "/tenant-services", "/about"):
+        response = client.get(path)
+        assert response.status_code == 200
+        assert b"2348001234567" not in response.data
+        assert b"wa.me/" not in response.data
+
+
+def test_production_metadata_forces_https_and_uses_optimized_social_image(client) -> None:
+    original = app.config["IS_PRODUCTION"]
+    app.config["IS_PRODUCTION"] = True
+    try:
+        response = client.get("/", base_url="http://structurebase.example")
+    finally:
+        app.config["IS_PRODUCTION"] = original
+
+    assert response.status_code == 200
+    assert b'<link rel="canonical" href="https://structurebase.example/">' in response.data
+    assert b'<meta property="og:url" content="https://structurebase.example/">' in response.data
+    assert b"https://structurebase.example/static/images/structurbhero2.webp" in response.data
+
+
+def test_partner_application_explains_review_process_before_the_form(client) -> None:
+    response = client.get("/partners/register")
+
+    assert response.status_code == 200
+    assert b"A reviewed route" in response.data
+    assert b"from application to commission" in response.data
+    assert b"Start application" in response.data
+    assert response.data.index(b"How it works") < response.data.index(b'id="partner-application"')
 
 
 def test_home_search_and_budget_filter_reduce_discovery_friction(client) -> None:

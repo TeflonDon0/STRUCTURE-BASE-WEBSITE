@@ -27,7 +27,7 @@
         </div>
         <div class="hero-actions tenant-hero-actions">
           <a href="#maintenance-request" class="cta">Start request</a>
-          <a href="{{ general_whatsapp_url }}" class="text-link text-link-strong" target="_blank" rel="noreferrer">Emergency WhatsApp</a>
+          {% if site_settings.whatsapp_configured %}<a href="{{ general_whatsapp_url }}" class="text-link text-link-strong" target="_blank" rel="noreferrer">Emergency WhatsApp</a>{% elif site_settings.contact_phone_configured %}<a href="tel:{{ site_settings.contact_phone_raw }}" class="text-link text-link-strong">Emergency phone</a>{% endif %}
         </div>
       </div>
     </div>
@@ -47,9 +47,9 @@
     <div class="tenant-emergency-strip" role="note" aria-label="Emergency contact guidance">
       <div>
         <p class="eyebrow">Active risk?</p>
-        <h2>Call or WhatsApp now for safety, access, power, water, or security emergencies.</h2>
+        <h2>{% if site_settings.whatsapp_configured or site_settings.contact_phone_configured %}Contact the operations desk now for active safety, access, power, water, or security risk.{% else %}Submit the request for operations follow-up and use the relevant local emergency service if anyone is in immediate danger.{% endif %}</h2>
       </div>
-      <a href="{{ general_whatsapp_url }}" class="cta cta-small" target="_blank" rel="noreferrer">Open WhatsApp</a>
+      {% if site_settings.whatsapp_configured %}<a href="{{ general_whatsapp_url }}" class="cta cta-small" target="_blank" rel="noreferrer">Open WhatsApp</a>{% elif site_settings.contact_phone_configured %}<a href="tel:{{ site_settings.contact_phone_raw }}" class="cta cta-small">Call operations</a>{% else %}<a href="#maintenance-request" class="cta cta-small">Log the issue</a>{% endif %}
     </div>
   </section>
 
@@ -108,7 +108,7 @@
             <p class="service-emergency-title">Escalate immediately if the risk is active.</p>
             <p class="form-note">
               Your request is logged. If people, access, power, water, or security are currently at risk, contact the operations desk on
-              <a href="{{ general_whatsapp_url }}" target="_blank" rel="noreferrer">WhatsApp now</a>.
+              {% if site_settings.whatsapp_configured %}<a href="{{ general_whatsapp_url }}" target="_blank" rel="noreferrer">WhatsApp now</a>{% elif site_settings.contact_phone_configured %}<a href="tel:{{ site_settings.contact_phone_raw }}">call the operations desk</a>{% else %}use the relevant local emergency service if anyone is in immediate danger{% endif %}.
             </p>
           </div>
         {% endif %}
@@ -271,8 +271,7 @@
         >
           <p class="service-emergency-title">Emergency priority is for active risk.</p>
           <p class="form-note">
-            Use it for live safety, access, security, power, or water issues. Submit the request first, then escalate on
-            <a href="{{ general_whatsapp_url }}" target="_blank" rel="noreferrer">WhatsApp</a> if the situation is still active.
+            Use it for live safety, access, security, power, or water issues. Submit the request first{% if site_settings.whatsapp_configured %}, then escalate on <a href="{{ general_whatsapp_url }}" target="_blank" rel="noreferrer">WhatsApp</a>{% elif site_settings.contact_phone_configured %}, then <a href="tel:{{ site_settings.contact_phone_raw }}">call the operations desk</a>{% endif %} if the situation is still active.
           </p>
         </div>
 

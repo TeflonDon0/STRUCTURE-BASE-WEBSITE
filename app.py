@@ -2869,6 +2869,16 @@ def site_settings() -> dict[str, str | bool]:
     whatsapp_digits = normalize_digits(merged["whatsapp_phone"])
     phone_digits = normalize_digits(merged["contact_phone_raw"]) or whatsapp_digits
     contact_email = effective_contact_email(merged["contact_email"])
+    contact_email_configured = bool(contact_email) and not is_placeholder_email(contact_email)
+    contact_phone_configured = (
+        10 <= len(phone_digits) <= 15
+        and phone_digits != normalize_digits(DEFAULT_PHONE_RAW)
+        and str(merged.get("contact_phone_display") or "").strip() != DEFAULT_PHONE_DISPLAY
+    )
+    whatsapp_configured = (
+        10 <= len(whatsapp_digits) <= 15
+        and whatsapp_digits != normalize_digits(DEFAULT_WHATSAPP_PHONE)
+    )
     email_sender_name = str(merged.get("email_sender_name") or "").strip() or merged["site_name"]
     email_brand_tagline = (
         str(merged.get("email_brand_tagline") or "").strip() or DEFAULT_EMAIL_BRAND_TAGLINE
@@ -2910,9 +2920,12 @@ def site_settings() -> dict[str, str | bool]:
     return {
         "site_name": merged["site_name"],
         "contact_email": contact_email,
+        "contact_email_configured": contact_email_configured,
         "contact_phone_display": merged["contact_phone_display"],
         "contact_phone_raw": phone_digits,
+        "contact_phone_configured": contact_phone_configured,
         "whatsapp_phone": whatsapp_digits,
+        "whatsapp_configured": whatsapp_configured,
         "office_address": merged["office_address"],
         "coverage_area": merged["coverage_area"],
         "footer_summary": merged["footer_summary"],
@@ -8420,9 +8433,19 @@ def absolute_asset_url(asset_path: str | None) -> str:
     url = asset_url(asset_path)
     if not url:
         return ""
-    if url.startswith(("http://", "https://")):
-        return url
-    return request.url_root.rstrip("/") + url
+    if not url.startswith(("http://", "https://")):
+        url = request.url_root.rstrip("/") + url
+    return canonical_external_url(url)
+
+
+def canonical_external_url(url: str) -> str:
+    if app.config["IS_PRODUCTION"] and url.startswith("http://"):
+        return "https://" + url.removeprefix("http://")
+    return url
+
+
+def canonical_request_url() -> str:
+    return canonical_external_url(request.base_url)
 
 
 def static_asset_version(filename: str) -> str:
@@ -8456,7 +8479,7 @@ def property_structured_data(listing: Mapping[str, object]) -> dict[str, object]
         "@type": "Offer",
         "name": str(listing["title"]),
         "description": str(listing["summary"]),
-        "url": request.base_url,
+        "url": canonical_request_url(),
         "image": absolute_asset_url(resolved_listing_image_path(listing)),
         "priceCurrency": "NGN",
         "price": int(listing["price"]) if listing.get("price") is not None else None,
@@ -8558,6 +8581,7 @@ def inject_globals() -> dict[str, object]:
         "listing_has_uploaded_image": listing_has_uploaded_image,
         "asset_url": asset_url,
         "absolute_asset_url": absolute_asset_url,
+        "canonical_request_url": canonical_request_url,
         "static_asset_url": static_asset_url,
         "service_worker_url": service_worker_url(),
         "database_backend": database_backend(),

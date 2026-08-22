@@ -20,7 +20,7 @@
         </div>
         <div class="hero-actions masthead-actions">
           <a href="{{ url_for('properties') }}" class="cta">Browse listings</a>
-          <a href="{{ general_whatsapp_url }}" class="cta cta-secondary" target="_blank" rel="noreferrer">Talk to an advisor</a>
+          {% if site_settings.whatsapp_configured %}<a href="{{ general_whatsapp_url }}" class="cta cta-secondary" target="_blank" rel="noreferrer">Talk to an advisor</a>{% endif %}
         </div>
       </div>
 
@@ -131,15 +131,15 @@
 
     <div class="about-check-grid">
       <article class="info-card">
-        <h2>Availability and price</h2>
+        <h3>Availability and price</h3>
         <p>Published options are reviewed for current status and price context, then confirmed again during advisor follow-up.</p>
       </article>
       <article class="info-card">
-        <h2>Fees and terms</h2>
+        <h3>Fees and terms</h3>
         <p>Clients are encouraged to ask about agency fees, service charges, payment terms, and negotiation room before viewing.</p>
       </article>
       <article class="info-card">
-        <h2>Photos and access</h2>
+        <h3>Photos and access</h3>
         <p>Representative media is marked clearly, and current photos or viewing access can be requested before committing travel time.</p>
       </article>
     </div>
@@ -154,7 +154,7 @@
       </div>
       <div class="cta-banner-actions">
         <a href="{{ url_for('properties') }}" class="cta">Browse listings</a>
-        <a href="{{ general_whatsapp_url }}" class="cta cta-card-secondary" target="_blank" rel="noreferrer">Talk to an advisor</a>
+        {% if site_settings.whatsapp_configured %}<a href="{{ general_whatsapp_url }}" class="cta cta-card-secondary" target="_blank" rel="noreferrer">Talk to an advisor</a>{% endif %}
         <a href="{{ url_for('tenant_services') }}" class="cta cta-card-secondary">Tenant services</a>
       </div>
     </div>

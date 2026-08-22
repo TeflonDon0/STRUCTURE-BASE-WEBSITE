@@ -89,11 +89,13 @@
               <a href="#property-enquiry" class="cta cta-outline">Ask a question first</a>
             {% endif %}
             <div class="detail-contact-links">
+              {% if site_settings.whatsapp_configured %}
               <a href="{{ general_whatsapp_url if listing.is_completed else listing_whatsapp_url(listing) }}" class="text-link text-link-strong" target="_blank" rel="noreferrer">{{ "Ask for a similar property" if listing.is_completed else "Chat on WhatsApp" }}</a>
+              {% endif %}
               {% if site_settings.contact_phone_configured %}
                 <a href="tel:{{ site_settings.contact_phone_raw }}" class="text-link">Call sales desk</a>
               {% endif %}
-              <a href="mailto:{{ site_settings.contact_email }}?subject=Enquiry about {{ listing.title | urlencode }}" class="text-link">Enquire by email</a>
+              {% if site_settings.contact_email_configured %}<a href="mailto:{{ site_settings.contact_email }}?subject=Enquiry about {{ listing.title | urlencode }}" class="text-link">Enquire by email</a>{% endif %}
             </div>
           </div>
         </section>
@@ -124,7 +126,7 @@
           <dl>
             <div>
               <dt>Listing review</dt>
-              <dd>Price, status, location context, and core details reviewed before publishing.</dd>
+              <dd>{% if listing.verified_property %}The property record is marked reviewed for price, status, location context, and core details.{% else %}The published facts are presented as supplied; availability and material details still need advisor confirmation.{% endif %}</dd>
             </div>
             <div>
               <dt>Media status</dt>
@@ -299,7 +301,7 @@
       </div>
       <div class="property-actions">
         <a href="{{ url_for('properties') }}" class="cta">Browse active properties</a>
-        <a href="{{ general_whatsapp_url }}" class="cta cta-secondary" target="_blank" rel="noreferrer">Ask for similar options</a>
+        {% if site_settings.whatsapp_configured %}<a href="{{ general_whatsapp_url }}" class="cta cta-secondary" target="_blank" rel="noreferrer">Ask for similar options</a>{% endif %}
       </div>
     </div>
   </section>
@@ -341,7 +343,7 @@
                 <p class="property-note">{{ item.address }}</p>
                 <div class="property-actions">
                   <a href="{{ url_for('property_detail', listing_id=item.id) }}" class="cta cta-small">View details</a>
-                  <a href="{{ listing_whatsapp_url(item) }}" class="text-link text-link-strong" target="_blank" rel="noreferrer">Chat on WhatsApp</a>
+                  {% if site_settings.whatsapp_configured %}<a href="{{ listing_whatsapp_url(item) }}" class="text-link text-link-strong" target="_blank" rel="noreferrer">Chat on WhatsApp</a>{% endif %}
                 </div>
               </div>
             </div>
@@ -353,7 +355,7 @@
 
   {% if not listing.is_completed %}
     <nav class="mobile-detail-actions" aria-label="Quick property actions">
-      <a href="{{ listing_whatsapp_url(listing) }}" target="_blank" rel="noreferrer">WhatsApp</a>
+      {% if site_settings.whatsapp_configured %}<a href="{{ listing_whatsapp_url(listing) }}" target="_blank" rel="noreferrer">WhatsApp</a>{% endif %}
       {% if site_settings.contact_phone_configured %}<a href="tel:{{ site_settings.contact_phone_raw }}">Call</a>{% else %}<a href="#property-enquiry">Enquire</a>{% endif %}
       <a href="#property-inspection" class="mobile-detail-actions-primary">Request inspection</a>
     </nav>
