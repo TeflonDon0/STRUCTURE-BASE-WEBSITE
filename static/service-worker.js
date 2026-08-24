@@ -1,4 +1,4 @@
-const CACHE_NAME = "structurebase-v7";
+const CACHE_NAME = "structurebase-v8";
 const APP_SHELL = [
   "/offline",
   "/static/images/logo-mark.svg",
@@ -20,8 +20,6 @@ self.addEventListener("activate", (event) => {
       Promise.all(keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key)))
     )
       .then(() => self.clients.claim())
-      .then(() => self.clients.matchAll({ type: "window" }))
-      .then((clients) => clients.forEach((client) => client.navigate(client.url)))
   );
 });
 
@@ -36,7 +34,8 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  if (requestUrl.pathname.startsWith("/dashboard") || requestUrl.pathname.startsWith("/login")) {
+  const bypassedPrefixes = ["/dashboard", "/login", "/partner", "/staff", "/healthz"];
+  if (bypassedPrefixes.some((prefix) => requestUrl.pathname.startsWith(prefix))) {
     return;
   }
 
@@ -81,9 +80,12 @@ self.addEventListener("fetch", (event) => {
           caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
           return response;
         })
-        .catch(() =>
-          caches.match("/static/images/logo-mark.webp")
-        );
+        .catch(() => {
+          if (event.request.destination === "image") {
+            return caches.match("/static/images/logo-mark.webp");
+          }
+          return Response.error();
+        });
     })
   );
 });

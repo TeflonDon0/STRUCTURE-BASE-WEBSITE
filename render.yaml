@@ -22,7 +22,7 @@ services:
       - key: STRUCTUREBASE_DATABASE_BACKEND
         value: mongodb
       - key: STRUCTUREBASE_STORAGE_BACKEND
-        value: auto
+        value: cloudinary
       - key: STRUCTUREBASE_MONGODB_URI
         sync: false
       - key: STRUCTUREBASE_MONGODB_DB_NAME
@@ -37,6 +37,14 @@ services:
         value: lead_notes
       - key: STRUCTUREBASE_MONGODB_INSPECTIONS_COLLECTION
         value: inspections
+      - key: STRUCTUREBASE_MONGODB_MAINTENANCE_COLLECTION
+        value: maintenance_tickets
+      - key: STRUCTUREBASE_MONGODB_FINANCIAL_COLLECTION
+        value: financial_records
+      - key: STRUCTUREBASE_MONGODB_DOCUMENT_COLLECTION
+        value: documents
+      - key: STRUCTUREBASE_MONGODB_SETTINGS_COLLECTION
+        value: site_preferences
       - key: STRUCTUREBASE_MONGODB_PARTNERS_COLLECTION
         value: partners
       - key: STRUCTUREBASE_MONGODB_REFERRALS_COLLECTION

@@ -36,6 +36,7 @@
               class="gallery-thumb{% if loop.first %} is-active{% endif %}"
               data-gallery-target="{{ asset_url(image_path) }}"
               aria-label="Show gallery image {{ loop.index }}"
+              aria-pressed="{{ 'true' if loop.first else 'false' }}"
             >
               <img src="{{ asset_url(image_path) }}" alt="{{ listing.title }} image {{ loop.index }}" width="480" height="320" loading="eager" decoding="async">
             </button>

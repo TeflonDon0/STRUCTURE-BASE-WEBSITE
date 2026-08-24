@@ -21,7 +21,7 @@ Flask property listing app for sale, rent, and operations workflows across Niger
 ## Local Run
 
 ```powershell
-python -m pip install -r requirements.txt
+python -m pip install -r requirements-dev.txt
 Copy-Item .env.example .env
 $env:PORT="8000"
 python app.py
@@ -31,10 +31,9 @@ Open [http://localhost:8000](http://localhost:8000).
 
 ## Initial Local Super Admin
 
-- Username: `admin`
-- Password: `change-me-structurebase`
+Set `STRUCTUREBASE_ADMIN_USERNAME` and a unique `STRUCTUREBASE_ADMIN_PASSWORD` in `.env` before the first run. Do not use the example placeholder password.
 
-On the first run against an empty database, these values are converted into an individual `SUPER_ADMIN` account with a hashed password. They are not used as a shared account after staff records exist. Change them before public deployment and set `STRUCTUREBASE_INITIAL_ADMIN_NAME` and `STRUCTUREBASE_INITIAL_ADMIN_EMAIL` to the owner's identity.
+On the first run against an empty database, these values are converted into an individual `SUPER_ADMIN` account with a hashed password. They are not used as a shared account after staff records exist. Set `STRUCTUREBASE_INITIAL_ADMIN_NAME` and `STRUCTUREBASE_INITIAL_ADMIN_EMAIL` to the owner's identity before public deployment.
 
 Additional staff are invited from `Dashboard -> Team`. Invitation links are single-use and expire after `STRUCTUREBASE_STAFF_INVITATION_HOURS` (48 hours by default).
 

@@ -137,6 +137,14 @@ def test_property_map_preserves_marker_interaction_contract(client) -> None:
     assert "const hitRadius = 22;" in site_script
 
 
+def test_property_gallery_exposes_selected_thumbnail_state(client) -> None:
+    response = client.get("/properties/1")
+
+    assert response.status_code == 200
+    assert response.data.count(b'aria-pressed="true"') == 1
+    assert b'aria-pressed="false"' in response.data
+
+
 def test_property_purchase_cards_preserve_light_surface_contrast(client) -> None:
     response = client.get("/properties/1")
     refinement_css = Path(app.root_path, "static", "refinement.css").read_text(encoding="utf-8")
@@ -201,6 +209,37 @@ def test_production_metadata_forces_https_and_uses_optimized_social_image(client
     assert b"https://structurebase.example/static/images/structurbhero2.webp" in response.data
 
 
+def test_versioned_static_assets_are_immutable_in_production(client) -> None:
+    original = app.config["IS_PRODUCTION"]
+    app.config["IS_PRODUCTION"] = True
+    try:
+        response = client.get("/static/style.css?v=release-hash")
+    finally:
+        app.config["IS_PRODUCTION"] = original
+
+    assert response.status_code == 200
+    assert response.headers["Cache-Control"] == "public, max-age=31536000, immutable"
+
+
+def test_local_assets_use_content_versioned_urls() -> None:
+    with app.test_request_context("/"):
+        url = app_module.asset_url("images/icon-192.png")
+
+    assert url.startswith("/static/images/icon-192.png?v=")
+    assert not url.endswith("v=0")
+
+
+def test_service_worker_avoids_private_routes_and_unsafe_generic_fallbacks(client) -> None:
+    response = client.get("/service-worker.js")
+
+    assert response.status_code == 200
+    assert b'"/partner"' in response.data
+    assert b'"/staff"' in response.data
+    assert b"client.navigate" not in response.data
+    assert b"event.request.destination === \"image\"" in response.data
+    assert b"return Response.error()" in response.data
+
+
 def test_client_acceptance_defaults_prevent_search_indexing(client) -> None:
     original = app.config["SEARCH_INDEXING_ENABLED"]
     app.config["SEARCH_INDEXING_ENABLED"] = False
@@ -226,6 +265,11 @@ def test_public_sitemap_lists_public_pages_and_properties(client) -> None:
     assert b"https://acceptance.structurebase.example/properties/1" in response.data
     assert b"/dashboard" not in response.data
     assert b"/login" not in response.data
+
+
+def test_public_distinct_values_reject_unknown_columns() -> None:
+    with pytest.raises(ValueError, match="Unsupported public distinct field"):
+        app_module.distinct_public_values("published; DROP TABLE listings")
 
 
 def test_public_base_url_controls_canonical_urls_without_rewriting_external_media(client) -> None:

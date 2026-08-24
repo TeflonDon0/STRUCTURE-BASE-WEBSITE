@@ -118,6 +118,7 @@ Do not share a staging link until all of these pass:
 
 ```bash
 python -m py_compile app.py wsgi.py scripts/deploy_smoke_check.py
+python -m pytest -q
 python scripts/deploy_smoke_check.py --env-file .env --connections
 python scripts/deploy_smoke_check.py --skip-env --url https://your-staging-url.example
 ```

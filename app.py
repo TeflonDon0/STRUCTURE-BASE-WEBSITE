@@ -19,7 +19,7 @@ from collections.abc import Mapping
 from datetime import UTC, date, datetime, timedelta
 from email.message import EmailMessage
 from email.utils import formataddr, parseaddr
-from functools import wraps
+from functools import lru_cache, wraps
 from pathlib import Path
 from urllib.parse import quote, urlsplit, urlunsplit
 from xml.sax.saxutils import escape as xml_escape
@@ -4602,6 +4602,8 @@ def apply_response_headers(response):
             "Strict-Transport-Security",
             "max-age=31536000; includeSubDomains",
         )
+    if app.config["IS_PRODUCTION"] and request.endpoint == "static" and request.args.get("v"):
+        response.headers["Cache-Control"] = "public, max-age=31536000, immutable"
 
     started = getattr(g, "request_started_at", None)
     duration_ms = round((time.perf_counter() - started) * 1000, 2) if started else None
@@ -7055,6 +7057,10 @@ def top_districts(limit: int = 4) -> list[dict[str, object]]:
 
 
 def distinct_public_values(field_name: str) -> list[dict[str, str]]:
+    allowed_fields = {"district", "property_type", "availability"}
+    if field_name not in allowed_fields:
+        raise ValueError(f"Unsupported public distinct field: {field_name}")
+
     if database_backend() == "mongodb":
         values = sorted(
             [value for value in get_mongo_collection().distinct(field_name, {"published": 1}) if value]
@@ -8501,7 +8507,7 @@ def asset_url(asset_path: str | None) -> str:
             resource_type="image",
             format="webp",
         )[0]
-    return url_for("static", filename=path)
+    return static_asset_url(path)
 
 
 def absolute_asset_url(asset_path: str | None) -> str:
@@ -8576,12 +8582,23 @@ def organization_structured_data() -> dict[str, object]:
     return data
 
 
-def static_asset_version(filename: str) -> str:
+def _compute_static_asset_version(filename: str) -> str:
     file_path = STATIC_DIR / filename
     try:
         return hashlib.blake2s(file_path.read_bytes(), digest_size=6).hexdigest()
     except OSError:
         return "0"
+
+
+@lru_cache(maxsize=256)
+def _cached_static_asset_version(filename: str) -> str:
+    return _compute_static_asset_version(filename)
+
+
+def static_asset_version(filename: str) -> str:
+    if app.config["IS_PRODUCTION"]:
+        return _cached_static_asset_version(filename)
+    return _compute_static_asset_version(filename)
 
 
 def static_asset_url(filename: str) -> str:
@@ -11256,4 +11273,5 @@ with app.app_context():
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", "5000"))
-    app.run(host="0.0.0.0", port=port, debug=False)
+    host = os.environ.get("HOST", "127.0.0.1").strip() or "127.0.0.1"
+    app.run(host=host, port=port, debug=False)
