@@ -11,3 +11,8 @@ tmp/
 tmp_server*.log
 __pycache__/
 *.pyc
+
+# wrangler files
+.wrangler
+.dev.vars*
+!.dev.vars.example
