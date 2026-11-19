@@ -1,185 +1,43 @@
 {% extends "base.html" %}
-
 {% block title %}{{ site_settings.site_name }} | Property Listings and Advisory{% endblock %}
-{% block meta_description %}Browse the current {{ site_settings.site_name }} catalogue with clear pricing, strong photography, and direct response routes from a team based in Lagos and active across Nigeria.{% endblock %}
+{% block meta_description %}Explore homes and commercial properties to buy or rent with {{ site_settings.site_name }}. Compare prices, shortlist locations, and arrange a viewing.{% endblock %}
 {% block body_class %}home-page{% endblock %}
-{% block head_extras %}
-  <link rel="stylesheet" href="{{ static_asset_url('home.css') }}">
-{% endblock %}
-
+{% block head_extras %}<link rel="stylesheet" href="{{ static_asset_url('home.css') }}">{% endblock %}
 {% block content %}
-  {% set spotlight = featured[0] if featured else None %}
-  {% set editorial = featured[:2] %}
-
-  <section class="hero-section hero-section-cinematic" data-reveal>
-    <div class="hero-atmosphere" aria-hidden="true"></div>
-    <div class="shell hero-shell hero-shell-home">
-      <div class="hero-copy">
-        <div class="hero-edition-note" aria-label="Structurebase property desk coverage">
-          <span>SB / Property intelligence</span>
-          <span>Lagos &middot; Nigeria</span>
+{% set editorial = featured[:2] %}
+<section class="home-masthead" aria-labelledby="home-heading">
+  <div class="shell home-masthead-grid">
+    <div class="home-intro">
+      <p class="eyebrow">Property sales &amp; rentals &middot; Lagos</p>
+      <h1 id="home-heading">{{ site_settings.homepage_hero_heading }}</h1>
+      <p class="home-intro-copy">{{ site_settings.homepage_hero_intro }}</p>
+      <form method="get" action="{{ url_for('properties') }}" class="home-search" aria-label="Search properties">
+        <div class="home-search-primary">
+          <label for="home-district">Location<select id="home-district" name="district"><option value="">All districts</option>{% for district in search_districts %}<option value="{{ district.district }}">{{ district.district }}</option>{% endfor %}</select></label>
+          <label for="home-purpose">Buy or rent<select id="home-purpose" name="status"><option value="">Buy or rent</option>{% for option in status_options %}<option value="{{ option }}">{{ option }}</option>{% endfor %}</select></label>
         </div>
-        <p class="hero-kicker">The Lagos property desk</p>
-        {% set hero_heading_parts = site_settings.homepage_hero_heading.split('. ') %}
-        <h1>
-          {% for part in hero_heading_parts %}
-            {% set cleaned_part = part.strip() %}
-            {% if cleaned_part %}
-              <span class="{% if loop.last %}hero-gold-text{% endif %}">{{ cleaned_part }}{% if not cleaned_part.endswith('.') %}.{% endif %}</span>
-            {% endif %}
-          {% endfor %}
-        </h1>
-        <p class="hero-intro">
-          {{ site_settings.homepage_hero_intro }}
-        </p>
-
-        <ul class="hero-trust-list" aria-label="Structurebase trust signals">{%- for signal in site_settings.homepage_trust_signals -%}<li>{{ signal }}</li>{%- endfor -%}</ul>
-
-        <form method="get" action="{{ url_for('properties') }}" class="home-property-search" aria-label="Search available properties">
-          <div class="home-search-heading">
-            <strong>Find a property that fits</strong>
-            <span>Search the live catalogue</span>
+        <details class="home-search-options" data-home-filters open>
+          <summary>Property type &amp; budget</summary>
+          <div class="home-search-primary">
+            <label for="home-type">Property type<select id="home-type" name="property_type"><option value="">All types</option>{% for item in search_property_types %}<option value="{{ item.property_type }}">{{ item.property_type }}</option>{% endfor %}</select></label>
+            <label for="home-budget">Maximum price (NGN)<input id="home-budget" type="number" name="max_price" min="100000" step="100000" inputmode="numeric" placeholder="Your budget"></label>
           </div>
-          <div class="home-search-fields">
-            <label>
-              <span>Location</span>
-              <select name="district">
-                <option value="">All districts</option>
-                {% for district in search_districts %}<option value="{{ district.district }}">{{ district.district }}</option>{% endfor %}
-              </select>
-            </label>
-            <label>
-              <span>Buy or rent</span>
-              <select name="status">
-                <option value="">Any purpose</option>
-                {% for option in status_options %}<option value="{{ option }}">{{ option }}</option>{% endfor %}
-              </select>
-            </label>
-            <details class="home-search-more" data-home-filters open>
-              <summary>More filters</summary>
-              <div class="home-search-more-fields">
-                <label>
-                  <span>Property type</span>
-                  <select name="property_type">
-                    <option value="">All types</option>
-                    {% for item in search_property_types %}<option value="{{ item.property_type }}">{{ item.property_type }}</option>{% endfor %}
-                  </select>
-                </label>
-                <label>
-                  <span>Maximum price</span>
-                  <input type="number" name="max_price" min="100000" step="100000" inputmode="numeric" placeholder="NGN budget">
-                </label>
-              </div>
-            </details>
-            <button type="submit" class="cta home-search-submit" data-loading-label="Searching...">Search properties</button>
-          </div>
-        </form>
-        <div class="home-hero-support-links">
-          {% if site_settings.whatsapp_configured %}
-          <a href="{{ general_whatsapp_url }}" class="text-link" target="_blank" rel="noreferrer">Ask an advisor to shortlist</a>
-          {% else %}
-          <a href="{{ url_for('about') }}#confidence-checks" class="text-link">See how shortlisting works</a>
-          {% endif %}
-          <a href="{{ url_for('partner_register') }}" class="text-link">Earn through the partner programme</a>
-        </div>
-      </div>
-
-      {% if spotlight %}
-      <aside class="hero-panel hero-panel-home" aria-label="Live listing preview">
-        <div class="hero-card-stack hero-card-stack-back" aria-hidden="true"></div>
-        <div class="hero-card-stack hero-card-stack-mid" aria-hidden="true"></div>
-        <article class="hero-listing-card">
-          <div class="hero-listing-media">
-            <img src="{{ asset_url(listing_image_path(spotlight)) }}" alt="{{ spotlight.title }}" width="1536" height="1024" loading="eager" fetchpriority="high" decoding="async">
-            <span class="hero-live-pill"><span aria-hidden="true"></span>{{ spotlight.availability }}</span>
-          </div>
-          <div class="hero-listing-body">
-            {% if listing_media_is_representative(spotlight) %}
-            <p class="home-media-note">Representative media included &middot; ask for current photos</p>
-            {% endif %}
-            <div class="hero-listing-head">
-              <div>
-                <h2>{{ spotlight.title }}</h2>
-                <p class="hero-listing-location">
-                  <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                    <path d="M12 22s7-6.23 7-12a7 7 0 1 0-14 0c0 5.77 7 12 7 12Zm0-9.3a2.7 2.7 0 1 1 0-5.4 2.7 2.7 0 0 1 0 5.4Z"/>
-                  </svg>
-                  {{ spotlight.district }}, Lagos
-                </p>
-              </div>
-              <div class="hero-listing-price">
-                <strong>{{ spotlight.price | naira }}{{ spotlight.price_suffix }}</strong>
-                <span>{{ spotlight.status }}</span>
-              </div>
-            </div>
-            <dl class="hero-listing-meta">
-              <div>
-                <dt>
-                  <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 5h11v2H7v10h10v-5h2v7H5V5Zm13 0h1v1h-1V5Zm-3 3h6v2h-6V8Z"/></svg>
-                  <span>{{ spotlight.area_sqm or '—' }}</span>
-                </dt>
-                <dd>SQM</dd>
-              </div>
-              <div>
-                <dt>
-                  <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 12V7h2v3h12V7h2v11h-2v-3H6v3H4v-6Zm4-3a2 2 0 1 1 4 0v1H8V9Z"/></svg>
-                  <span>{{ spotlight.bedrooms or '—' }}</span>
-                </dt>
-                <dd>Bedrooms</dd>
-              </div>
-              <div>
-                <dt>
-                  <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M7 10V6a3 3 0 0 1 6 0v1h-2V6a1 1 0 0 0-2 0v4h10v3a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5v-3h3Z"/></svg>
-                  <span>{{ spotlight.bathrooms or '—' }}</span>
-                </dt>
-                <dd>Bathrooms</dd>
-              </div>
-              <div>
-                <dt>
-                  <span>{{ spotlight.property_type }}</span>
-                </dt>
-                <dd>Property type</dd>
-              </div>
-            </dl>
-            <a href="{{ url_for('property_detail', listing_id=spotlight.id) }}" class="hero-listing-link">View this property</a>
-          </div>
-        </article>
-      </aside>
-      {% endif %}
+        </details>
+        <button type="submit" class="home-button" data-loading-label="Searching...">Search properties <span aria-hidden="true">&rarr;</span></button>
+      </form>
+      <a href="{{ url_for('properties') }}" class="home-browse-link">Or browse all available properties <span aria-hidden="true">&rarr;</span></a>
     </div>
-  </section>
-
-  <section class="home-standard shell" aria-labelledby="home-standard-title" data-reveal>
-    <div class="home-standard-intro">
-      <p class="eyebrow">SB / Proof ledger</p>
-      <h2 id="home-standard-title">Proof before pressure.</h2>
-      <p class="home-proof-note">A practical record of what is known, what still needs confirmation, and what happens next.</p>
-      <a href="{{ url_for('about') }}#confidence-checks" class="text-link text-link-strong">See how confidence is built</a>
-    </div>
-    <ol class="home-standard-list">
-      <li>
-        <strong>Core details recorded</strong>
-        <span>Price, status, location context, and the available listing facts come first.</span>
-      </li>
-      <li>
-        <strong>Unknowns surfaced early</strong>
-        <span>Fees, access, timing, and representative media are called out before travel.</span>
-      </li>
-      <li>
-        <strong>Context stays attached</strong>
-        <span>Your selected property stays attached when the conversation moves to the team.</span>
-      </li>
-    </ol>
-  </section>
-
+    <figure class="home-masthead-image"><img src="{{ static_asset_url('images/structurbhero2.webp') }}" alt="Contemporary residential property" width="1536" height="1024" fetchpriority="high" decoding="async"></figure>
+  </div>
+</section>
   {% if editorial %}
-    <section class="section shell" data-reveal>
-      <div class="section-heading section-heading-inline">
+    <section class="shell home-section home-featured" data-reveal>
+      <div class="home-section-heading">
         <div>
           <p class="eyebrow">Featured properties</p>
-          <h2>Properties to start your shortlist.</h2>
+          <h2>Start your shortlist.</h2>
         </div>
-        <a href="{{ url_for('properties') }}" class="text-link text-link-strong">View the full selection</a>
+        <a href="{{ url_for('properties') }}" class="text-link text-link-strong">View all properties &rarr;</a>
       </div>
 
       <div class="home-editorial-grid">
@@ -189,13 +47,9 @@
               <img src="{{ asset_url(listing_image_path(listing)) }}" alt="{{ listing.title }}" class="editorial-image" width="1536" height="1024" loading="lazy" decoding="async">
             </a>
             <div class="editorial-copy">
-              {% if listing_media_is_representative(listing) %}
-              <p class="home-media-note">Representative media included &middot; ask for current photos</p>
-              {% endif %}
               <p class="editorial-kicker">{{ listing.district }} &middot; {{ listing.property_type }}</p>
               <h3>{{ listing.title }}</h3>
               <p class="editorial-price">{{ listing.price | naira }}{{ listing.price_suffix }}</p>
-              <p class="editorial-summary">{{ listing.summary }}</p>
               <div class="editorial-actions stack-mobile">
                 <a href="{{ url_for('property_detail', listing_id=listing.id) }}" class="cta cta-small">View details</a>
                 {% if site_settings.whatsapp_configured %}
@@ -210,7 +64,7 @@
   {% endif %}
 
   {% if completed %}
-    <section class="section shell completed-property-section" data-reveal aria-labelledby="completed-property-title">
+    <section class="shell home-section completed-property-section" data-reveal aria-labelledby="completed-property-title">
       <div class="section-heading section-heading-inline">
         <div>
           <p class="eyebrow">Completed transactions</p>
@@ -236,159 +90,42 @@
     </section>
   {% endif %}
 
-  <section class="section shell section-tight" data-reveal>
-    <div class="section-heading section-heading-inline">
-      <div>
-        <p class="eyebrow">Choose Your Route</p>
-        <h2>Start from the need you actually have today.</h2>
-      </div>
-    </div>
 
-    <div class="card-grid route-grid">
-      <article class="info-card">
-        <p class="route-index">01 / Buy</p>
-        <h3>Buying</h3>
-        <p>Confirm price, title context, viewing windows, and fit before committing time to an inspection.</p>
-        <a href="{{ url_for('properties', status='For Sale') }}" class="text-link text-link-strong">Browse sale listings</a>
-      </article>
-      <article class="info-card">
-        <p class="route-index">02 / Rent</p>
-        <h3>Renting</h3>
-        <p>Compare districts, rent status, access timing, and likely terms before shortlisting homes.</p>
-        <a href="{{ url_for('properties', status='For Rent') }}" class="text-link text-link-strong">Browse rentals</a>
-      </article>
-      <article class="info-card">
-        <p class="route-index">03 / List</p>
-        <h3>Listing support</h3>
-        <p>Landlords and operators can route interest through direct enquiry paths with listing context attached.</p>
-        {% if site_settings.whatsapp_configured %}<a href="{{ general_whatsapp_url }}" class="text-link text-link-strong" target="_blank" rel="noreferrer">Talk to an advisor</a>{% else %}<a href="{{ url_for('about') }}" class="text-link text-link-strong">Understand our approach</a>{% endif %}
-      </article>
-      <article class="info-card">
-        <p class="route-index">04 / Support</p>
-        <h3>Tenant maintenance</h3>
-        <p>Residents can log issues with contact details, priority, and photos so the team can triage faster.</p>
-        <a href="{{ url_for('tenant_services') }}" class="text-link text-link-strong">Open tenant services</a>
-      </article>
-    </div>
-  </section>
-
-  <section class="section shell" data-reveal>
-    <div class="section-heading section-heading-inline">
-      <div>
-        <p class="eyebrow">Search By District</p>
-        <h2>Find your part of Lagos.</h2>
-      </div>
-    </div>
-
-    <div class="district-grid district-grid-curated">
-      {% for area in districts[:4] %}
-        <article class="district-card district-card-curated">
-          <p class="district-card-kicker">In the catalogue</p>
-          <h3>{{ area.district }}</h3>
-          <p>{{ area.total }} published listing{% if area.total != 1 %}s{% endif %} to explore. Check each property for availability.</p>
-          <a href="{{ url_for('properties', district=area.district) }}" class="district-card-action">Browse {{ area.district }}</a>
-        </article>
-      {% endfor %}
-    </div>
-  </section>
-
-  <section class="section shell" data-reveal>
-    <div class="home-story-grid">
-      <figure class="home-story-card home-story-card-image">
-        <img src="{{ static_asset_url('images/team-corporate-nigeria.webp') }}" alt="Illustration of a property advisory conversation" width="1619" height="972" loading="lazy" decoding="async">
-        <figcaption>Illustrative advisory scene</figcaption>
-      </figure>
-      <article class="home-story-card home-story-card-copy">
-        <p class="eyebrow">How The Team Works</p>
-        <h2>Clear signals before viewing. Cleaner follow-up after enquiry.</h2>
-        <div class="home-story-list">
-          <div>
-            <strong>Photos, price, and location first</strong>
-            <p>Each listing leads with the essentials clients need before they commit to a viewing or enquiry.</p>
-          </div>
-          <div>
-            <strong>Direct advisor routes</strong>
-            <p>WhatsApp, phone, and form enquiries keep the property details attached so follow-up starts with context.</p>
-          </div>
-          <div>
-            <strong>Grounded local context</strong>
-            <p>Districts, maps, and availability notes make the catalogue feel like a guided search, not a raw database.</p>
-          </div>
-        </div>
-      </article>
-    </div>
-  </section>
-
-  <section class="section shell" data-reveal>
-    <div class="home-faq-grid">
-      <article class="home-faq-index" aria-label="Structurebase decision principle">
-        <span>SB / 04</span>
-        <blockquote>“Clarity first. Then the viewing.”</blockquote>
-        <p>Use the listing to narrow fit. Use the conversation to confirm what the page cannot.</p>
-      </article>
-      <article class="home-faq-copy">
-        <p class="eyebrow">Common Questions</p>
-        <h2>What clients usually want to confirm before they book a viewing.</h2>
-        <div class="faq-stack">
-          <details class="faq-item" open>
-            <summary>Are prices and availability current?</summary>
-            <p>The catalogue is maintained for current price, sale or rent status, and availability. Confirm agency fees, service charges, payment terms, and negotiation room before viewing.</p>
-          </details>
-          <details class="faq-item">
-            <summary>Can I ask questions before I visit?</summary>
-            <p>Yes. Share your budget, preferred district, and timing. The advisor can help confirm fit, viewing windows, and next steps before you travel.</p>
-          </details>
-          <details class="faq-item">
-            <summary>What does verified mean?</summary>
-            <p>Verified signals mean the team has reviewed availability, price, and basic listing details before publishing or follow-up.</p>
-          </details>
-          <details class="faq-item">
-            <summary>How will my details be used?</summary>
-            <p>Your contact details are used to respond to your enquiry or service request, not to make the page public.</p>
-          </details>
-        </div>
-      </article>
-    </div>
-  </section>
-
-  <section class="section shell" data-reveal>
-    <div class="cta-banner home-partner-banner">
-      <div><p class="eyebrow">SB / Partner programme</p><h2>Turn trusted introductions into traceable opportunities.</h2><p>Join a reviewed partner network and share only approved property materials, with each introduction tracked from first click through commission review.</p><ul class="partner-benefit-list"><li>Personal referral links</li><li>Approved marketing assets</li><li>Clear commission status</li></ul></div>
-      <div class="cta-banner-actions"><a href="{{ url_for('partner_dashboard') if is_partner_authenticated else url_for('partner_application_status') if has_partner_account else url_for('partner_register') }}" class="cta">{{ 'Open partner portal' if is_partner_authenticated else 'View application' if has_partner_account else 'Become a partner' }}</a><a href="{{ url_for('partner_login') }}" class="text-link">Partner sign in</a></div>
-    </div>
-  </section>
-
-  {% if is_authenticated %}
-    <section class="section shell" data-reveal>
-      <div class="cta-banner">
-        <div>
-          <p class="eyebrow">Management Workflow</p>
-          <h2>Need to update inventory quickly?</h2>
-          <p>The dashboard lets you publish, feature, edit, or hide listings without rebuilding pages.</p>
-        </div>
-        <div class="cta-banner-actions">
-          <a href="{{ url_for('dashboard') }}" class="cta">Open dashboard</a>
-        </div>
-      </div>
-    </section>
-  {% else %}
-    <section class="section shell" data-reveal>
-      <div class="home-final-banner">
-        <div class="home-final-banner-copy">
-          <p class="eyebrow">Find your next property</p>
-          <h2>Move from browsing to a confident shortlist.</h2>
-          <p>Browse live listings, open the map, or speak with the team directly if you want help narrowing the right fit.</p>
-          <div class="hero-actions stack-mobile">
-            <a href="{{ url_for('properties') }}" class="cta">Browse listings</a>
-            {% if site_settings.whatsapp_configured %}
-            <a href="{{ general_whatsapp_url }}" class="cta cta-secondary" target="_blank" rel="noreferrer">Talk to an advisor</a>
-            {% else %}
-            <a href="{{ url_for('about') }}#confidence-checks" class="cta cta-secondary">How we work</a>
-            {% endif %}
-          </div>
-        </div>
-      </div>
-    </section>
-  {% endif %}
+{% if not featured %}
+<section class="shell home-section"><h2>Explore the current catalogue.</h2><p>No featured properties are available right now.</p><a href="{{ url_for('properties') }}" class="text-link text-link-strong">Browse properties &rarr;</a></section>
+{% endif %}
+{% if districts %}
+<section class="shell home-section home-district-section" aria-labelledby="home-districts-title">
+  <div class="home-section-heading"><div><p class="eyebrow">Explore locations</p><h2 id="home-districts-title">Where would you like to be?</h2></div></div>
+  <div class="home-districts">{% for area in districts[:4] %}
+    <a href="{{ url_for('properties', district=area.district) }}" class="home-district"><span><strong>{{ area.district }}</strong><small>{{ area.total }} published listing{% if area.total != 1 %}s{% endif %} &middot; confirm availability</small></span><span aria-hidden="true">&rarr;</span></a>
+  {% endfor %}</div>
+</section>
+{% endif %}
+<section class="home-checks" aria-labelledby="home-checks-title">
+  <div class="shell home-checks-grid">
+    <div><p class="eyebrow">Before you book a viewing</p><h2 id="home-checks-title">Know what to ask.<br>Know what comes next.</h2><a href="{{ url_for('about') }}#confidence-checks" class="text-link text-link-strong">How we review listings &rarr;</a></div>
+    <ol class="home-check-list">{% for signal in site_settings.homepage_trust_signals %}
+      <li><span class="home-check-number" aria-hidden="true">0{{ loop.index }}</span><div><h3>{{ signal }}</h3><p>{% if loop.index == 1 %}Confirm the property is still on the market and agree a viewing window before you travel.{% elif loop.index == 2 %}Ask about agency fees, service charges, and payment terms alongside the published price.{% else %}Send an enquiry from the property page so the team knows exactly which listing you mean.{% endif %}</p></div></li>
+    {% endfor %}</ol>
+  </div>
+</section>
+<section class="shell home-section home-faq-section" aria-labelledby="home-faq-title">
+  <div><p class="eyebrow">A few useful answers</p><h2 id="home-faq-title">Before you enquire.</h2></div>
+  <div class="home-questions">
+    <details><summary>Are prices and availability current?</summary><p>Listings show the published asking price and status. Confirm current availability, total fees, and payment terms with the team before arranging a viewing.</p></details>
+    <details><summary>Can I ask questions before I visit?</summary><p>Yes. Open a property and use its enquiry form to share your questions, budget, and timing. You can request an inspection when you are ready.</p></details>
+    <details><summary>What does &ldquo;verified&rdquo; mean?</summary><p>Review badges describe the team's recorded checks of the listing details. They are not a substitute for independent checks of ownership documents. Where images are representative, request current property photos.</p></details>
+    <details><summary>How will my contact details be used?</summary><p>The team uses your details to respond to your enquiry or service request. <a href="{{ url_for('privacy') }}">Read the privacy information</a> for more about how information is handled.</p></details>
+  </div>
+</section>
+<section class="shell home-section home-closing" aria-labelledby="home-closing-title">
+  <div><p class="eyebrow">Your next step</p><h2 id="home-closing-title">Find a place worth viewing.</h2><p>Start with the listings. Bring your questions to the team.</p></div>
+  <a href="{{ url_for('properties') }}" class="home-button">Browse properties <span aria-hidden="true">&rarr;</span></a>
+</section>
+<div class="shell home-other-routes">
+  <p>Have a property or an introduction? <a href="{{ url_for('partner_dashboard') if is_partner_authenticated else url_for('partner_application_status') if has_partner_account else url_for('partner_register') }}">Explore the partner programme &rarr;</a></p>
+  <a href="{{ url_for('tenant_services') }}">Tenant maintenance &rarr;</a>
+  {% if is_authenticated %}<a href="{{ url_for('dashboard') }}">Open dashboard &rarr;</a>{% endif %}
+</div>
 {% endblock %}
-

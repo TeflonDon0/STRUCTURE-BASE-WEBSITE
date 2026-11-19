@@ -10,7 +10,7 @@
   <section class="page-hero" data-reveal>
     <div class="shell page-hero-shell">
       <div>
-        <p class="eyebrow">SB / Property catalogue</p>
+        <p class="eyebrow">Property catalogue</p>
         <h1>Find a property that fits.</h1>
         <p class="page-intro">
           Compare sale, rent, and lease listings by district, budget, and property type.
@@ -158,7 +158,6 @@
       <div class="property-grid-list">
         {% for listing in listings %}
           <article class="property-card{% if listing.is_completed %} property-card-completed{% endif %}" id="listing-{{ listing.id }}">
-            <p class="property-card-reference">SB / {{ '%02d' | format(loop.index) }}</p>
             <a href="{{ url_for('property_detail', listing_id=listing.id) }}" class="property-media-link" aria-label="View {{ listing.title }}">
               <div class="property-media" style="--media-bg: url('{{ asset_url(listing_image_path(listing)) }}')">
                 <img src="{{ asset_url(listing_image_path(listing)) }}" alt="{{ listing.title }}" width="1536" height="1024" loading="{% if loop.index <= 2 %}eager{% else %}lazy{% endif %}" decoding="async">
@@ -174,9 +173,6 @@
             </a>
             <div class="property-body">
               <div class="property-copy">
-                {% if listing_media_is_representative(listing) %}
-                <p class="catalogue-media-note">Representative media included &middot; ask for current photos</p>
-                {% endif %}
                 <div class="property-card-topline">
                   <p class="property-location">{{ listing.district }}</p>
                   <p class="property-availability">{{ listing.availability }}</p>
@@ -205,7 +201,7 @@
                 </div>
               {% endif %}
               <div class="property-footer">
-                <p class="property-note">{{ listing.address }}</p>
+                <p class="property-note">{{ listing.district }}</p>
                 <div class="property-actions">
                   <a href="{{ url_for('property_detail', listing_id=listing.id) }}" class="cta cta-small">View details</a>
                   {% if site_settings.whatsapp_configured %}
@@ -287,7 +283,7 @@
             {{ map_summary.mapped_count }} of {{ listings|length }} listing{% if listings|length != 1 %}s{% endif %} are mapped on this view.
           </p>
           {% if map_summary.approximate_count %}
-            <p class="map-note">{{ map_summary.approximate_count }} marker{% if map_summary.approximate_count != 1 %}s use{% else %} uses{% endif %} district-centre fallback until exact coordinates are added.</p>
+            <p class="map-note">{{ map_summary.approximate_count }} area marker{% if map_summary.approximate_count != 1 %}s shown{% else %} shown{% endif %} where exact location details have not been confirmed.</p>
           {% endif %}
         </div>
       </div>

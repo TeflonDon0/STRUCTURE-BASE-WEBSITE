@@ -12,7 +12,7 @@
       </div>
 
       <div class="detail-copy">
-        <p class="eyebrow">SB / Staff access</p>
+        <p class="eyebrow">Staff access</p>
         <h1>Sign in to your workspace.</h1>
         <p class="page-intro">
           Use the admin workspace to update inventory, follow up leads, review tenant issues, and keep site information current.
@@ -69,25 +69,6 @@
             <a href="{{ url_for('home') }}" class="text-link">View public site</a>
           </div>
 
-          {% if using_default_credentials %}
-            <details class="credential-hint" role="note">
-              <summary class="credential-summary">
-                <span class="credential-title">{{ "Local demo sign-in" if show_local_default_credentials else "Default credentials detected" }}</span>
-                <span class="credential-summary-copy">{{ "Shown only on localhost." if show_local_default_credentials else "Update the environment before public deployment." }}</span>
-              </summary>
-
-              <div class="credential-detail">
-                {% if show_local_default_credentials %}
-                  <p class="credential-line"><strong>Username:</strong> <code>{{ default_admin_username }}</code></p>
-                  <p class="credential-line"><strong>Password:</strong> <code>{{ default_admin_password }}</code></p>
-                {% endif %}
-
-                <p class="form-note">
-                  Visible on localhost for initial setup. The first startup converts these values into an individual super-admin account with a hashed password.
-                </p>
-              </div>
-            </details>
-          {% endif %}
         </form>
       </div>
     </div>

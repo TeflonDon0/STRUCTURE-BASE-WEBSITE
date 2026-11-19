@@ -36,11 +36,11 @@ def test_media_disclosure_handles_mixed_and_supplied_galleries():
     assert listing_media_is_representative({"image_path": "", "gallery_paths": [], "property_type": "House"})
 
 
-def test_detail_discloses_seeded_representative_media():
+def test_detail_uses_clean_property_presentation():
     response = app.test_client().get("/properties/1")
     assert response.status_code == 200
-    assert b"Representative media included" in response.data
-    assert b"This gallery includes representative imagery" in response.data
+    assert b"Representative media included" not in response.data
+    assert b"Before making a decision." in response.data
 
 
 @pytest.mark.parametrize("field,value", [("email", "not-email"), ("phone", "x")])

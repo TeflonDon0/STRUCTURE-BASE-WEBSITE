@@ -319,10 +319,10 @@ DEFAULT_EMAIL_SENDER_NAME = DEFAULT_SITE_NAME
 DEFAULT_EMAIL_BRAND_TAGLINE = "Property sales, rentals, and operations support"
 DEFAULT_EMAIL_BRAND_MARKET_LINE = "Based in Lagos, active across Nigeria"
 DEFAULT_EMAIL_FOOTER_NOTE = "Client communications from a Lagos-based team active across Nigeria."
-DEFAULT_HOMEPAGE_HERO_HEADING = "Verified property options. Clear next steps."
+DEFAULT_HOMEPAGE_HERO_HEADING = "Find your next property in Lagos."
 LEGACY_HOMEPAGE_HERO_HEADING = "Find verified property options. Move with clear guidance."
 DEFAULT_HOMEPAGE_HERO_INTRO = (
-    "For buyers, renters, landlords, and investors who need current listings, clear pricing, and direct advisor follow-up across Lagos and selected Nigerian markets."
+    "Explore homes and commercial spaces to buy or rent. Compare prices, shortlist locations, and arrange a viewing with the team."
 )
 LEGACY_HOMEPAGE_HERO_INTRO = (
     "Curated listings and advisor support for buyers, renters, landlords, and investors in Lagos and selected Nigerian markets."
@@ -1346,6 +1346,32 @@ def normalize_document_record(record: Mapping[str, object] | sqlite3.Row) -> dic
     return data
 
 
+def remove_bundled_sample_listings_sqlite(db: sqlite3.Connection) -> None:
+    sample_titles = (
+        "Ikoyi Skyline Penthouse",
+        "Lekki Phase 1 Detached Villa",
+        "Victoria Island Office Suite",
+        "Yaba Income Duplex",
+    )
+    sample_images = (
+        "images/ikoyi-penthouse-sample.webp",
+        "images/lekki-villa-sample.webp",
+        "images/victoria-island-office-sample.webp",
+        "images/yaba-duplex-sample.webp",
+    )
+    placeholders = ", ".join("?" for _ in sample_titles)
+    db.execute(
+        f"DELETE FROM listings WHERE title IN ({placeholders})",
+        sample_titles,
+    )
+    placeholders = ", ".join("?" for _ in sample_images)
+    db.execute(
+        f"DELETE FROM listings WHERE image_path IN ({placeholders})",
+        sample_images,
+    )
+    db.commit()
+
+
 def init_sqlite_db() -> None:
     DATABASE_PATH.parent.mkdir(parents=True, exist_ok=True)
     UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
@@ -1890,96 +1916,9 @@ def init_sqlite_db() -> None:
     db.execute("PRAGMA optimize")
     db.commit()
 
-    current_count = db.execute("SELECT COUNT(*) AS count FROM listings").fetchone()["count"]
-    if current_count == 0:
-        seed_sqlite_listings()
+    if app.config["IS_PRODUCTION"]:
+        remove_bundled_sample_listings_sqlite(db)
     bootstrap_staff_admin()
-
-
-def seed_sqlite_listings() -> None:
-    db = get_db()
-    payloads = []
-    for item in sample_listings():
-        payload = dict(item)
-        payload["gallery_paths"] = json.dumps(payload.get("gallery_paths", []))
-        payloads.append(payload)
-    db.executemany(
-        """
-        INSERT INTO listings (
-            title,
-            status,
-            availability,
-            property_type,
-            district,
-            address,
-            longitude,
-            latitude,
-            gallery_paths,
-            virtual_tour_url,
-            documentation_summary,
-            documentation_verified,
-            payment_plan_summary,
-            is_serviced,
-            has_power_24_7,
-            is_flood_free,
-            near_express,
-            near_schools,
-            near_markets,
-            verified_property,
-            verified_landlord,
-            price,
-            price_suffix,
-            bedrooms,
-            bathrooms,
-            area_sqm,
-            summary,
-            description,
-            image_path,
-            featured,
-            published,
-            view_count,
-            created_at,
-            updated_at
-        ) VALUES (
-            :title,
-            :status,
-            :availability,
-            :property_type,
-            :district,
-            :address,
-            :longitude,
-            :latitude,
-            :gallery_paths,
-            :virtual_tour_url,
-            :documentation_summary,
-            :documentation_verified,
-            :payment_plan_summary,
-            :is_serviced,
-            :has_power_24_7,
-            :is_flood_free,
-            :near_express,
-            :near_schools,
-            :near_markets,
-            :verified_property,
-            :verified_landlord,
-            :price,
-            :price_suffix,
-            :bedrooms,
-            :bathrooms,
-            :area_sqm,
-            :summary,
-            :description,
-            :image_path,
-            :featured,
-            :published,
-            :view_count,
-            :created_at,
-            :updated_at
-        )
-        """,
-        payloads,
-    )
-    db.commit()
 
 
 def init_mongodb() -> None:
@@ -1998,21 +1937,34 @@ def init_mongodb() -> None:
     collection.create_index([("is_flood_free", ASCENDING)])
     collection.create_index([("near_express", ASCENDING)])
 
-    if collection.count_documents({}) == 0:
-        collection.insert_many(sample_listings())
-    else:
-        collection.update_many({"availability": {"$exists": False}}, {"$set": {"availability": "Available"}})
-        collection.update_many({"view_count": {"$exists": False}}, {"$set": {"view_count": 0}})
-        collection.update_many({"last_viewed_at": {"$exists": False}}, {"$set": {"last_viewed_at": None}})
-        collection.update_many({"longitude": {"$exists": False}}, {"$set": {"longitude": None}})
-        collection.update_many({"latitude": {"$exists": False}}, {"$set": {"latitude": None}})
-        collection.update_many({"gallery_paths": {"$exists": False}}, {"$set": {"gallery_paths": []}})
-        collection.update_many({"virtual_tour_url": {"$exists": False}}, {"$set": {"virtual_tour_url": ""}})
-        collection.update_many({"documentation_summary": {"$exists": False}}, {"$set": {"documentation_summary": ""}})
-        collection.update_many({"documentation_verified": {"$exists": False}}, {"$set": {"documentation_verified": 0}})
-        collection.update_many({"payment_plan_summary": {"$exists": False}}, {"$set": {"payment_plan_summary": ""}})
-        for key, _label in DISCOVERY_FEATURE_FIELDS + VERIFICATION_FIELDS:
-            collection.update_many({key: {"$exists": False}}, {"$set": {key: 0}})
+    collection.delete_many({
+        "$or": [
+            {"public_id": {"$in": [
+                "ikoyi-skyline-penthouse",
+                "lekki-phase-1-detached-villa",
+                "victoria-island-office-suite",
+                "yaba-income-duplex",
+            ]}},
+            {"image_path": {"$in": [
+                "images/ikoyi-penthouse-sample.webp",
+                "images/lekki-villa-sample.webp",
+                "images/victoria-island-office-sample.webp",
+                "images/yaba-duplex-sample.webp",
+            ]}},
+        ]
+    })
+    collection.update_many({"availability": {"$exists": False}}, {"$set": {"availability": "Available"}})
+    collection.update_many({"view_count": {"$exists": False}}, {"$set": {"view_count": 0}})
+    collection.update_many({"last_viewed_at": {"$exists": False}}, {"$set": {"last_viewed_at": None}})
+    collection.update_many({"longitude": {"$exists": False}}, {"$set": {"longitude": None}})
+    collection.update_many({"latitude": {"$exists": False}}, {"$set": {"latitude": None}})
+    collection.update_many({"gallery_paths": {"$exists": False}}, {"$set": {"gallery_paths": []}})
+    collection.update_many({"virtual_tour_url": {"$exists": False}}, {"$set": {"virtual_tour_url": ""}})
+    collection.update_many({"documentation_summary": {"$exists": False}}, {"$set": {"documentation_summary": ""}})
+    collection.update_many({"documentation_verified": {"$exists": False}}, {"$set": {"documentation_verified": 0}})
+    collection.update_many({"payment_plan_summary": {"$exists": False}}, {"$set": {"payment_plan_summary": ""}})
+    for key, _label in DISCOVERY_FEATURE_FIELDS + VERIFICATION_FIELDS:
+        collection.update_many({key: {"$exists": False}}, {"$set": {key: 0}})
 
     enquiries = get_mongo_enquiries_collection()
     enquiries.create_index([("public_id", ASCENDING)], unique=True)
@@ -2930,9 +2882,9 @@ def site_settings() -> dict[str, str | bool]:
         str(merged.get("homepage_trust_signal_2") or "").strip() or DEFAULT_HOMEPAGE_TRUST_SIGNAL_2,
         str(merged.get("homepage_trust_signal_3") or "").strip() or DEFAULT_HOMEPAGE_TRUST_SIGNAL_3,
     ]
-    if homepage_hero_heading == LEGACY_HOMEPAGE_HERO_HEADING:
+    if homepage_hero_heading in {LEGACY_HOMEPAGE_HERO_HEADING, "Verified property options. Clear next steps."}:
         homepage_hero_heading = DEFAULT_HOMEPAGE_HERO_HEADING
-    if homepage_hero_intro == LEGACY_HOMEPAGE_HERO_INTRO:
+    if homepage_hero_intro in {LEGACY_HOMEPAGE_HERO_INTRO, "For buyers, renters, landlords, and investors who need current listings, clear pricing, and direct advisor follow-up across Lagos and selected Nigerian markets."}:
         homepage_hero_intro = DEFAULT_HOMEPAGE_HERO_INTRO
     homepage_trust_signals = [
         DEFAULT_HOMEPAGE_TRUST_SIGNAL_1 if homepage_trust_signals[0] == LEGACY_HOMEPAGE_TRUST_SIGNAL_1 else homepage_trust_signals[0],
@@ -8647,7 +8599,7 @@ def property_structured_data(listing: Mapping[str, object]) -> dict[str, object]
         "itemOffered": {
             "@type": "Residence" if str(listing.get("property_type") or "").lower() != "office" else "Product",
             "name": str(listing["title"]),
-            "address": str(listing["address"]),
+            "address": str(listing["district"]),
         },
     }
 
@@ -8682,10 +8634,10 @@ def listing_price_label(listing: Mapping[str, object]) -> str:
 
 
 def listing_map_feature(listing: Mapping[str, object]) -> dict[str, object] | None:
-    longitude = listing.get("map_longitude")
-    latitude = listing.get("map_latitude")
-    if longitude is None or latitude is None:
+    fallback = fallback_listing_coordinates(listing)
+    if fallback is None:
         return None
+    longitude, latitude = fallback
 
     return {
         "type": "Feature",
@@ -8694,7 +8646,7 @@ def listing_map_feature(listing: Mapping[str, object]) -> dict[str, object] | No
             "id": str(listing["id"]),
             "title": str(listing["title"]),
             "district": str(listing["district"]),
-            "address": str(listing["address"]),
+            "address": str(listing["district"]),
             "property_type": str(listing["property_type"]),
             "status": str(listing["status"]),
             "availability": str(listing["availability"]),
@@ -8702,7 +8654,7 @@ def listing_map_feature(listing: Mapping[str, object]) -> dict[str, object] | No
             "detail_url": url_for("property_detail", listing_id=str(listing["id"])),
             "results_anchor": f"#listing-{listing['id']}",
             "image_url": asset_url(resolved_listing_image_path(listing)),
-            "map_location_mode": str(listing.get("map_location_mode") or "missing"),
+            "map_location_mode": "approximate",
             "verified_property": 1 if listing.get("verified_property") else 0,
             "verified_landlord": 1 if listing.get("verified_landlord") else 0,
         },
@@ -8711,14 +8663,13 @@ def listing_map_feature(listing: Mapping[str, object]) -> dict[str, object] | No
 
 def listing_map_payload(listings: list[dict[str, object]]) -> tuple[dict[str, object], dict[str, int]]:
     features = [feature for listing in listings if (feature := listing_map_feature(listing))]
-    exact_count = sum(1 for listing in listings if listing.get("map_location_mode") == "exact")
     mapped_count = len(features)
     return (
         {"type": "FeatureCollection", "features": features},
         {
             "mapped_count": mapped_count,
-            "exact_count": exact_count,
-            "approximate_count": max(0, mapped_count - exact_count),
+            "exact_count": 0,
+            "approximate_count": mapped_count,
         },
     )
 

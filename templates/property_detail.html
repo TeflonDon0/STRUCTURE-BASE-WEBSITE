@@ -24,7 +24,7 @@
           </ol>
         </nav>
         <div class="detail-heading-meta">
-          <p class="eyebrow">SB / {{ listing.status }}</p>
+          <p class="eyebrow">{{ listing.status }}</p>
           {% if listing.verified_property %}
             <span class="dashboard-badge dashboard-badge-accent">Verified property</span>
           {% endif %}
@@ -72,9 +72,6 @@
         <img src="{{ asset_url(gallery[0] if gallery else listing_image_path(listing)) }}" alt="{{ listing.title }}" class="detail-image" id="detail-main-image" width="1536" height="1024" loading="eager" fetchpriority="high" decoding="async">
         <div class="detail-media-overlay">
           <span>{{ gallery|length if gallery else 1 }} photo{% if (gallery|length if gallery else 1) != 1 %}s{% endif %}</span>
-          {% if listing_media_is_representative(listing) %}
-            <span>Representative media included</span>
-          {% endif %}
         </div>
 
       </div>
@@ -129,17 +126,13 @@
 
         <aside class="verification-dossier" aria-labelledby="verification-dossier-title">
           <div class="verification-dossier-head">
-            <p class="eyebrow">Property dossier</p>
-            <h2 id="verification-dossier-title">What this page confirms.</h2>
+            <p class="eyebrow">Property overview</p>
+            <h2 id="verification-dossier-title">Before making a decision.</h2>
           </div>
           <dl>
             <div>
               <dt>Listing review</dt>
               <dd>{% if listing.verified_property %}The property record is marked reviewed for price, status, location context, and core details.{% else %}The published facts are presented as supplied; availability and material details still need advisor confirmation.{% endif %}</dd>
-            </div>
-            <div>
-              <dt>Media status</dt>
-              <dd>{% if listing_media_is_representative(listing) %}This gallery includes representative imagery. Request current property photos before making a decision.{% else %}Media supplied for this listing. Confirm that photos reflect its current condition.{% endif %}</dd>
             </div>
             <div>
               <dt>Before viewing</dt>
@@ -157,14 +150,12 @@
                   href="{{ url_for('properties', focus=listing.id) }}#map"
                   class="text-link text-link-strong"
                 >
-                  {{ "View location on map" if listing.map_location_mode == 'exact' else "View area on map" }}
+                  View area on map
                 </a>
               {% endif %}
             </div>
-            <p>{{ listing.address }}</p>
-            {% if listing.map_location_mode == 'approximate' %}
-              <p class="property-note">Map view uses a district-centre marker until exact coordinates are added.</p>
-            {% endif %}
+            <p>{{ listing.district }}</p>
+            <p class="property-note">Exact address shared privately after enquiry.</p>
           </article>
           <article class="info-card detail-info-card detail-description-card">
             <h2>Description</h2>
@@ -335,9 +326,6 @@
                 {% endif %}
                 {% if item.availability != 'Available' %}
                   <span class="property-badge property-badge-secondary">{{ item.availability }}</span>
-                {% endif %}
-                {% if listing_media_is_representative(item) %}
-                  <span class="property-badge property-badge-secondary property-badge-representative {% if item.availability != 'Available' %}property-badge-stacked{% endif %}" title="Representative media included. Ask for current photos before final decisions.">Representative media included</span>
                 {% endif %}
               </div>
             </a>
