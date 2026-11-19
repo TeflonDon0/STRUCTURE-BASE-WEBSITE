@@ -4880,6 +4880,10 @@ def validate_maintenance_form(form) -> tuple[dict[str, str], dict[str, list[str]
         message = "Add at least one contact method for follow-up."
         add_error("email", message)
         add_error("phone", message)
+    if data["email"] and not re.fullmatch(r"[^\s@]+@[^\s@]+\.[^\s@]+", data["email"]):
+        add_error("email", "Enter a valid email address.")
+    if data["phone"] and not 7 <= len(normalize_partner_phone(data["phone"])) <= 15:
+        add_error("phone", "Enter a valid phone or WhatsApp number.")
     if data["issue_category"] not in MAINTENANCE_CATEGORY_OPTIONS:
         add_error("issue_category", "Choose a valid maintenance category.")
     if data["priority"] not in MAINTENANCE_PRIORITY_OPTIONS:
@@ -8485,6 +8489,16 @@ def listing_media_gallery(listing: Mapping[str, object]) -> list[str]:
     return ordered
 
 
+def listing_media_is_representative(listing: Mapping[str, object]) -> bool:
+    """Bundled examples must not be presented as supplied property photography."""
+    sample_paths = {
+        "images/ikoyi-penthouse-sample.webp", "images/lekki-villa-sample.webp",
+        "images/victoria-island-office-sample.webp", "images/yaba-duplex-sample.webp",
+        "images/building1.jpg", "images/building2.webp",
+    }
+    return any(path in sample_paths for path in listing_media_gallery(listing))
+
+
 def listing_feature_labels(listing: Mapping[str, object]) -> list[str]:
     return [label for key, label in DISCOVERY_FEATURE_FIELDS if listing.get(key)]
 
@@ -8730,6 +8744,7 @@ def inject_globals() -> dict[str, object]:
         "listing_feature_labels": listing_feature_labels,
         "listing_verification_labels": listing_verification_labels,
         "listing_has_uploaded_image": listing_has_uploaded_image,
+        "listing_media_is_representative": listing_media_is_representative,
         "asset_url": asset_url,
         "absolute_asset_url": absolute_asset_url,
         "canonical_request_url": canonical_request_url,

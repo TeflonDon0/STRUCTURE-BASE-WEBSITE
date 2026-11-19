@@ -3,6 +3,9 @@
 {% block title %}About | {{ site_settings.site_name }}{% endblock %}
 {% block meta_description %}Learn how {{ site_settings.site_name }} supports property sales, rent, lease, and tenant service coordination from Lagos across key markets in Nigeria.{% endblock %}
 {% block body_class %}about-page{% endblock %}
+{% block head_extras %}
+  <link rel="stylesheet" href="{{ static_asset_url('about.css') }}">
+{% endblock %}
 
 {% block content %}
   <section class="page-hero" data-reveal>
@@ -16,10 +19,10 @@
         <div class="masthead-signal-row" aria-label="{{ site_settings.site_name }} service signals">
           <span>More than three decades in property</span>
           <span>Open, practical advisory</span>
-          <span>{{ stats.total }} published listing{% if stats.total != 1 %}s{% endif %}</span>
         </div>
         <div class="hero-actions masthead-actions">
           <a href="{{ url_for('properties') }}" class="cta">Browse listings</a>
+          <a href="#confidence-checks" class="text-link">See our listing checks</a>
           {% if site_settings.whatsapp_configured %}<a href="{{ general_whatsapp_url }}" class="cta cta-secondary" target="_blank" rel="noreferrer">Talk to an advisor</a>{% endif %}
         </div>
       </div>
@@ -28,12 +31,7 @@
         <img src="{{ static_asset_url('images/emeke-ananenu-ceo.webp') }}" alt="Emeke Ananenu, CEO of Structurebase" width="1122" height="1402" loading="eager" fetchpriority="high" decoding="async">
         <div class="about-hero-card-panel">
           <p class="about-ceo-name">Emeke Ananenu</p>
-          <p>CEO, {{ site_settings.site_name }}. Known for honest counsel, straightforward conversations, and an open-minded approach to each client's situation.</p>
-          <div class="about-hero-stat-row">
-            <span><strong>30+</strong> years</span>
-            <span><strong>{{ stats.district_count or 0 }}</strong> districts</span>
-            <span><strong>{{ stats.verified_count or 0 }}</strong> vetted</span>
-          </div>
+          <p>CEO, {{ site_settings.site_name }}</p>
         </div>
       </aside>
     </div>
@@ -43,33 +41,26 @@
     <div class="inner-summary-strip about-summary-strip" aria-label="{{ site_settings.site_name }} at a glance">
       <div>
         <p class="eyebrow">At a glance</p>
-        <p>Based in {{ site_settings.office_address }}. Led with the calm, direct judgement that comes from decades in the market.</p>
+        <p>Based in {{ site_settings.office_address }}. Supporting property searches, enquiries, and tenant service coordination.</p>
       </div>
       <div class="inner-stat-row">
-        <article>
-          <strong>30+</strong>
-          <span>Years of experience</span>
-        </article>
         <article>
           <strong>{{ stats.total }}</strong>
           <span>Published listings</span>
         </article>
         <article>
           <strong>{{ stats.district_count or 0 }}</strong>
-          <span>Active districts</span>
-        </article>
-        <article>
-          <strong>{{ stats.verified_count or 0 }}</strong>
-          <span>Vetted listings</span>
+          <span>Districts in the catalogue</span>
         </article>
       </div>
     </div>
   </section>
 
   <section class="section shell about-story-section" data-reveal>
-    <div class="about-story-media">
-      <img src="{{ static_asset_url('images/team-handshake.webp') }}" alt="Property advisory discussion with Structurebase" width="1619" height="972" loading="lazy" decoding="async">
-    </div>
+    <figure class="about-story-media">
+      <img src="{{ static_asset_url('images/team-handshake.webp') }}" alt="Illustration of a property advisory discussion" width="1619" height="972" loading="lazy" decoding="async">
+      <figcaption>Illustrative advisory scene</figcaption>
+    </figure>
     <div class="about-story-copy">
       <p class="eyebrow">Leadership Standard</p>
       <h2>Measured advice before anyone commits time or money.</h2>
@@ -125,7 +116,7 @@
   <section class="section shell" id="confidence-checks" data-reveal>
     <div class="section-heading">
       <p class="eyebrow">How Confidence Is Built</p>
-      <h2>Simple checks before a client spends time on the wrong option.</h2>
+      <h2>What to confirm before a viewing.</h2>
       <p>The team focuses on the details that usually decide whether a property deserves a visit, a call, or a place on the shortlist.</p>
     </div>
 
@@ -140,17 +131,18 @@
       </article>
       <article class="info-card">
         <h3>Photos and access</h3>
-        <p>Representative media is marked clearly, and current photos or viewing access can be requested before committing travel time.</p>
+        <p>Where an image is representative, ask for current property photos and viewing access before making travel plans.</p>
       </article>
     </div>
+    <p class="about-checks-note">Ask what has been checked, what remains unconfirmed, and which documents are available before making a decision.</p>
   </section>
 
   <section class="section shell" data-reveal>
     <div class="cta-banner">
       <div>
         <p class="eyebrow">Next Step</p>
-        <h2>Need help with a property, a listing, or tenant support?</h2>
-        <p>Start with the live catalogue, speak with an advisor to confirm fit, or route a maintenance request through tenant services.</p>
+        <h2>Choose your next step.</h2>
+        <p>Explore the property catalogue or send a maintenance request through tenant services.{% if site_settings.whatsapp_configured %} For help shortlisting, speak with an advisor.{% endif %}</p>
       </div>
       <div class="cta-banner-actions">
         <a href="{{ url_for('properties') }}" class="cta">Browse listings</a>

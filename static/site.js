@@ -108,7 +108,8 @@ if (backToTop) {
   });
 }
 
-document.querySelectorAll('a[href^="#"]:not([href="#"])').forEach((link) => {
+// Filter triggers already focus their first field after opening the panel.
+document.querySelectorAll('a[href^="#"]:not([href="#"]):not([data-open-filter])').forEach((link) => {
   link.addEventListener("click", () => {
     const targetId = link.hash.slice(1);
     const target = targetId ? document.getElementById(targetId) : null;

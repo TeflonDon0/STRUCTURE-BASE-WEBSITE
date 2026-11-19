@@ -1,0 +1,199 @@
+/* Home-only corrections; loaded after the shared public design system. */
+.home-page .hero-section-cinematic {
+  min-height: 0;
+  padding-block: clamp(2.5rem, 5vw, 4.5rem) 5rem;
+}
+
+.home-page .hero-section-cinematic::before,
+.home-page .hero-section-cinematic::after,
+.home-page .hero-atmosphere {
+  display: none;
+}
+
+.home-page .hero-shell-home {
+  min-height: 0;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: clamp(2rem, 5vw, 4.5rem);
+  align-items: center;
+}
+
+.home-page .hero-shell-home .hero-copy h1 {
+  max-width: 100%;
+  margin-top: 0;
+  font-size: clamp(3rem, 4.5vw, 4.25rem);
+  line-height: 1.02;
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+}
+
+.home-page .hero-edition-note {
+  color: var(--sb-rose);
+}
+
+.home-page .home-property-search {
+  margin-top: 1.5rem;
+  background: var(--sb-burgundy-deep);
+}
+
+.home-page main .home-property-search .home-search-submit {
+  background: var(--sb-gold);
+  background-image: none;
+  border-color: var(--sb-gold);
+  color: var(--sb-ink) !important;
+  box-shadow: none;
+}
+
+.home-page main .home-property-search .home-search-submit:hover {
+  background: var(--sb-paper);
+}
+
+.home-page .home-hero-support-links a,
+.home-page .editorial-actions a,
+.home-page .hero-listing-link {
+  min-height: 2.75rem;
+  display: inline-flex;
+  align-items: center;
+}
+
+.home-page .hero-listing-meta dt {
+  flex-wrap: wrap;
+  overflow-wrap: anywhere;
+}
+
+.home-page .hero-listing-media img {
+  filter: none;
+}
+
+.home-page .home-media-note {
+  margin: 0 0 0.75rem;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  color: var(--sb-muted);
+}
+
+.home-page .hero-listing-body .home-media-note {
+  color: var(--sb-gold);
+}
+
+/* Explicit media geometry overrides the intrinsic HTML height on desktop. */
+.home-page .editorial-media-link {
+  aspect-ratio: 16 / 10.5;
+  overflow: hidden;
+}
+
+.home-page .editorial-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.home-page .section-heading h2 {
+  max-width: 27ch;
+}
+
+.home-page .section:nth-of-type(3n + 2) {
+  background: transparent;
+  box-shadow: none;
+}
+
+.home-page .home-partner-banner .eyebrow {
+  color: var(--sb-gold);
+}
+
+.home-page .home-story-card-image {
+  position: relative;
+  margin: 0;
+}
+
+.home-page .home-story-card-image figcaption {
+  position: absolute;
+  inset: auto 0 0;
+  padding: 0.6rem 1rem;
+  background: var(--sb-burgundy-deep);
+  color: var(--sb-paper);
+  font-size: 0.75rem;
+}
+
+.home-page :is(a, button, input, select, summary):focus-visible {
+  outline: 3px solid var(--sb-gold-deep);
+  outline-offset: 4px;
+}
+
+.home-page .hero-section :is(a, button, input, select, summary):focus-visible {
+  outline-color: var(--sb-gold);
+}
+
+@media (max-width: 1004px) {
+  .home-page .route-grid .info-card {
+    grid-template-columns: minmax(0, 1fr);
+    align-content: start;
+    gap: 0.75rem;
+  }
+
+  .home-page .home-standard {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1.75rem;
+  }
+
+  .home-page .hero-shell-home {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .home-page .hero-shell-home .hero-copy {
+    max-width: 100%;
+  }
+
+  .home-page .hero-panel-home {
+    max-width: 40rem;
+    width: 100%;
+    margin-inline: auto;
+  }
+}
+
+@media (max-width: 760px) {
+  .home-page .hero-section-cinematic {
+    padding-block: 2rem 2.5rem;
+  }
+
+  .home-page .hero-shell-home .hero-copy h1 {
+    font-size: clamp(2.5rem, 10.5vw, 3.5rem);
+  }
+
+  .home-page .hero-edition-note {
+    font-size: 0.625rem;
+    letter-spacing: 0.06em;
+  }
+
+  .home-page .hero-intro {
+    margin-top: 1rem;
+  }
+
+  .home-page .home-search-fields {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .home-page .home-search-submit,
+  .home-page .home-search-more {
+    grid-column: 1 / -1;
+  }
+
+  .home-page .home-search-fields :is(select, input) {
+    font-size: 1rem;
+    padding-inline: 0.65rem;
+  }
+
+  .home-page .section-heading h2 {
+    max-width: 100%;
+  }
+
+  .home-page .home-faq-index blockquote {
+    margin-block: 2rem;
+  }
+}
+
+@media (max-width: 359px) {
+  .home-page .home-search-fields {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,0 +1,160 @@
+/* Tenant Services only: task clarity, readable forms, and visible feedback. */
+body.tenant-services-page .page-hero {
+  padding-block: clamp(1.5rem, 3vw, 2.5rem);
+}
+
+body.tenant-services-page .page-hero .page-hero-shell {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+body.tenant-services-page .page-hero .page-hero-shell > div {
+  gap: 0.75rem;
+}
+
+body.tenant-services-page .page-hero .page-hero-shell h1 {
+  max-width: 26ch;
+  margin: 0;
+  font-size: clamp(2.35rem, 4vw, 3.5rem);
+  line-height: 1.05;
+}
+
+.tenant-services-page .page-hero .eyebrow,
+.tenant-services-page .page-hero .page-intro,
+.tenant-services-page .masthead-signal-row {
+  margin: 0;
+}
+
+.tenant-services-page .tenant-hero-actions {
+  margin-top: 0.25rem;
+}
+
+.tenant-services-page .section:nth-of-type(3n + 2) {
+  background: transparent;
+  box-shadow: none;
+}
+
+.tenant-services-page :is(#maintenance-request, .tenant-emergency-section, .service-receipt, .objection-strip) {
+  max-width: 60rem;
+  margin-inline: auto;
+}
+
+.tenant-services-page .tenant-emergency-section {
+  padding-block: 1.5rem 0;
+}
+
+.tenant-services-page .tenant-emergency-strip {
+  border-left: 3px solid var(--sb-danger);
+  box-shadow: none;
+}
+
+.tenant-services-page .tenant-emergency-strip h2 {
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.tenant-services-page .tenant-emergency-strip p:last-child {
+  margin-top: 0.5rem;
+  color: var(--sb-muted);
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+
+.tenant-services-page #maintenance-request {
+  padding-top: 1.5rem;
+}
+
+.tenant-services-page .service-form {
+  gap: 0;
+  padding: clamp(1rem, 3vw, 2rem);
+  background: var(--sb-white);
+}
+
+.tenant-services-page .tenant-form-intro {
+  display: grid;
+  gap: 0.6rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid var(--sb-line);
+}
+
+.tenant-services-page .tenant-form-intro h2 {
+  font-size: clamp(1.8rem, 3vw, 2.25rem);
+  line-height: 1.1;
+}
+
+.tenant-services-page .tenant-form-intro > p:last-child {
+  max-width: 44rem;
+  color: var(--sb-muted);
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+body.tenant-services-page .service-step-section {
+  display: grid;
+  gap: 1rem;
+  padding-block: 1.75rem;
+}
+
+.tenant-services-page .service-form .form-section-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.5rem;
+  margin: 0;
+}
+
+.tenant-services-page .form-section-head h2 {
+  font-size: 1.6rem;
+  line-height: 1.15;
+}
+
+.tenant-services-page .form-section-head .form-note {
+  max-width: 46rem;
+  font-size: 0.875rem;
+}
+
+.tenant-services-page .service-form .form-row { margin: 0; }
+.tenant-services-page .tenant-field-note { color: var(--sb-muted); font-size: 0.8rem; font-weight: 500; }
+.tenant-services-page .service-form :is(input, select, textarea) { font-size: 1rem; }
+.tenant-services-page .service-form :is(input:not([type="hidden"]), select) { min-height: 3rem; }
+.tenant-services-page .form-actions { padding-top: 1.5rem; border-top: 1px solid var(--sb-line); }
+.tenant-services-page .objection-strip strong { color: var(--sb-burgundy); }
+
+.tenant-services-page .tenant-error-summary {
+  display: grid;
+  gap: 0.65rem;
+  padding: 1.25rem;
+  margin-top: 1.5rem;
+  border: 1px solid var(--sb-danger);
+  border-left-width: 4px;
+  border-radius: var(--sb-radius-sm);
+  background: var(--sb-paper);
+}
+
+.tenant-services-page .tenant-error-summary h2 { font-size: 1.5rem; line-height: 1.2; }
+.tenant-services-page .tenant-error-summary ul { margin: 0; padding-left: 1.25rem; }
+.tenant-services-page .tenant-error-summary a { display: inline-block; padding-block: 0.3rem; color: var(--sb-burgundy-deep); text-decoration: underline; }
+.tenant-services-page .tenant-error-summary p { font-size: 0.875rem; color: var(--sb-muted); }
+
+.tenant-services-page :is(a, button, input, select, textarea, summary, [data-tenant-feedback]):focus-visible {
+  outline: 3px solid var(--sb-gold-deep);
+  outline-offset: 4px;
+}
+
+.tenant-services-page .page-hero a:focus-visible { outline-color: var(--sb-gold); }
+.tenant-services-page :is(#maintenance-request, [data-tenant-feedback], .service-form input, .service-form select, .service-form textarea) { scroll-margin-top: 7rem; }
+.tenant-services-page #tenant-receipt h2 { overflow-wrap: anywhere; }
+.tenant-services-page .service-receipt .page-intro {
+  color: var(--sb-muted);
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+@media (max-width: 760px) {
+  body.tenant-services-page .page-hero .page-hero-shell { width: calc(100% - 2rem); }
+  body.tenant-services-page .page-hero .page-hero-shell h1 { font-size: clamp(2.15rem, 9vw, 3rem); }
+  .tenant-services-page .page-hero .page-intro { font-size: 1rem; }
+  .tenant-services-page .masthead-signal-row span { font-size: 0.75rem; }
+  body.tenant-services-page .service-step-section { padding-block: 1.5rem; }
+  .tenant-services-page .form-section-head h2 { font-size: 1.45rem; }
+  .tenant-services-page .tenant-emergency-strip .eyebrow { font-size: 0.75rem; }
+  .tenant-services-page .service-receipt-grid { grid-template-columns: minmax(0, 1fr); }
+}

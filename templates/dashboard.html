@@ -3,16 +3,17 @@
 {% block title %}Admin Overview | {{ site_settings.site_name }}{% endblock %}
 {% block meta_description %}Admin overview for listings, leads, operations, finance, documents, and site controls on {{ site_settings.site_name }}.{% endblock %}
 {% block robots %}noindex,nofollow{% endblock %}
-{% block body_class %}dashboard-page admin-workspace-page{% endblock %}
+{% block body_class %}dashboard-page admin-workspace-page admin-overview-page{% endblock %}
+{% block head_extras %}<link rel="stylesheet" href="{{ static_asset_url('admin-overview.css') }}">{% endblock %}
 
 {% block content %}
   <section class="page-hero admin-overview-hero">
     <div class="shell admin-overview-shell">
       <div class="admin-overview-intro">
         <p class="eyebrow">Operational overview</p>
-        <h1>Run the business from one workspace.</h1>
+        <h1>Workspace overview</h1>
         <p class="page-intro">
-          Start with what needs attention now, then move into the right queue for deeper record work.
+          Review flagged queues, check recent records, or open a module to continue your work.
         </p>
       </div>
 
@@ -24,6 +25,7 @@
         <a href="{{ url_for('admin_enquiries') }}" class="cta cta-outline">Review leads</a>
         {% endif %}
         <div class="admin-hero-secondary-actions" aria-label="Secondary admin actions">
+          <a href="#admin-modules" class="text-link">All modules</a>
           {% if can('maintenance.view') %}<a href="{{ url_for('admin_maintenance') }}" class="text-link">Operations</a>{% endif %}
           {% if can('finance.view') %}<a href="{{ url_for('admin_finance') }}" class="text-link">Finance</a>{% endif %}
           {% if can('staff.view') %}<a href="{{ url_for('admin_team') }}" class="text-link">Team</a>{% endif %}
@@ -38,10 +40,10 @@
       <div class="dashboard-section-head admin-section-head">
         <div>
           <p class="dashboard-section-kicker">Needs attention</p>
-          <h2>Start with the items that can block revenue or service.</h2>
+          <h2>Queues needing attention</h2>
         </div>
         <div class="dashboard-section-meta">
-          <span class="dashboard-badge dashboard-badge-muted">{{ action_items|length }} active</span>
+          <span class="dashboard-badge dashboard-badge-muted">{{ action_items|length }} flagged queue{% if action_items|length != 1 %}s{% endif %}</span>
         </div>
       </div>
 
@@ -60,7 +62,7 @@
         </div>
       {% else %}
         <div class="empty-state admin-empty-state admin-action-empty">
-          <p>No urgent items are waiting. Use the modules below to review routine work.</p>
+          <p>No items are flagged in the queues you can access. Review recent records or open a module for routine work.</p>
         </div>
       {% endif %}
     </div>
@@ -107,100 +109,14 @@
       <article class="admin-stat-card admin-stat-card-context">
         <span class="admin-stat-label">Tracked views</span>
         <strong class="admin-stat-value">{{ stats.total_views or 0 }}</strong>
-        <span class="admin-stat-meta">{{ stats.featured_count or 0 }} featured listings live</span>
+        <span class="admin-stat-meta">Cumulative property views, not unique visitors</span>
       </article>
       {% endif %}
     </div>
   </section>
 
   <section class="section shell section-tight">
-      <div class="dashboard-section-head admin-section-head">
-        <div>
-          <p class="dashboard-section-kicker">Work queues</p>
-          <h2>Open the module that matches the task.</h2>
-        </div>
-      </div>
-
-    <div class="admin-domain-grid">
-      {% if can('properties.view') %}
-      <a href="{{ url_for('admin_listings') }}" class="admin-domain-card">
-        <span class="admin-domain-label">Listings</span>
-        <strong>{{ stats.total }}</strong>
-        <p>{{ inventory_overview.under_offer_count or 0 }} under offer &middot; {{ inventory_overview.off_market_count or 0 }} off market &middot; {{ inventory_overview.verified_count or 0 }} vetted</p>
-      </a>
-      {% endif %}
-      {% if can('leads.view') %}
-      <a href="{{ url_for('admin_enquiries') }}" class="admin-domain-card">
-        <span class="admin-domain-label">Leads</span>
-        <strong>{{ overview_metrics.lead_attention_count or 0 }}</strong>
-        <p>{{ overview_metrics.due_follow_up_count or 0 }} due now &middot; {{ overview_metrics.unassigned_leads_count or 0 }} still need ownership.</p>
-      </a>
-      {% endif %}
-      {% if can('inspections.view') %}
-      <a href="{{ url_for('admin_inspections') }}" class="admin-domain-card">
-        <span class="admin-domain-label">Inspections</span><strong>Schedule</strong>
-        <p>Confirm property visits, assign staff, and record outcomes against each lead.</p>
-      </a>
-      {% endif %}
-      {% if can('maintenance.view') %}
-      <a href="{{ url_for('admin_maintenance') }}" class="admin-domain-card">
-        <span class="admin-domain-label">Operations</span>
-        <strong>{{ stats.maintenance_open or 0 }}</strong>
-        <p>{{ overview_metrics.emergency_ticket_count or 0 }} emergency &middot; {{ overview_metrics.vendor_gap_count or 0 }} without vendor cover.</p>
-      </a>
-      {% endif %}
-      {% if can('finance.view') %}
-      <a href="{{ url_for('admin_finance') }}" class="admin-domain-card">
-        <span class="admin-domain-label">Finance</span>
-        <strong>{{ stats.financial_due_count or 0 }}</strong>
-        <p>{{ overview_metrics.overdue_finance_count or 0 }} overdue &middot; {{ stats.financial_due_amount | naira }} still open.</p>
-      </a>
-      {% endif %}
-      {% if can('documents.view') %}
-      <a href="{{ url_for('admin_documents') }}" class="admin-domain-card">
-        <span class="admin-domain-label">Documents</span>
-        <strong>{{ stats.document_total or 0 }}</strong>
-        <p>{{ overview_metrics.generated_document_count or 0 }} ready-made agreements and receipts alongside uploaded files.</p>
-      </a>
-      {% endif %}
-      {% if can('staff.view') %}
-      <a href="{{ url_for('admin_team') }}" class="admin-domain-card">
-        <span class="admin-domain-label">Team</span>
-        <strong>Staff access</strong>
-        <p>Review individual accounts, roles, status, and pending invitations.</p>
-      </a>
-      {% endif %}
-      {% if can('partners.view') %}
-      <a href="{{ url_for('admin_partners') }}" class="admin-domain-card">
-        <span class="admin-domain-label">Partners</span><strong>{{ partner_summary.pending }} pending</strong>
-        <p>{{ partner_summary.approved }} approved &middot; {{ partner_summary.total }} total applications.</p>
-      </a>
-      {% endif %}
-      {% if can('audit_logs.view') %}
-      <a href="{{ url_for('admin_audit_log') }}" class="admin-domain-card">
-        <span class="admin-domain-label">Audit</span>
-        <strong>Activity history</strong>
-        <p>Trace important staff, public, and system actions to accountable records.</p>
-      </a>
-      {% endif %}
-      {% if can('analytics.view') %}
-      <a href="{{ url_for('admin_analytics') }}" class="admin-domain-card">
-        <span class="admin-domain-label">Analytics</span>
-        <strong>Business performance</strong>
-        <p>Compare demand, pipeline progress, property engagement, and partner contribution using recorded activity.</p>
-      </a>
-      {% endif %}
-      {% if can('settings.manage') %}
-      <a href="{{ url_for('admin_settings') }}" class="admin-domain-card">
-        <span class="admin-domain-label">Settings</span>
-        <strong>Site controls</strong>
-        <p>Update public contact routes, office details, and footer messaging.</p>
-      </a>
-      {% endif %}
-    </div>
-  </section>
-
-  <section class="section shell section-tight">
+    <div class="dashboard-section-head admin-section-head"><div><p class="dashboard-section-kicker">Recent records</p><h2>Continue your work</h2></div></div>
     <div class="admin-workboard">
       <div class="admin-workboard-main">
         {% if can('leads.view') %}
@@ -389,4 +305,91 @@
       </aside>
     </div>
   </section>
+  <section class="section shell section-tight" id="admin-modules" aria-labelledby="admin-modules-title">
+      <div class="dashboard-section-head admin-section-head">
+        <div>
+          <p class="dashboard-section-kicker">Work queues</p>
+          <h2 id="admin-modules-title">All modules</h2>
+        </div>
+      </div>
+
+    <div class="admin-domain-grid">
+      {% if can('properties.view') %}
+      <a href="{{ url_for('admin_listings') }}" class="admin-domain-card">
+        <span class="admin-domain-label">Listings</span>
+        <strong>{{ stats.total }}</strong>
+        <p>{{ inventory_overview.under_offer_count or 0 }} under offer &middot; {{ inventory_overview.off_market_count or 0 }} off market &middot; {{ inventory_overview.verified_count or 0 }} vetted</p>
+      </a>
+      {% endif %}
+      {% if can('leads.view') %}
+      <a href="{{ url_for('admin_enquiries') }}" class="admin-domain-card">
+        <span class="admin-domain-label">Leads</span>
+        <strong>{{ overview_metrics.lead_attention_count or 0 }}</strong>
+        <p>{{ overview_metrics.due_follow_up_count or 0 }} due now &middot; {{ overview_metrics.unassigned_leads_count or 0 }} still need ownership.</p>
+      </a>
+      {% endif %}
+      {% if can('inspections.view') %}
+      <a href="{{ url_for('admin_inspections') }}" class="admin-domain-card">
+        <span class="admin-domain-label">Inspections</span><strong>Schedule</strong>
+        <p>Confirm property visits, assign staff, and record outcomes against each lead.</p>
+      </a>
+      {% endif %}
+      {% if can('maintenance.view') %}
+      <a href="{{ url_for('admin_maintenance') }}" class="admin-domain-card">
+        <span class="admin-domain-label">Operations</span>
+        <strong>{{ stats.maintenance_open or 0 }}</strong>
+        <p>{{ overview_metrics.emergency_ticket_count or 0 }} emergency &middot; {{ overview_metrics.vendor_gap_count or 0 }} without vendor cover.</p>
+      </a>
+      {% endif %}
+      {% if can('finance.view') %}
+      <a href="{{ url_for('admin_finance') }}" class="admin-domain-card">
+        <span class="admin-domain-label">Finance</span>
+        <strong>{{ stats.financial_due_count or 0 }}</strong>
+        <p>{{ overview_metrics.overdue_finance_count or 0 }} overdue &middot; {{ stats.financial_due_amount | naira }} still open.</p>
+      </a>
+      {% endif %}
+      {% if can('documents.view') %}
+      <a href="{{ url_for('admin_documents') }}" class="admin-domain-card">
+        <span class="admin-domain-label">Documents</span>
+        <strong>{{ stats.document_total or 0 }}</strong>
+        <p>{{ overview_metrics.generated_document_count or 0 }} ready-made agreements and receipts alongside uploaded files.</p>
+      </a>
+      {% endif %}
+      {% if can('staff.view') %}
+      <a href="{{ url_for('admin_team') }}" class="admin-domain-card">
+        <span class="admin-domain-label">Team</span>
+        <strong>Staff access</strong>
+        <p>Review individual accounts, roles, status, and pending invitations.</p>
+      </a>
+      {% endif %}
+      {% if can('partners.view') %}
+      <a href="{{ url_for('admin_partners') }}" class="admin-domain-card">
+        <span class="admin-domain-label">Partners</span><strong>{{ partner_summary.pending }} pending</strong>
+        <p>{{ partner_summary.approved }} approved &middot; {{ partner_summary.total }} total applications.</p>
+      </a>
+      {% endif %}
+      {% if can('audit_logs.view') %}
+      <a href="{{ url_for('admin_audit_log') }}" class="admin-domain-card">
+        <span class="admin-domain-label">Audit</span>
+        <strong>Activity history</strong>
+        <p>Trace important staff, public, and system actions to accountable records.</p>
+      </a>
+      {% endif %}
+      {% if can('analytics.view') %}
+      <a href="{{ url_for('admin_analytics') }}" class="admin-domain-card">
+        <span class="admin-domain-label">Analytics</span>
+        <strong>Business performance</strong>
+        <p>Compare demand, pipeline progress, property engagement, and partner contribution using recorded activity.</p>
+      </a>
+      {% endif %}
+      {% if can('settings.manage') %}
+      <a href="{{ url_for('admin_settings') }}" class="admin-domain-card">
+        <span class="admin-domain-label">Settings</span>
+        <strong>Site controls</strong>
+        <p>Update public contact routes, office details, and footer messaging.</p>
+      </a>
+      {% endif %}
+    </div>
+  </section>
+
 {% endblock %}

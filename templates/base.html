@@ -133,7 +133,7 @@
         <img src="{{ static_asset_url('images/logo-mark.webp') }}" alt="" width="42" height="42" aria-hidden="true">
         <span class="brand-copy">
           <span class="brand-name">{{ site_settings.site_name }}</span>
-          <span class="brand-tag">{{ "Partner portal" if partner_shell else "Admin workspace" if admin_shell or auth_shell else "Based in Lagos, active across
+          <span class="brand-tag">{{ "Partner access" if request.endpoint == "partner_login" else "Partner portal" if partner_shell else "Admin workspace" if admin_shell or auth_shell else "Based in Lagos, active across
             Nigeria" }}</span>
         </span>
       </a>

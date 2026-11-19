@@ -10,22 +10,73 @@
 {% endblock %}
 {% block body_class %}detail-page{% if listing.is_completed %} detail-completed-page{% endif %}{% endblock %}
 
+{% block head_extras %}<link rel="stylesheet" href="{{ static_asset_url('detail-refinement.css') }}">{% endblock %}
+
 {% block content %}
   <section class="page-hero" data-reveal>
     <div class="shell detail-shell">
       {% set gallery = listing_media_gallery(listing) %}
+      <div class="detail-copy detail-summary">
+        <nav class="breadcrumbs" aria-label="Breadcrumb">
+          <ol>
+            <li><a href="{{ url_for('properties') }}">Listings</a></li>
+            <li aria-current="page">{{ listing.title }}</li>
+          </ol>
+        </nav>
+        <div class="detail-heading-meta">
+          <p class="eyebrow">SB / {{ listing.status }}</p>
+          {% if listing.verified_property %}
+            <span class="dashboard-badge dashboard-badge-accent">Verified property</span>
+          {% endif %}
+          {% if listing.verified_landlord %}
+            <span class="dashboard-badge dashboard-badge-accent">Verified landlord</span>
+          {% endif %}
+          {% if listing.availability != 'Available' %}
+            <span class="dashboard-badge dashboard-badge-muted">{{ listing.availability }}</span>
+          {% endif %}
+        </div>
+        <p class="detail-review-scope">Review badges refer to the team's recorded checks. Confirm ownership documents separately with the advisor.</p>
+        <h1>{{ listing.title }}</h1>
+        <p class="page-intro">{{ listing.summary }}</p>
+
+        <section class="detail-decision-card" aria-label="Listing summary">
+          <div>
+            <p class="detail-decision-label">{{ "Last published price" if listing.is_completed else "Asking price" }}</p>
+            <div class="detail-price">{{ listing.price | naira }}{{ listing.price_suffix }}</div>
+            <p class="page-hero-note detail-price-note">
+              {% if listing.is_completed %}This transaction is complete and the property is no longer being marketed.{% else %}Confirm agency fees, service charges, payment terms, and negotiation room with the advisor before booking a viewing.{% endif %}
+            </p>
+          </div>
+          <div class="detail-decision-actions">
+            {% if listing.is_completed %}
+              <a href="{{ url_for('properties') }}" class="cta cta-accent">Browse active properties</a>
+            {% else %}
+              <a href="#property-inspection" class="cta cta-accent">Request an inspection</a>
+              <a href="#property-enquiry" class="cta cta-outline">Ask a question first</a>
+            {% endif %}
+            <div class="detail-contact-links">
+              {% if site_settings.whatsapp_configured %}
+              <a href="{{ general_whatsapp_url if listing.is_completed else listing_whatsapp_url(listing) }}" class="text-link text-link-strong" target="_blank" rel="noreferrer">{{ "Ask for a similar property" if listing.is_completed else "Chat on WhatsApp" }}</a>
+              {% endif %}
+              {% if site_settings.contact_phone_configured %}
+                <a href="tel:{{ site_settings.contact_phone_raw }}" class="text-link">Call sales desk</a>
+              {% endif %}
+              {% if site_settings.contact_email_configured %}<a href="mailto:{{ site_settings.contact_email }}?subject=Enquiry about {{ listing.title | urlencode }}" class="text-link">Enquire by email</a>{% endif %}
+            </div>
+          </div>
+        </section>
+      </div>
+
       <div class="detail-media-column">
       <div class="detail-media-card">
         <img src="{{ asset_url(gallery[0] if gallery else listing_image_path(listing)) }}" alt="{{ listing.title }}" class="detail-image" id="detail-main-image" width="1536" height="1024" loading="eager" fetchpriority="high" decoding="async">
         <div class="detail-media-overlay">
           <span>{{ gallery|length if gallery else 1 }} photo{% if (gallery|length if gallery else 1) != 1 %}s{% endif %}</span>
-          {% if not listing_has_uploaded_image(listing) %}
-            <span>Representative image</span>
+          {% if listing_media_is_representative(listing) %}
+            <span>Representative media included</span>
           {% endif %}
         </div>
-        {% if not listing_has_uploaded_image(listing) %}
-            <span class="property-badge property-badge-secondary property-badge-representative {% if listing.availability != 'Available' %}property-badge-stacked{% endif %}" title="Representative image. Ask for current photos before final decisions.">Representative image</span>
-        {% endif %}
+
       </div>
 
       {% if gallery|length > 1 %}
@@ -58,55 +109,7 @@
       </aside>
       </div>
 
-      <div class="detail-copy">
-        <nav class="breadcrumbs" aria-label="Breadcrumb">
-          <ol>
-            <li><a href="{{ url_for('properties') }}">Listings</a></li>
-            <li aria-current="page">{{ listing.title }}</li>
-          </ol>
-        </nav>
-        <div class="detail-heading-meta">
-          <p class="eyebrow">SB / {{ listing.status }}</p>
-          {% if listing.verified_property %}
-            <span class="dashboard-badge dashboard-badge-accent">Verified property</span>
-          {% endif %}
-          {% if listing.verified_landlord %}
-            <span class="dashboard-badge dashboard-badge-accent">Verified landlord</span>
-          {% endif %}
-          {% if listing.availability != 'Available' %}
-            <span class="dashboard-badge dashboard-badge-muted">{{ listing.availability }}</span>
-          {% endif %}
-        </div>
-        <h1>{{ listing.title }}</h1>
-        <p class="page-intro">{{ listing.summary }}</p>
-
-        <section class="detail-decision-card" aria-label="Listing summary">
-          <div>
-            <p class="detail-decision-label">{{ "Last published price" if listing.is_completed else "Asking price" }}</p>
-            <div class="detail-price">{{ listing.price | naira }}{{ listing.price_suffix }}</div>
-            <p class="page-hero-note detail-price-note">
-              {% if listing.is_completed %}This transaction is complete and the property is no longer being marketed.{% else %}Confirm agency fees, service charges, payment terms, and negotiation room with the advisor before booking a viewing.{% endif %}
-            </p>
-          </div>
-          <div class="detail-decision-actions">
-            {% if listing.is_completed %}
-              <a href="{{ url_for('properties') }}" class="cta cta-accent">Browse active properties</a>
-            {% else %}
-              <a href="#property-inspection" class="cta cta-accent">Request an inspection</a>
-              <a href="#property-enquiry" class="cta cta-outline">Ask a question first</a>
-            {% endif %}
-            <div class="detail-contact-links">
-              {% if site_settings.whatsapp_configured %}
-              <a href="{{ general_whatsapp_url if listing.is_completed else listing_whatsapp_url(listing) }}" class="text-link text-link-strong" target="_blank" rel="noreferrer">{{ "Ask for a similar property" if listing.is_completed else "Chat on WhatsApp" }}</a>
-              {% endif %}
-              {% if site_settings.contact_phone_configured %}
-                <a href="tel:{{ site_settings.contact_phone_raw }}" class="text-link">Call sales desk</a>
-              {% endif %}
-              {% if site_settings.contact_email_configured %}<a href="mailto:{{ site_settings.contact_email }}?subject=Enquiry about {{ listing.title | urlencode }}" class="text-link">Enquire by email</a>{% endif %}
-            </div>
-          </div>
-        </section>
-
+      <div class="detail-copy detail-content">
         <ul class="property-meta property-meta-large">
           <li>{{ listing.property_type }}</li>
           <li>{{ listing.district }}</li>
@@ -136,7 +139,7 @@
             </div>
             <div>
               <dt>Media status</dt>
-              <dd>{% if listing_has_uploaded_image(listing) %}Listing media supplied for this property.{% else %}Representative imagery is marked and current photos can be requested.{% endif %}</dd>
+              <dd>{% if listing_media_is_representative(listing) %}This gallery includes representative imagery. Request current property photos before making a decision.{% else %}Media supplied for this listing. Confirm that photos reflect its current condition.{% endif %}</dd>
             </div>
             <div>
               <dt>Before viewing</dt>
@@ -333,8 +336,8 @@
                 {% if item.availability != 'Available' %}
                   <span class="property-badge property-badge-secondary">{{ item.availability }}</span>
                 {% endif %}
-                {% if not listing_has_uploaded_image(item) %}
-                  <span class="property-badge property-badge-secondary property-badge-representative {% if item.availability != 'Available' %}property-badge-stacked{% endif %}" title="Representative image. Ask for current photos before final decisions.">Representative image</span>
+                {% if listing_media_is_representative(item) %}
+                  <span class="property-badge property-badge-secondary property-badge-representative {% if item.availability != 'Available' %}property-badge-stacked{% endif %}" title="Representative media included. Ask for current photos before final decisions.">Representative media included</span>
                 {% endif %}
               </div>
             </a>

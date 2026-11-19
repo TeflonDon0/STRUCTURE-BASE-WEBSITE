@@ -1,0 +1,168 @@
+/* Catalogue-only refinements; retain shared brand tokens and card contracts. */
+body.properties-page .page-hero {
+  padding-block: clamp(1.75rem, 2.5vw, 2.25rem);
+}
+
+body.properties-page .page-hero .page-hero-shell {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+body.properties-page .page-hero .page-hero-shell > div {
+  gap: 0.75rem;
+}
+
+body.properties-page .page-hero .page-hero-shell h1 {
+  max-width: 28ch;
+  font-size: clamp(2.5rem, 4vw, 3.5rem);
+  line-height: 1.05;
+}
+
+body.properties-page .page-hero .page-intro {
+  max-width: 48rem;
+  margin-top: 0;
+  font-size: 1.05rem;
+}
+
+.properties-page .page-hero .eyebrow { margin-bottom: 0; }
+.properties-page .page-hero h1 { margin-block: 0; }
+
+.properties-page .masthead-signal-row {
+  margin-top: 0;
+}
+
+.properties-page .masthead-actions {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem 1.5rem;
+  margin-top: 0.25rem;
+}
+
+body.properties-page .page-hero .masthead-actions { margin-top: 0.25rem; }
+
+.properties-page .masthead-actions .text-link {
+  width: auto;
+  flex: 0 1 auto;
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+  color: var(--sb-paper);
+}
+
+.properties-page .section:nth-of-type(3n + 2) {
+  background: transparent;
+  box-shadow: none;
+}
+
+body.properties-page .catalogue-filter-panel > .listing-filters {
+  grid-template-columns: minmax(0, 2fr) repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+body.properties-page .catalogue-filter-panel .listing-filters > .form-group {
+  grid-column: auto;
+}
+
+.properties-page .catalogue-filter-head {
+  padding-bottom: 0.75rem;
+}
+
+.properties-page .catalogue-more-filters,
+.properties-page .listing-filters > .filter-actions {
+  grid-column: 1 / -1;
+}
+
+.properties-page .catalogue-more-filters {
+  border-block: 1px solid var(--sb-line);
+}
+
+.properties-page .catalogue-more-filters > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 2.75rem;
+  padding: 0.65rem 0;
+  color: var(--sb-burgundy);
+  font-weight: 700;
+  cursor: pointer;
+  list-style: none;
+}
+
+.properties-page .catalogue-more-filters > summary::-webkit-details-marker {
+  display: none;
+}
+
+.properties-page .catalogue-more-filters > summary::after { content: "+"; }
+.properties-page .catalogue-more-filters[open] > summary::after { content: "\2212"; }
+
+.properties-page .catalogue-more-fields {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+  padding-block: 0.5rem 1rem;
+}
+
+.properties-page .catalogue-more-filters:not([open]) > .catalogue-more-fields {
+  display: none;
+}
+
+body.properties-page .listing-filters > .filter-actions {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  justify-content: flex-start;
+}
+
+.properties-page .filter-actions .text-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+}
+
+.properties-page .catalogue-results-section {
+  padding-top: 1.5rem;
+}
+
+.properties-page .catalogue-media-note {
+  color: var(--sb-muted);
+  font-size: 0.75rem;
+  line-height: 1.5;
+  margin-bottom: 0.35rem;
+}
+
+.properties-page .property-location { background: transparent; }
+.properties-page .catalogue-owner-cta h2 { max-width: 30ch; line-height: 1.15; }
+.properties-page .catalogue-reassurance strong { color: var(--sb-burgundy); }
+
+.properties-page :is(a, button, input, select, summary):focus-visible {
+  outline: 3px solid var(--sb-gold-deep);
+  outline-offset: 4px;
+}
+
+.properties-page .page-hero a:focus-visible { outline-color: var(--sb-gold); }
+
+@media (max-width: 1100px) and (min-width: 761px) {
+  .properties-page .property-meta { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 760px) {
+  body.properties-page .page-hero { padding-block: 1.75rem; }
+  body.properties-page .page-hero .page-hero-shell { width: calc(100% - 2rem); }
+  body.properties-page .page-hero .page-hero-shell h1 { font-size: clamp(2.4rem, 10vw, 3.2rem); }
+  .properties-page .masthead-actions .cta { flex-basis: 100%; }
+  body.properties-page .catalogue-filter-panel > .listing-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  body.properties-page .catalogue-filter-panel .listing-filters > .form-group:has(#q) { grid-column: 1 / -1; }
+  .properties-page .catalogue-more-fields { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .properties-page .catalogue-more-fields .form-group { grid-column: auto; }
+  .properties-page .catalogue-more-fields .form-group:has(:is(#sort, #min_bedrooms)) { grid-column: 1 / -1; }
+  .properties-page .listing-filters :is(input, select) { font-size: 1rem; padding-inline: 0.65rem; }
+  .properties-page .catalogue-filter-panel > summary span::after { content: " +"; color: var(--sb-burgundy); }
+  .properties-page .catalogue-filter-panel[open] > summary span::after { content: " \2212"; }
+}
+
+@media (max-width: 359px) {
+  body.properties-page .catalogue-filter-panel > .listing-filters,
+  .properties-page .catalogue-more-fields { grid-template-columns: minmax(0, 1fr); }
+}

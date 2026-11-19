@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block title %}Privacy | {{ site_settings.site_name }}{% endblock %}
-{% block meta_description %}Learn how {{ site_settings.site_name }} handles listing data, uploaded images, and direct enquiries on the public site and in the dashboard.{% endblock %}
+{% block meta_description %}Learn how {{ site_settings.site_name }} handles property enquiries, maintenance requests, partner accounts, and uploaded images.{% endblock %}
 {% block body_class %}legal-page privacy-page{% endblock %}
 
 {% block content %}
@@ -9,9 +9,9 @@
     <div class="shell page-hero-shell">
       <div>
         <p class="eyebrow">SB / Privacy</p>
-        <h1>How listing and enquiry information is handled.</h1>
+        <h1>How your information is handled.</h1>
         <p class="page-intro">
-          {{ site_settings.site_name }} uses the information on this site to publish property listings and route enquiries to the right team.
+          {{ site_settings.site_name }} uses information submitted through this site to publish listings, respond to enquiries, manage maintenance requests, and administer partner applications and referrals.
         </p>
       </div>
     </div>
@@ -25,18 +25,30 @@
       </article>
       <article class="info-card">
         <h2>Uploaded Images</h2>
-        <p>Uploaded photos are attached to their relevant listings and displayed where needed across the site.</p>
+        <p>Published property photos appear with their listings. A photo submitted with a maintenance request is attached to that request for operations follow-up.</p>
       </article>
       <article class="info-card">
         <h2>Direct Enquiries</h2>
-        <p>Enquiry links route users to your direct email or phone contact so lead handling stays simple and transparent.</p>
+        <p>Enquiry and inspection forms store your contact details, selected property, message, and requested viewing details so authorised staff can respond and coordinate follow-up. External phone, email, and WhatsApp links open the relevant service when configured.</p>
+      </article>
+      <article class="info-card">
+        <h2>Maintenance requests</h2>
+        <p>Resident name, unit, contact details, issue description, priority, and any attached photo are stored for the operations team to review and manage the request.</p>
+      </article>
+      <article class="info-card">
+        <h2>Partner accounts and referrals</h2>
+        <p>Partner applications store identity, contact, location, and marketing-profile details for review. Passwords are stored as hashes. Referral links and recorded activity connect eligible introductions to leads and commission records; partner access is restricted to the records attributed to that account.</p>
+      </article>
+      <article class="info-card">
+        <h2>Sessions and service providers</h2>
+        <p>Cookies support sign-in, form security, and property-referral attribution. The site also uses external font and map services. Depending on the deployment configuration, database, image-storage, and email providers support processing and delivery.</p>
       </article>
       <article class="info-card">
         <h2>Questions</h2>
         {% if site_settings.contact_email_configured %}
         <p>For privacy questions, contact <a href="mailto:{{ site_settings.contact_email }}">{{ site_settings.contact_email }}</a>.</p>
         {% else %}
-        <p>The privacy contact address is environment-managed and will be published here before the final public launch.</p>
+        <p>A dedicated privacy contact has not yet been published. For an existing property enquiry, ask the responding advisor to route your privacy question to the appropriate person.</p>
         {% endif %}
       </article>
     </div>

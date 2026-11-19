@@ -4,79 +4,51 @@
 {% block meta_description %}Log maintenance issues, attach photos, and route tenant facility requests directly to the {{ site_settings.site_name }} operations team.{% endblock %}
 {% block body_class %}tenant-services-page{% endblock %}
 
-{% block content %}
-  {% set contact_error = "" %}
-  {% if field_errors.email %}
-    {% set contact_error = field_errors.email[0] %}
-  {% elif field_errors.phone %}
-    {% set contact_error = field_errors.phone[0] %}
-  {% endif %}
+{% block head_extras %}
+  <link rel="stylesheet" href="{{ static_asset_url('tenant-services.css') }}">
+  <script src="{{ static_asset_url('tenant-services.js') }}" defer></script>
+{% endblock %}
 
+{% block content %}
   <section class="page-hero" data-reveal>
     <div class="shell page-hero-shell">
       <div>
         <p class="eyebrow">SB / Tenant operations</p>
         <h1>Log maintenance requests.</h1>
         <p class="page-intro">
-          Submit the unit reference, one reliable contact method, and a clear description so the operations team can route the request quickly.
+          Tell the operations team what needs attention, where it is, and how to reach you.
         </p>
         <div class="masthead-signal-row" aria-label="Tenant service signals">
           <span>For residents and on-site contacts</span>
-          <span>Routes to operations triage</span>
+          <span>Request reference on submission</span>
           <span>One photo optional</span>
         </div>
         <div class="hero-actions tenant-hero-actions">
           <a href="#maintenance-request" class="cta">Start request</a>
-          {% if site_settings.whatsapp_configured %}<a href="{{ general_whatsapp_url }}" class="text-link text-link-strong" target="_blank" rel="noreferrer">Emergency WhatsApp</a>{% elif site_settings.contact_phone_configured %}<a href="tel:{{ site_settings.contact_phone_raw }}" class="text-link text-link-strong">Emergency phone</a>{% endif %}
+          {% if site_settings.whatsapp_configured %}<a href="{{ general_whatsapp_url }}" class="text-link text-link-strong" target="_blank" rel="noreferrer">Contact operations on WhatsApp</a>{% elif site_settings.contact_phone_configured %}<a href="tel:{{ site_settings.contact_phone_raw }}" class="text-link text-link-strong">Call operations</a>{% endif %}
         </div>
       </div>
-    </div>
-  </section>
-
-  <section class="section shell section-tight" data-reveal>
-    <div class="inner-summary-strip tenant-summary-strip" aria-label="Before sending a maintenance request">
-      <div>
-        <p class="eyebrow">Before you send</p>
-        <p>Choose the closest issue type, add one reliable contact method, and reserve Emergency for active safety, access, power, water, or security risk.</p>
-      </div>
-      <a href="#maintenance-request" class="text-link text-link-strong">Go to request form</a>
     </div>
   </section>
 
   <section class="section shell section-tight tenant-emergency-section" data-reveal>
     <div class="tenant-emergency-strip" role="note" aria-label="Emergency contact guidance">
       <div>
-        <p class="eyebrow">Active risk?</p>
-        <h2>{% if site_settings.whatsapp_configured or site_settings.contact_phone_configured %}Contact the operations desk now for active safety, access, power, water, or security risk.{% else %}Submit the request for operations follow-up and use the relevant local emergency service if anyone is in immediate danger.{% endif %}</h2>
+        <p class="eyebrow">Safety comes first</p>
+        <h2>If anyone is in immediate danger, contact the relevant local emergency service.</h2>
+        <p>Do not wait for an online response.{% if site_settings.whatsapp_configured or site_settings.contact_phone_configured %} Contact operations for urgent property issues, then log the details when safe.{% else %} Log maintenance details below when it is safe to do so.{% endif %}</p>
       </div>
       {% if site_settings.whatsapp_configured %}<a href="{{ general_whatsapp_url }}" class="cta cta-small" target="_blank" rel="noreferrer">Open WhatsApp</a>{% elif site_settings.contact_phone_configured %}<a href="tel:{{ site_settings.contact_phone_raw }}" class="cta cta-small">Call operations</a>{% else %}<a href="#maintenance-request" class="cta cta-small">Log the issue</a>{% endif %}
     </div>
   </section>
 
-  <section class="section shell section-tight" data-reveal>
-    <div class="objection-strip" aria-label="Tenant service reassurance">
-      <article>
-        <strong>What happens next</strong>
-        <p>You receive a request reference and follow-up window after submission.</p>
-      </article>
-      <article>
-        <strong>What to include</strong>
-        <p>Unit, contact method, priority, and one clear photo are enough for first triage.</p>
-      </article>
-      <article>
-        <strong>Privacy</strong>
-        <p>Your contact and issue details are used to route this request to the operations team.</p>
-      </article>
-    </div>
-  </section>
-
   {% if submission_receipt %}
     <section class="section shell section-tight" data-reveal>
-      <article class="service-receipt">
+      <article class="service-receipt" id="tenant-receipt" tabindex="-1" data-tenant-feedback aria-labelledby="tenant-receipt-title">
         <div class="service-receipt-head">
           <div>
             <p class="eyebrow">Request received</p>
-            <h2>{{ submission_receipt.ticket_reference }}</h2>
+            <h2 id="tenant-receipt-title">{{ submission_receipt.ticket_reference }}</h2>
             <p class="page-intro">The operations desk can now triage your request and assign the next action.</p>
           </div>
           <span class="dashboard-badge">{{ submission_receipt.priority }}</span>
@@ -101,14 +73,14 @@
           </div>
         </div>
 
-        <p class="service-receipt-note">{{ submission_receipt.response_window }}</p>
+        <p class="service-receipt-note">{% if submission_receipt.is_emergency %}Emergency priority recorded. Do not wait for an online response if there is immediate danger.{% else %}{{ submission_receipt.response_window }}{% endif %}</p>
 
         {% if submission_receipt.is_emergency %}
           <div class="service-emergency-note is-visible">
             <p class="service-emergency-title">Escalate immediately if the risk is active.</p>
             <p class="form-note">
-              Your request is logged. If people, access, power, water, or security are currently at risk, contact the operations desk on
-              {% if site_settings.whatsapp_configured %}<a href="{{ general_whatsapp_url }}" target="_blank" rel="noreferrer">WhatsApp now</a>{% elif site_settings.contact_phone_configured %}<a href="tel:{{ site_settings.contact_phone_raw }}">call the operations desk</a>{% else %}use the relevant local emergency service if anyone is in immediate danger{% endif %}.
+              Your request is logged. If anyone is in immediate danger, contact the relevant local emergency service.
+              {% if site_settings.whatsapp_configured %}For urgent property issues, <a href="{{ general_whatsapp_url }}" target="_blank" rel="noreferrer">contact operations on WhatsApp</a>.{% elif site_settings.contact_phone_configured %}For urgent property issues, <a href="tel:{{ site_settings.contact_phone_raw }}">call operations</a>.{% endif %}
             </p>
           </div>
         {% endif %}
@@ -117,34 +89,42 @@
   {% endif %}
 
   <section class="section shell section-tight" id="maintenance-request" data-reveal>
-    <form method="post" enctype="multipart/form-data" class="contact-form listing-form service-form">
+    <form method="post" enctype="multipart/form-data" class="contact-form listing-form service-form" aria-labelledby="tenant-form-title">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
-      <div class="service-form-summary" aria-label="Maintenance request checklist">
-        <div>
-          <p class="eyebrow">Request checklist</p>
-          <h2>Takes about 2-3 minutes.</h2>
-        </div>
+      <div class="tenant-form-intro">
+        <p class="eyebrow">Maintenance request</p>
+        <h2 id="tenant-form-title">Tell us what needs attention.</h2>
+        <p>Fields marked required must be completed. Add either email or phone so the team can follow up. A photo is optional.</p>
+      </div>
+
+      {% if field_errors %}
+      <div class="tenant-error-summary" id="tenant-errors" tabindex="-1" data-tenant-feedback aria-labelledby="tenant-errors-title">
+        <h2 id="tenant-errors-title">Check your request before sending.</h2>
+        <p>Your entries have been kept. Correct the fields below.{% if form_data.resident_name or form_data.description %} If you selected a photo, choose it again before resubmitting.{% endif %}</p>
+        {% set error_labels = {'resident_name': 'Resident name', 'unit_reference': 'Unit reference', 'email': 'Email or phone', 'phone': 'Phone or WhatsApp', 'issue_category': 'Issue category', 'priority': 'Priority', 'description': 'Issue description', 'issue_image': 'Photo'} %}
         <ul>
-          <li>Required: resident name and unit reference.</li>
-          <li>Required: email or phone/WhatsApp.</li>
-          <li>Required: issue category, priority, and description.</li>
-          <li>Optional: one clear photo.</li>
+          {% for field, messages in field_errors.items() %}
+            {% if field != 'phone' or messages != field_errors.email %}
+            <li><a href="#{{ field }}">{{ error_labels.get(field, field) }}: {{ messages[0] }}</a></li>
+            {% endif %}
+          {% endfor %}
         </ul>
       </div>
+      {% endif %}
 
       <section class="form-section service-step-section">
         <div class="form-section-head">
           <div>
             <p class="form-section-kicker"><span class="service-step-number">1</span> Resident details</p>
-            <h2>Who should the team follow up with?</h2>
+            <h2>Your name and unit</h2>
           </div>
           <p class="form-note">Use the resident or on-site contact who can confirm access, timing, or recent history.</p>
         </div>
 
         <div class="form-row">
           <div class="form-group{% if field_errors.resident_name %} has-error{% endif %}">
-            <label for="resident_name">Resident name</label>
+            <label for="resident_name">Resident name <span class="tenant-field-note">(required)</span></label>
             <input
               type="text"
               id="resident_name"
@@ -157,7 +137,7 @@
             {% if field_errors.resident_name %}<p id="resident_name-error" class="form-error">{{ field_errors.resident_name[0] }}</p>{% endif %}
           </div>
           <div class="form-group{% if field_errors.unit_reference %} has-error{% endif %}">
-            <label for="unit_reference">Unit reference</label>
+            <label for="unit_reference">Unit reference <span class="tenant-field-note">(required)</span></label>
             <input
               type="text"
               id="unit_reference"
@@ -172,7 +152,7 @@
         </div>
 
         <div class="form-group">
-          <label for="property_title">Property or estate name</label>
+          <label for="property_title">Property or estate name <span class="tenant-field-note">(optional)</span></label>
           <input
             type="text"
             id="property_title"
@@ -187,9 +167,9 @@
         <div class="form-section-head">
           <div>
             <p class="form-section-kicker"><span class="service-step-number">2</span> Follow-up contact</p>
-            <h2>Add at least one contact method</h2>
+            <h2>How can we reach you?</h2>
           </div>
-          <p class="form-note">Phone or WhatsApp is best when the team may need quick access confirmation.</p>
+          <p class="form-note">Use a contact method you can check for access arrangements and follow-up questions.</p>
         </div>
 
         <div class="form-row">
@@ -201,9 +181,10 @@
               name="email"
               value="{{ form_data.email }}"
               autocomplete="email"
-              {% if field_errors.email or contact_error %}aria-invalid="true"{% endif %}
-              {% if contact_error %}aria-describedby="contact-help"{% endif %}
+              {% if field_errors.email %}aria-invalid="true"{% endif %}
+              aria-describedby="contact-help{% if field_errors.email %} email-error{% endif %}"
             >
+            {% if field_errors.email %}<p id="email-error" class="form-error">{{ field_errors.email[0] }}</p>{% endif %}
           </div>
           <div class="form-group{% if field_errors.phone %} has-error{% endif %}">
             <label for="phone">Phone or WhatsApp</label>
@@ -213,13 +194,14 @@
               name="phone"
               value="{{ form_data.phone }}"
               autocomplete="tel"
-              {% if field_errors.phone or contact_error %}aria-invalid="true"{% endif %}
-              {% if contact_error %}aria-describedby="contact-help"{% endif %}
+              {% if field_errors.phone %}aria-invalid="true"{% endif %}
+              aria-describedby="contact-help{% if field_errors.phone %} phone-error{% endif %}"
             >
+            {% if field_errors.phone %}<p id="phone-error" class="form-error">{{ field_errors.phone[0] }}</p>{% endif %}
           </div>
         </div>
-        <p id="contact-help" class="{% if contact_error %}form-error{% else %}form-hint{% endif %}">
-          {{ contact_error or "Add either email or phone. Phone or WhatsApp gives the fastest route for access-sensitive issues." }}
+        <p id="contact-help" class="form-hint">
+          Add either email or phone. You may provide both if that helps the team reach you.
         </p>
       </section>
 
@@ -229,12 +211,12 @@
             <p class="form-section-kicker"><span class="service-step-number">3</span> Issue details</p>
             <h2>Describe what needs attention</h2>
           </div>
-          <p class="form-note">Choose the closest category and set priority honestly so the queue stays useful for the operations desk.</p>
+          <p class="form-note">Choose the closest category. Use Emergency for an active safety, access, power, water, or security risk.</p>
         </div>
 
         <div class="form-row">
           <div class="form-group{% if field_errors.issue_category %} has-error{% endif %}">
-            <label for="issue_category">Issue category</label>
+            <label for="issue_category">Issue category <span class="tenant-field-note">(required)</span></label>
             <select
               id="issue_category"
               name="issue_category"
@@ -249,12 +231,13 @@
             {% if field_errors.issue_category %}<p id="issue_category-error" class="form-error">{{ field_errors.issue_category[0] }}</p>{% endif %}
           </div>
           <div class="form-group{% if field_errors.priority %} has-error{% endif %}">
-            <label for="priority">Priority</label>
+            <label for="priority">Priority <span class="tenant-field-note">(required)</span></label>
             <select
               id="priority"
               name="priority"
+              aria-describedby="priority-help{% if field_errors.priority %} priority-error{% endif %}"
               required
-              {% if field_errors.priority %}aria-invalid="true" aria-describedby="priority-error"{% endif %}
+              {% if field_errors.priority %}aria-invalid="true"{% endif %}
             >
               {% for option in maintenance_priority_options %}
                 <option value="{{ option }}" {% if form_data.priority == option %}selected{% endif %}>{{ option }}</option>
@@ -264,19 +247,22 @@
           </div>
         </div>
 
+        <p class="form-hint" id="priority-help">Low: minor issue. Medium: routine maintenance. High: urgent disruption. Emergency: active risk.</p>
+
         <div
           id="emergency-note"
-          class="service-emergency-note{% if form_data.priority == 'Emergency' %} is-visible{% endif %}"
+          role="status" aria-live="polite" class="service-emergency-note{% if form_data.priority == 'Emergency' %} is-visible{% endif %}"
           {% if form_data.priority != 'Emergency' %}hidden{% endif %}
         >
           <p class="service-emergency-title">Emergency priority is for active risk.</p>
           <p class="form-note">
-            Use it for live safety, access, security, power, or water issues. Submit the request first{% if site_settings.whatsapp_configured %}, then escalate on <a href="{{ general_whatsapp_url }}" target="_blank" rel="noreferrer">WhatsApp</a>{% elif site_settings.contact_phone_configured %}, then <a href="tel:{{ site_settings.contact_phone_raw }}">call the operations desk</a>{% endif %} if the situation is still active.
+            If anyone is in immediate danger, contact the relevant local emergency service. Do not wait for this form.
+            {% if site_settings.whatsapp_configured %}For urgent property issues, <a href="{{ general_whatsapp_url }}" target="_blank" rel="noreferrer">contact operations on WhatsApp</a>.{% elif site_settings.contact_phone_configured %}For urgent property issues, <a href="tel:{{ site_settings.contact_phone_raw }}">call operations</a>.{% endif %} Log the details when safe.
           </p>
         </div>
 
         <div class="form-group{% if field_errors.description %} has-error{% endif %}">
-          <label for="description">Issue description</label>
+          <label for="description">Issue description <span class="tenant-field-note">(required)</span></label>
           <textarea
             id="description"
             name="description"
@@ -303,7 +289,7 @@
         </div>
 
         <div class="form-group{% if field_errors.issue_image %} has-error{% endif %}">
-          <label for="issue_image">Photo of the issue</label>
+          <label for="issue_image">Photo of the issue <span class="tenant-field-note">(optional)</span></label>
           <input
             type="file"
             id="issue_image"
@@ -334,4 +320,21 @@
       </div>
     </form>
   </section>
+  <section class="section shell section-tight" data-reveal>
+    <div class="objection-strip" aria-label="Tenant service reassurance">
+      <article>
+        <strong>What happens next</strong>
+        <p>You receive a request reference and follow-up window after submission.</p>
+      </article>
+      <article>
+        <strong>What to include</strong>
+        <p>Include your unit, a contact method, and the issue details. A photo is optional.</p>
+      </article>
+      <article>
+        <strong>Privacy</strong>
+        <p>Your contact and issue details are used to route this request to the operations team.</p>
+      </article>
+    </div>
+  </section>
+
 {% endblock %}

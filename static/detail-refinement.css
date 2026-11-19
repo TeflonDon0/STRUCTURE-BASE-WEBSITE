@@ -1,0 +1,36 @@
+/* Focused detail and partner sign-in corrections. */
+.detail-page .detail-review-scope {
+  color: var(--sb-paper);
+  font-size: 0.8rem;
+  line-height: 1.6;
+}
+.partner-signin-page .login-form {
+  display: grid;
+  gap: 1.25rem;
+}
+.partner-signin-page .detail-copy h1 {
+  max-width: 19ch;
+  font-size: clamp(2.25rem, 4vw, 3.5rem);
+  line-height: 1.08;
+}
+.partner-signin-page .login-form input {
+  font-size: 1rem;
+}
+/* Keep the document order aligned with the stacked reading and focus order. */
+@media (min-width: 1101px) {
+  .detail-page .detail-summary { grid-column: 2; grid-row: 1; }
+  .detail-page .detail-media-column { grid-column: 1; grid-row: 1 / span 2; }
+  .detail-page .detail-content { grid-column: 2; grid-row: 2; }
+}
+@media (max-width: 1100px) {
+  .detail-page .detail-summary > .breadcrumbs { order: 0; }
+  .detail-page .detail-summary > h1 { order: 1; margin: 0; }
+  .detail-page .detail-summary > .detail-heading-meta { order: 2; }
+  .detail-page .detail-summary > .detail-decision-card { order: 3; }
+  .detail-page .detail-summary > .page-intro { order: 4; }
+  .detail-page .detail-summary > .detail-review-scope { order: 5; margin: 0; }
+  .detail-page .detail-media-overlay { flex-wrap: wrap; }
+}
+@media (max-width: 760px) {
+  .partner-signin-page .detail-copy h1 { max-width: 100%; }
+}

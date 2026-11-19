@@ -3,6 +3,9 @@
 {% block title %}{{ site_settings.site_name }} | Property Listings and Advisory{% endblock %}
 {% block meta_description %}Browse the current {{ site_settings.site_name }} catalogue with clear pricing, strong photography, and direct response routes from a team based in Lagos and active across Nigeria.{% endblock %}
 {% block body_class %}home-page{% endblock %}
+{% block head_extras %}
+  <link rel="stylesheet" href="{{ static_asset_url('home.css') }}">
+{% endblock %}
 
 {% block content %}
   {% set spotlight = featured[0] if featured else None %}
@@ -91,6 +94,9 @@
             <span class="hero-live-pill"><span aria-hidden="true"></span>{{ spotlight.availability }}</span>
           </div>
           <div class="hero-listing-body">
+            {% if listing_media_is_representative(spotlight) %}
+            <p class="home-media-note">Representative media included &middot; ask for current photos</p>
+            {% endif %}
             <div class="hero-listing-head">
               <div>
                 <h2>{{ spotlight.title }}</h2>
@@ -130,10 +136,9 @@
               </div>
               <div>
                 <dt>
-                  <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m6 8 1.2-3h9.6L18 8l2 2v7h-2v2h-2v-2H8v2H6v-2H4v-7l2-2Zm2.6-1-1 2h8.8l-1-2H8.6ZM7 14h3v-2H7v2Zm7 0h3v-2h-3v2Z"/></svg>
-                  <span>{{ spotlight.availability }}</span>
+                  <span>{{ spotlight.property_type }}</span>
                 </dt>
-                <dd>Status</dd>
+                <dd>Property type</dd>
               </div>
             </dl>
             <a href="{{ url_for('property_detail', listing_id=spotlight.id) }}" class="hero-listing-link">View this property</a>
@@ -172,7 +177,7 @@
       <div class="section-heading section-heading-inline">
         <div>
           <p class="eyebrow">Featured properties</p>
-          <h2>A focused edit of current homes and investment-ready spaces.</h2>
+          <h2>Properties to start your shortlist.</h2>
         </div>
         <a href="{{ url_for('properties') }}" class="text-link text-link-strong">View the full selection</a>
       </div>
@@ -184,6 +189,9 @@
               <img src="{{ asset_url(listing_image_path(listing)) }}" alt="{{ listing.title }}" class="editorial-image" width="1536" height="1024" loading="lazy" decoding="async">
             </a>
             <div class="editorial-copy">
+              {% if listing_media_is_representative(listing) %}
+              <p class="home-media-note">Representative media included &middot; ask for current photos</p>
+              {% endif %}
               <p class="editorial-kicker">{{ listing.district }} &middot; {{ listing.property_type }}</p>
               <h3>{{ listing.title }}</h3>
               <p class="editorial-price">{{ listing.price | naira }}{{ listing.price_suffix }}</p>
@@ -268,16 +276,16 @@
     <div class="section-heading section-heading-inline">
       <div>
         <p class="eyebrow">Search By District</p>
-        <h2>Explore areas with very different rhythms, budgets, and daily patterns.</h2>
+        <h2>Find your part of Lagos.</h2>
       </div>
     </div>
 
     <div class="district-grid district-grid-curated">
       {% for area in districts[:4] %}
         <article class="district-card district-card-curated">
-          <p class="district-card-kicker">Active now</p>
+          <p class="district-card-kicker">In the catalogue</p>
           <h3>{{ area.district }}</h3>
-          <p>{{ area.count }} live listing{% if area.count != 1 %}s{% endif %} currently available to review.</p>
+          <p>{{ area.total }} published listing{% if area.total != 1 %}s{% endif %} to explore. Check each property for availability.</p>
           <a href="{{ url_for('properties', district=area.district) }}" class="district-card-action">Browse {{ area.district }}</a>
         </article>
       {% endfor %}
@@ -286,9 +294,10 @@
 
   <section class="section shell" data-reveal>
     <div class="home-story-grid">
-      <article class="home-story-card home-story-card-image">
-        <img src="{{ static_asset_url('images/team-corporate-nigeria.webp') }}" alt="Structurebase advisors reviewing property options with clients in a Lagos office" width="1619" height="972" loading="lazy" decoding="async">
-      </article>
+      <figure class="home-story-card home-story-card-image">
+        <img src="{{ static_asset_url('images/team-corporate-nigeria.webp') }}" alt="Illustration of a property advisory conversation" width="1619" height="972" loading="lazy" decoding="async">
+        <figcaption>Illustrative advisory scene</figcaption>
+      </figure>
       <article class="home-story-card home-story-card-copy">
         <p class="eyebrow">How The Team Works</p>
         <h2>Clear signals before viewing. Cleaner follow-up after enquiry.</h2>
