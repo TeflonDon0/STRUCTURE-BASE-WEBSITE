@@ -357,3 +357,23 @@ body.partner-public-page .partner-hero .detail-copy h1 {
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+/* Put the application ahead of supplementary review/process material. */
+.partner-public-page .partner-application-layout {
+  grid-template-columns: minmax(0, 1.5fr) minmax(0, .7fr);
+}
+@media (max-width: 980px) {
+  .partner-public-page .partner-application-layout { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 760px) {
+  .partner-public-page .partner-hero-media {
+    display: block;
+    height: 10rem;
+    min-height: 0;
+    max-height: none;
+    aspect-ratio: auto;
+  }
+  .partner-public-page .partner-hero-media img { height: 100%; min-height: 0; object-fit: cover; }
+  .partner-public-page .partner-hero .page-intro { font-size: 1rem; }
+  .partner-public-page .partner-hero { padding-block: 1.5rem; }
+}

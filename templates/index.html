@@ -8,13 +8,15 @@
 <section class="home-masthead" aria-labelledby="home-heading">
   <div class="shell home-masthead-grid">
     <div class="home-intro">
+      <div class="home-title">
       <p class="eyebrow">Property sales &amp; rentals &middot; Lagos</p>
       <h1 id="home-heading">{{ site_settings.homepage_hero_heading }}</h1>
+      </div>
       <p class="home-intro-copy">{{ site_settings.homepage_hero_intro }}</p>
       <form method="get" action="{{ url_for('properties') }}" class="home-search" aria-label="Search properties">
         <div class="home-search-primary">
           <label for="home-district">Location<select id="home-district" name="district"><option value="">All districts</option>{% for district in search_districts %}<option value="{{ district.district }}">{{ district.district }}</option>{% endfor %}</select></label>
-          <label for="home-purpose">Buy or rent<select id="home-purpose" name="status"><option value="">Buy or rent</option>{% for option in status_options %}<option value="{{ option }}">{{ option }}</option>{% endfor %}</select></label>
+          <label for="home-purpose">Looking to<select id="home-purpose" name="status"><option value="">Buy or rent</option>{% for option in status_options %}<option value="{{ option }}">{{ option }}</option>{% endfor %}</select></label>
         </div>
         <details class="home-search-options" data-home-filters open>
           <summary>Property type &amp; budget</summary>
@@ -27,7 +29,7 @@
       </form>
       <a href="{{ url_for('properties') }}" class="home-browse-link">Or browse all available properties <span aria-hidden="true">&rarr;</span></a>
     </div>
-    <figure class="home-masthead-image"><img src="{{ static_asset_url('images/structurbhero2.webp') }}" alt="Contemporary residential property" width="1536" height="1024" fetchpriority="high" decoding="async"></figure>
+    <figure class="home-masthead-image"><img src="{{ static_asset_url('images/structurbhero2.webp') }}" srcset="{{ static_asset_url('images/structurbhero2-640.webp') }} 640w, {{ static_asset_url('images/structurbhero2-960.webp') }} 960w, {{ static_asset_url('images/structurbhero2.webp') }} 1536w" sizes="(max-width: 760px) 100vw, (max-width: 1004px) 75vw, (max-width: 1440px) 66vw, 900px" alt="Contemporary residential property" width="1536" height="1024" fetchpriority="high" decoding="async"></figure>
   </div>
 </section>
   {% if editorial %}

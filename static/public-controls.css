@@ -1,0 +1,61 @@
+/* One public control system, loaded after the page styles. Admin styles are separate. */
+body:is(.home-page, .properties-page, .detail-page, .about-page, .tenant-services-page, .partner-public-page, .partner-status-page, .legal-page) #main :is(.cta, .home-button) {
+  min-height: 2.75rem;
+  border: 1px solid var(--sb-gold);
+  border-radius: .4rem;
+  background: var(--sb-gold);
+  /* The legacy cascade forces CTA text colours; keep this override scoped. */
+  color: var(--sb-ink) !important;
+  box-shadow: none;
+  text-shadow: none;
+  font-size: .875rem;
+  font-weight: 800;
+  line-height: 1.4;
+}
+
+body:is(.home-page, .properties-page, .detail-page, .about-page, .tenant-services-page, .partner-public-page, .partner-status-page, .legal-page) #main :is(.cta, .home-button):hover {
+  background: var(--sb-paper-deep);
+  border-color: var(--sb-gold-deep);
+  color: var(--sb-ink) !important;
+  box-shadow: none;
+  transform: none;
+}
+
+body:is(.home-page, .properties-page, .detail-page, .about-page, .tenant-services-page, .partner-public-page, .partner-status-page, .legal-page) #main :is(.cta-secondary, .cta-outline) {
+  background: transparent;
+  border-color: var(--sb-burgundy);
+  color: var(--sb-burgundy) !important;
+}
+
+body:is(.home-page, .properties-page, .detail-page, .about-page, .tenant-services-page, .partner-public-page, .partner-status-page, .legal-page) #main :is(.page-hero, .home-masthead, .home-closing) :is(.cta-secondary, .cta-outline) {
+  border-color: var(--sb-gold);
+  color: var(--sb-paper) !important;
+}
+
+body:is(.home-page, .properties-page, .detail-page, .about-page, .tenant-services-page, .partner-public-page, .partner-status-page, .legal-page) #main :is(.cta-secondary, .cta-outline):hover {
+  background: var(--sb-paper-deep);
+  color: var(--sb-ink) !important;
+}
+
+body:is(.home-page, .properties-page, .detail-page, .about-page, .tenant-services-page, .partner-public-page, .partner-status-page, .legal-page) #main :is(.info-card, .editorial-card, .district-card) {
+  border-radius: .75rem;
+  box-shadow: none;
+}
+
+body:is(.home-page, .properties-page, .detail-page, .about-page, .tenant-services-page, .partner-public-page, .partner-status-page, .legal-page) #main :is(a, button, input, select, textarea, summary):focus-visible {
+  outline: 3px solid var(--sb-focus);
+  outline-offset: 4px;
+}
+
+body:is(.home-page, .properties-page, .detail-page, .about-page, .tenant-services-page, .partner-public-page, .partner-status-page, .legal-page) #main :is(.page-hero, .home-masthead, .home-closing) :is(a, button, summary):focus-visible {
+  outline-color: var(--sb-paper);
+}
+
+body:is(.home-page, .properties-page, .detail-page, .about-page, .tenant-services-page, .partner-public-page, .partner-status-page, .legal-page) #main :is(.contact-form, .service-form) :is(a, button, summary):focus-visible {
+  outline-color: var(--sb-focus);
+}
+
+body:is(.home-page, .properties-page, .detail-page, .about-page, .tenant-services-page, .partner-public-page, .partner-status-page, .legal-page) #main :is(.home-media-note, .home-search label, .partner-field-note, .tenant-field-note) {
+  font-size: .8125rem;
+  line-height: 1.5;
+}

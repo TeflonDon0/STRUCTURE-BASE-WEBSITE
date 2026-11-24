@@ -193,3 +193,31 @@ body.admin-overview-page #admin-modules {
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+.admin-overview-page .admin-module-picker { border: 0; background: transparent; padding: 0; margin: 0; }
+.admin-overview-page .admin-module-picker > summary { display: none; }
+@media (max-width: 760px) {
+  body.admin-overview-page .admin-module-picker > summary {
+    display: list-item;
+    min-height: 2.75rem;
+    padding: .75rem;
+    border: 1px solid var(--admin-line);
+    border-radius: .5rem;
+    cursor: pointer;
+    font-weight: 700;
+  }
+  body.admin-overview-page .admin-module-picker[open] > .admin-domain-grid { margin-top: 1rem; }
+  body.admin-overview-page .admin-domain-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  body.admin-overview-page .admin-domain-card { gap: .35rem; padding: .85rem; }
+  body.admin-overview-page .admin-domain-card strong { font-size: 1.05rem; }
+  body.admin-overview-page .admin-domain-card p { font-size: .8125rem; }
+  body.admin-overview-page .admin-action-card { gap: .5rem .75rem; padding: .85rem; }
+  body.admin-overview-page .admin-action-copy > span { line-height: 1.5; font-size: .8125rem; }
+  body.admin-overview-page .admin-stat-card { padding: .8rem; }
+  body.admin-overview-page .admin-stat-value { font-size: 1.5rem; }
+  body.admin-overview-page .admin-overview-hero { padding-block: 1rem; }
+  body.admin-overview-page .admin-hero-actions .admin-hero-secondary-actions { gap: .25rem .85rem; }
+}
+@media (max-width: 359px) {
+  body.admin-overview-page .admin-domain-grid { grid-template-columns: minmax(0, 1fr); }
+}

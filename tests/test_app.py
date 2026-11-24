@@ -305,14 +305,16 @@ def test_production_healthcheck_does_not_expose_configuration(client) -> None:
     assert response.get_json() == {"status": "ok"}
 
 
-def test_partner_application_explains_review_process_before_the_form(client) -> None:
+def test_partner_application_keeps_review_terms_and_direct_form_entry(client) -> None:
     response = client.get("/partners/register")
 
     assert response.status_code == 200
     assert b"A reviewed route" in response.data
     assert b"from application to commission" in response.data
     assert b"Start application" in response.data
-    assert response.data.index(b"How it works") < response.data.index(b'id="partner-application"')
+    assert b'href="#full-name"' in response.data
+    assert b"Applications are reviewed before access is activated." in response.data
+    assert b"Commission eligibility and payment depend on" in response.data
 
 
 def test_home_search_and_budget_filter_reduce_discovery_friction(client) -> None:
@@ -1736,3 +1738,32 @@ def test_staff_invitation_is_single_use_and_creates_hashed_account(client) -> No
                     "DELETE FROM activity_log WHERE entity_type = 'staff_user' AND entity_id NOT IN (SELECT public_id FROM staff_users)"
                 )
                 db.commit()
+
+
+def test_listing_bulk_and_delete_forms_have_independent_ownership(client) -> None:
+    from html.parser import HTMLParser
+
+    class FormOwnershipParser(HTMLParser):
+        def __init__(self):
+            super().__init__()
+            self.active_form = None
+            self.selection_count = 0
+
+        def handle_starttag(self, tag, attributes):
+            attrs = dict(attributes)
+            if tag == "form":
+                assert self.active_form is None, "Nested forms break browser submission ownership"
+                self.active_form = attrs.get("id") or attrs.get("action") or "form"
+            if tag == "input" and attrs.get("name") == "listing_ids":
+                assert attrs.get("form") == "listing-bulk-form"
+                self.selection_count += 1
+
+        def handle_endtag(self, tag):
+            if tag == "form":
+                self.active_form = None
+
+    response = authenticated_client(client).get("/dashboard/listings")
+    assert response.status_code == 200
+    parser = FormOwnershipParser()
+    parser.feed(response.get_data(as_text=True))
+    assert parser.selection_count > 0

@@ -10,18 +10,9 @@
   <section class="page-hero" data-reveal>
     <div class="shell page-hero-shell">
       <div>
-        <p class="eyebrow">Property catalogue</p>
-        <h1>Find a property that fits.</h1>
-        <p class="page-intro">
-          Compare sale, rent, and lease listings by district, budget, and property type.
-        </p>
-        <div class="masthead-signal-row" aria-label="Catalogue signals">
-          <span>{{ listings|length }} matching listing{% if listings|length != 1 %}s{% endif %}</span>
-          <span>Sale, rent, and lease</span>
-        </div>
+        <h1>Find your next property.</h1>
         <div class="hero-actions masthead-actions">
           <a href="#listing-filters" class="cta" data-open-filter="true">Filter listings</a>
-          <a href="#catalogue-results" class="text-link">View results</a>
           <a href="#catalogue-map" class="text-link">Explore the map</a>
         </div>
       </div>
@@ -40,17 +31,6 @@
         <strong>{{ listings|length }} result{% if listings|length != 1 %}s{% endif %}{% if active_filter_count %} · {{ active_filter_count }} filter{% if active_filter_count != 1 %}s{% endif %}{% endif %}</strong>
       </summary>
       <form method="get" action="{{ url_for('properties') }}#catalogue-results" class="listing-filters" id="listing-filters" aria-label="Filter property listings">
-        <div class="catalogue-filter-head">
-          <div>
-            <p class="eyebrow">Current view</p>
-            <p><strong>{{ listings|length }} listing{% if listings|length != 1 %}s{% endif %}</strong> match{% if listings|length == 1 %}es{% endif %} your current search.</p>
-          </div>
-          {% if site_settings.whatsapp_configured %}
-            <a href="{{ general_whatsapp_url }}" class="text-link text-link-strong catalogue-advisor-link" target="_blank" rel="noreferrer">Need help shortlisting?</a>
-          {% elif site_settings.contact_email_configured %}
-            <a href="mailto:{{ site_settings.contact_email }}?subject=Structurebase%20property%20shortlist" class="text-link text-link-strong catalogue-advisor-link">Email the property desk</a>
-          {% endif %}
-        </div>
         <div class="form-group">
           <label for="q">Search</label>
           <input type="search" id="q" name="q" value="{{ filters.q }}" placeholder="Property name, area, or keyword">
@@ -134,6 +114,12 @@
           </div>
         </details>
         <div class="filter-actions">
+          {% if site_settings.whatsapp_configured %}
+            <a href="{{ general_whatsapp_url }}" class="text-link text-link-strong catalogue-advisor-link" target="_blank" rel="noreferrer">Need help shortlisting?</a>
+          {% elif site_settings.contact_email_configured %}
+            <a href="mailto:{{ site_settings.contact_email }}?subject=Structurebase%20property%20shortlist" class="text-link text-link-strong catalogue-advisor-link">Email the property desk</a>
+          {% endif %}
+
           <button type="submit" class="cta cta-small" data-loading-label="Applying...">Apply filters</button>
           <a href="{{ url_for('properties') }}" class="text-link">Reset</a>
         </div>
@@ -145,9 +131,9 @@
     {% if listings %}
       <div class="catalogue-results-head">
         <div>
-          <p class="eyebrow">Results</p>
+
           <h2>{{ listings|length }} property option{% if listings|length != 1 %}s{% endif %}</h2>
-          <p class="catalogue-results-note">Review location, asking price, availability, and essential features before opening the full property record.</p>
+
         </div>
         {% if site_settings.whatsapp_configured %}
           <a href="{{ general_whatsapp_url }}" class="text-link text-link-strong" target="_blank" rel="noreferrer">Ask for a shortlist</a>

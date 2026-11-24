@@ -166,3 +166,30 @@ body.properties-page .listing-filters > .filter-actions {
   body.properties-page .catalogue-filter-panel > .listing-filters,
   .properties-page .catalogue-more-fields { grid-template-columns: minmax(0, 1fr); }
 }
+
+/* Compact discovery chrome keeps inventory close to the controls. */
+body.properties-page .page-hero { padding-block: 1.5rem; }
+body.properties-page .page-hero .page-hero-shell > div {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+body.properties-page .page-hero .page-hero-shell h1 {
+  font-size: clamp(2rem, 3vw, 2.75rem);
+  max-width: 100%;
+}
+body.properties-page .page-hero .masthead-actions { margin: 0; }
+body.properties-page .catalogue-results-head { margin-bottom: 1rem; }
+body.properties-page .catalogue-results-head h2 { margin: 0; font-size: 1.25rem; }
+body.properties-page .catalogue-filter-panel { box-shadow: none; padding: 1rem 1.25rem; }
+body.properties-page .catalogue-filter-panel .listing-filters { gap: .75rem; }
+body.properties-page .catalogue-filter-panel .filter-actions { gap: 1rem; }
+body.properties-page .catalogue-filter-panel .catalogue-advisor-link { order: 2; }
+body.properties-page .page-hero + .section { padding-top: 1.5rem; }
+@media (max-width: 760px) {
+  body.properties-page .catalogue-filter-panel { padding: .5rem 1rem; }
+  body.properties-page .page-hero .masthead-actions { flex-direction: row; }
+  body.properties-page .page-hero .masthead-actions .cta { width: auto; min-width: 10rem; }
+}

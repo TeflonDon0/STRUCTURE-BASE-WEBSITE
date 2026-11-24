@@ -18,10 +18,13 @@
   <div class="admin-pipeline-panel">
     <div class="dashboard-section-head admin-section-head"><div><p class="dashboard-section-kicker">Pipeline</p><h2>Lead flow and follow-up health.</h2></div>
       <div class="dashboard-section-meta"><span class="dashboard-badge dashboard-badge-muted">{{ enquiry_summary.open_count }} open</span><span class="dashboard-badge dashboard-badge-accent">{{ enquiry_summary.due_follow_up_count }} due</span></div></div>
+    <details class="mobile-disclosure" data-mobile-disclosure open>
+      <summary>Pipeline stages</summary>
     <div class="admin-pipeline-grid">
       {% for status in enquiry_status_options %}<article class="admin-pipeline-step {% if status in ['CLOSED_WON','CLOSED_LOST','ARCHIVED'] %}admin-pipeline-step-closed{% endif %}"><span>{{ lead_stage_labels[status] }}</span><strong>{{ enquiry_summary.status_counts.get(status, 0) }}</strong></article>{% endfor %}
     </div>
     <p class="admin-insight-note">{{ enquiry_summary.unassigned_count }} open lead{{ '' if enquiry_summary.unassigned_count == 1 else 's' }} still need ownership.</p>
+    </details>
   </div>
 </section>
 

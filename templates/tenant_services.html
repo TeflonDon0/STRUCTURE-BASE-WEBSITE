@@ -13,16 +13,10 @@
   <section class="page-hero" data-reveal>
     <div class="shell page-hero-shell">
       <div>
-        <p class="eyebrow">Tenant operations</p>
         <h1>Log maintenance requests.</h1>
         <p class="page-intro">
           Tell the operations team what needs attention, where it is, and how to reach you.
         </p>
-        <div class="masthead-signal-row" aria-label="Tenant service signals">
-          <span>For residents and on-site contacts</span>
-          <span>Request reference on submission</span>
-          <span>One photo optional</span>
-        </div>
         <div class="hero-actions tenant-hero-actions">
           <a href="#maintenance-request" class="cta">Start request</a>
           {% if site_settings.whatsapp_configured %}<a href="{{ general_whatsapp_url }}" class="text-link text-link-strong" target="_blank" rel="noreferrer">Contact operations on WhatsApp</a>{% elif site_settings.contact_phone_configured %}<a href="tel:{{ site_settings.contact_phone_raw }}" class="text-link text-link-strong">Call operations</a>{% endif %}
@@ -34,11 +28,9 @@
   <section class="section shell section-tight tenant-emergency-section" data-reveal>
     <div class="tenant-emergency-strip" role="note" aria-label="Emergency contact guidance">
       <div>
-        <p class="eyebrow">Safety comes first</p>
-        <h2>If anyone is in immediate danger, contact the relevant local emergency service.</h2>
-        <p>Do not wait for an online response.{% if site_settings.whatsapp_configured or site_settings.contact_phone_configured %} Contact operations for urgent property issues, then log the details when safe.{% else %} Log maintenance details below when it is safe to do so.{% endif %}</p>
+        <p><strong>Immediate danger?</strong> Contact the relevant local emergency service. Do not wait for an online response.</p>
       </div>
-      {% if site_settings.whatsapp_configured %}<a href="{{ general_whatsapp_url }}" class="cta cta-small" target="_blank" rel="noreferrer">Open WhatsApp</a>{% elif site_settings.contact_phone_configured %}<a href="tel:{{ site_settings.contact_phone_raw }}" class="cta cta-small">Call operations</a>{% else %}<a href="#maintenance-request" class="cta cta-small">Log the issue</a>{% endif %}
+      {% if site_settings.whatsapp_configured %}<a href="{{ general_whatsapp_url }}" class="cta cta-small" target="_blank" rel="noreferrer">Open WhatsApp</a>{% elif site_settings.contact_phone_configured %}<a href="tel:{{ site_settings.contact_phone_raw }}" class="cta cta-small">Call operations</a>{% endif %}
     </div>
   </section>
 

@@ -1,8 +1,22 @@
 /* Focused detail and partner sign-in corrections. */
-.detail-page .detail-review-scope {
-  color: var(--sb-paper);
-  font-size: 0.8rem;
-  line-height: 1.6;
+.detail-page .detail-summary {
+  gap: .75rem;
+}
+.detail-page .detail-summary :is(h1, .eyebrow, .detail-decision-label) {
+  margin: 0;
+}
+.detail-page .detail-summary .detail-price {
+  font-size: clamp(1.8rem, 3vw, 2.6rem);
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+.detail-page .detail-content > .detail-heading-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem;
+}
+.detail-page .detail-decision-card {
+  gap: 1rem;
 }
 .partner-signin-page .login-form {
   display: grid;
@@ -23,12 +37,7 @@
   .detail-page .detail-content { grid-column: 2; grid-row: 2; }
 }
 @media (max-width: 1100px) {
-  .detail-page .detail-summary > .breadcrumbs { order: 0; }
-  .detail-page .detail-summary > h1 { order: 1; margin: 0; }
-  .detail-page .detail-summary > .detail-heading-meta { order: 2; }
-  .detail-page .detail-summary > .detail-decision-card { order: 3; }
-  .detail-page .detail-summary > .page-intro { order: 4; }
-  .detail-page .detail-summary > .detail-review-scope { order: 5; margin: 0; }
+  .detail-page .detail-summary > h1 { font-size: clamp(2.1rem, 6vw, 3rem); line-height: 1.1; }
   .detail-page .detail-media-overlay { flex-wrap: wrap; }
 }
 @media (max-width: 760px) {

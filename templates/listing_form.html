@@ -15,7 +15,8 @@
         </p>
       </div>
 
-      <aside class="page-hero-card listing-editor-brief">
+      <details class="page-hero-card listing-editor-brief mobile-disclosure" data-mobile-disclosure open>
+        <summary>Publishing checklist</summary>
         <p class="eyebrow">Publishing Checklist</p>
         <ul class="hero-proof hero-proof-compact">
           <li>Use clear district and address fields for Lagos search intent</li>
@@ -31,7 +32,7 @@
           <span>Required: title, location, price, summary</span>
           <span>Optional: gallery, map coordinates, trust filters</span>
         </div>
-      </aside>
+      </details>
     </div>
   </section>
 
@@ -299,8 +300,8 @@
           <button type="submit" class="cta" data-loading-label="Saving...">{{ submit_label }}</button>
           <a href="{{ back_url }}" class="text-link">Back</a>
         </div>
-        <p class="form-note">Saving returns you to the inventory queue. Published listings update the public catalogue immediately.</p>
       </div>
+      <p class="form-note">Saving returns you to the inventory queue. Published listings update the public catalogue immediately.</p>
     </form>
   </section>
 {% endblock %}

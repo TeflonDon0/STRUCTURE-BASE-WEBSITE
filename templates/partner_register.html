@@ -16,58 +16,19 @@
         <p class="eyebrow">Partner programme</p>
         <h1>Introduce properties. Track your opportunities.</h1>
         <p class="page-intro">For realtors and property marketers: apply to share approved listings, use personal referral links, and follow lead and commission status.</p>
-        <ul class="partner-hero-signals" aria-label="Partner programme benefits">
-          <li>Reviewed partner identity</li>
-          <li>Approved property materials</li>
-          <li>Traceable referral workflow</li>
-        </ul>
         <div class="hero-actions masthead-actions">
-          <a href="#partner-application" class="cta">Start application</a>
+          <a href="#full-name" class="cta">Start application</a>
           <a href="{{ url_for('partner_login') }}" class="cta cta-secondary">Partner sign in</a>
         </div>
       </div>
       <div class="detail-media-card detail-media-card-promo partner-hero-media">
         <img src="{{ static_asset_url('images/login-promo-lagos.webp') }}" alt="Illustration of a residential street" width="1536" height="1024" loading="eager" fetchpriority="high" decoding="async">
-        <div class="partner-hero-media-note">
-          <strong>Approved inventory. Clear attribution.</strong>
-        </div>
       </div>
     </div>
-  </section>
-
-  <section class="section shell section-tight" data-reveal aria-labelledby="partner-process-title">
-    <div class="section-heading section-heading-inline">
-      <div>
-        <p class="eyebrow">How it works</p>
-        <h2 id="partner-process-title">A reviewed route from application to commission.</h2>
-      </div>
-      <p>Applications are reviewed before access is activated. Commission eligibility and payment depend on the applicable rules, deal progress, and approval.</p>
-    </div>
-    <ol class="partner-process-list">
-      <li><span>01</span><strong>Apply</strong><p>Share your identity, location, experience, and marketing channels.</p></li>
-      <li><span>02</span><strong>Get reviewed</strong><p>The team checks fit and confirms whether portal access can be activated.</p></li>
-      <li><span>03</span><strong>Share responsibly</strong><p>Use approved property assets and personal referral links so activity remains attributable.</p></li>
-      <li><span>04</span><strong>Track outcomes</strong><p>Follow lead and commission status from the partner portal as opportunities progress.</p></li>
-    </ol>
   </section>
 
   <section class="section shell section-tight" id="partner-application" data-reveal>
     <div class="partner-application-layout">
-      <aside class="partner-application-aside">
-        <p class="eyebrow">Application</p>
-        <h2>Your route to the partner network.</h2>
-        <p>Share accurate contact details and tell us about your property audience. After submitting, you can sign in to check the review status.</p>
-        <details class="partner-review-note">
-          <summary>What the review looks for</summary>
-          <ul>
-            <li>Accurate identity and contact details</li>
-            <li>A clear, responsible marketing approach</li>
-            <li>Fit with available locations and inventory</li>
-          </ul>
-        </details>
-        <p class="form-note">Already applied? <a href="{{ url_for('partner_login') }}" class="text-link text-link-strong">Sign in to check your status</a>.</p>
-      </aside>
-
       <form method="post" action="{{ url_for('partner_register') }}" class="contact-form partner-application-form" aria-labelledby="partner-form-title">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div class="partner-form-intro">
@@ -156,6 +117,38 @@
           <p class="form-note">Next: your application is recorded as pending review. Sign in with your email and password to check its status.</p>
         </div>
       </form>
+      <aside class="partner-application-aside">
+        <p class="eyebrow">Application</p>
+        <h2>Your route to the partner network.</h2>
+        <p>Share accurate contact details and tell us about your property audience. After submitting, you can sign in to check the review status.</p>
+        <details class="partner-review-note">
+          <summary>What the review looks for</summary>
+          <ul>
+            <li>Accurate identity and contact details</li>
+            <li>A clear, responsible marketing approach</li>
+            <li>Fit with available locations and inventory</li>
+          </ul>
+        </details>
+        <p class="form-note">Already applied? <a href="{{ url_for('partner_login') }}" class="text-link text-link-strong">Sign in to check your status</a>.</p>
+      </aside>
+
+
     </div>
   </section>
+  <section class="section shell section-tight" data-reveal aria-labelledby="partner-process-title">
+    <div class="section-heading section-heading-inline">
+      <div>
+        <p class="eyebrow">How it works</p>
+        <h2 id="partner-process-title">A reviewed route from application to commission.</h2>
+      </div>
+      <p>Applications are reviewed before access is activated. Commission eligibility and payment depend on the applicable rules, deal progress, and approval.</p>
+    </div>
+    <ol class="partner-process-list">
+      <li><span>01</span><strong>Apply</strong><p>Share your identity, location, experience, and marketing channels.</p></li>
+      <li><span>02</span><strong>Get reviewed</strong><p>The team checks fit and confirms whether portal access can be activated.</p></li>
+      <li><span>03</span><strong>Share responsibly</strong><p>Use approved property assets and personal referral links so activity remains attributable.</p></li>
+      <li><span>04</span><strong>Track outcomes</strong><p>Follow lead and commission status from the partner portal as opportunities progress.</p></li>
+    </ol>
+  </section>
+
 {% endblock %}

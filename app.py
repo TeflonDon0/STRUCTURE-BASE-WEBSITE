@@ -322,7 +322,7 @@ DEFAULT_EMAIL_FOOTER_NOTE = "Client communications from a Lagos-based team activ
 DEFAULT_HOMEPAGE_HERO_HEADING = "Find your next property in Lagos."
 LEGACY_HOMEPAGE_HERO_HEADING = "Find verified property options. Move with clear guidance."
 DEFAULT_HOMEPAGE_HERO_INTRO = (
-    "Explore homes and commercial spaces to buy or rent. Compare prices, shortlist locations, and arrange a viewing with the team."
+    "Compare homes and commercial spaces, then arrange a viewing with the team."
 )
 LEGACY_HOMEPAGE_HERO_INTRO = (
     "Curated listings and advisor support for buyers, renters, landlords, and investors in Lagos and selected Nigerian markets."
@@ -2884,7 +2884,7 @@ def site_settings() -> dict[str, str | bool]:
     ]
     if homepage_hero_heading in {LEGACY_HOMEPAGE_HERO_HEADING, "Verified property options. Clear next steps."}:
         homepage_hero_heading = DEFAULT_HOMEPAGE_HERO_HEADING
-    if homepage_hero_intro in {LEGACY_HOMEPAGE_HERO_INTRO, "For buyers, renters, landlords, and investors who need current listings, clear pricing, and direct advisor follow-up across Lagos and selected Nigerian markets."}:
+    if homepage_hero_intro in {LEGACY_HOMEPAGE_HERO_INTRO, "Explore homes and commercial spaces to buy or rent. Compare prices, shortlist locations, and arrange a viewing with the team.", "For buyers, renters, landlords, and investors who need current listings, clear pricing, and direct advisor follow-up across Lagos and selected Nigerian markets."}:
         homepage_hero_intro = DEFAULT_HOMEPAGE_HERO_INTRO
     homepage_trust_signals = [
         DEFAULT_HOMEPAGE_TRUST_SIGNAL_1 if homepage_trust_signals[0] == LEGACY_HOMEPAGE_TRUST_SIGNAL_1 else homepage_trust_signals[0],

@@ -234,12 +234,18 @@ document.querySelectorAll("[data-partner-marketing-actions]").forEach((actions) 
 
 if (nav && toggle) {
   const mobileNavQuery = window.matchMedia("(max-width: 860px)");
+  const mobileNavigationActive = () => mobileNavQuery.matches || (
+    toggle.getClientRects().length > 0 && getComputedStyle(toggle).visibility !== "hidden"
+  );
   let focusBeforeNavOpen = null;
 
   const syncNavAvailability = (open) => {
-    const shouldHideNav = mobileNavQuery.matches && !open;
+    const shouldHideNav = mobileNavigationActive() && !open;
     nav.toggleAttribute("inert", shouldHideNav);
     nav.setAttribute("aria-hidden", String(shouldHideNav));
+    const backgroundLocked = mobileNavigationActive() && open;
+    document.getElementById("main")?.toggleAttribute("inert", backgroundLocked);
+    document.querySelector(".site-footer")?.toggleAttribute("inert", backgroundLocked);
   };
 
   const syncToggleLabel = (open) => {
@@ -286,6 +292,18 @@ if (nav && toggle) {
     if (event.key === "Escape") {
       closeNav();
     }
+    if (event.key === "Tab" && mobileNavigationActive() && nav.classList.contains("open")) {
+      const controls = [toggle, ...nav.querySelectorAll("a, button, summary, input, select")]
+        .filter((element) => !element.disabled && element.getClientRects().length && getComputedStyle(element).visibility !== "hidden");
+      const lastControl = controls[controls.length - 1];
+      if (event.shiftKey && document.activeElement === toggle) {
+        event.preventDefault();
+        lastControl?.focus();
+      } else if (!event.shiftKey && document.activeElement === lastControl) {
+        event.preventDefault();
+        toggle.focus();
+      }
+    }
   });
 
   document.addEventListener("click", (event) => {
@@ -295,7 +313,7 @@ if (nav && toggle) {
   });
 
   window.addEventListener("resize", () => {
-    if (window.innerWidth > 860) {
+    if (!mobileNavigationActive()) {
       closeNav();
       syncNavAvailability(true);
       return;

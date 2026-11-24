@@ -31,6 +31,6 @@ partnerApplication.addEventListener("focus", () => {
 window.addEventListener("load", () => {
   window.requestAnimationFrame(() => {
     if (partnerErrors) partnerErrors.focus();
-    else if (window.location.hash === "#partner-application") partnerNameField.focus();
+    else if (["#partner-application", "#full-name"].includes(window.location.hash)) partnerNameField.focus();
   });
 }, { once: true });

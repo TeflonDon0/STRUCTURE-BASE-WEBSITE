@@ -36,7 +36,12 @@
   <link rel="stylesheet" href="{{ static_asset_url('style.css') }}">
   <link rel="stylesheet" href="{{ static_asset_url('refinement.css') }}">
   {% block head_extras %}{% endblock %}
+  {% if request.endpoint in ['home', 'properties', 'property_detail', 'about', 'tenant_services', 'partner_register', 'partner_application_status', 'privacy', 'terms'] %}
+  <link rel="stylesheet" href="{{ static_asset_url('public-controls.css') }}">
+  {% endif %}
+  <link rel="stylesheet" href="{{ static_asset_url('mobile-ux.css') }}">
   <script src="{{ static_asset_url('site.js') }}" defer></script>
+  <script src="{{ static_asset_url('mobile-ux.js') }}" defer></script>
   {% if not request.path.startswith('/dashboard') and request.endpoint not in ['login', 'partner_login', 'partner_application_status', 'accept_staff_invitation', 'communication_preview_frame'] %}
   <script type="application/ld+json" nonce="{{ csp_nonce() }}">{{ organization_structured_data() | tojson }}</script>
   {% endif %}

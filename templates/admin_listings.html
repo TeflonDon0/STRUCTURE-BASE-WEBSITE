@@ -164,10 +164,10 @@
   <section class="section shell section-tight">
     {% if listings %}
       {% if can('properties.edit') %}
-      <form method="post" action="{{ url_for('bulk_update_listings') }}" class="admin-bulk-shell" data-selection-scope>
+      <div class="admin-bulk-shell" data-selection-scope>
+      <form id="listing-bulk-form" method="post" action="{{ url_for('bulk_update_listings') }}" class="admin-bulk-bar">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <input type="hidden" name="next" value="{{ next_url }}">
-        <div class="admin-bulk-bar">
           <div class="admin-bulk-copy">
             <p class="dashboard-section-kicker">Bulk actions</p>
             <h2>Apply one change across selected listings</h2>
@@ -182,7 +182,7 @@
             </select>
             <button type="submit" class="cta cta-small">Apply to selected</button>
           </div>
-        </div>
+      </form>
       {% else %}
       <div class="admin-bulk-shell">
       {% endif %}
@@ -193,7 +193,7 @@
               <div class="admin-record-select">
                 {% if can('properties.edit') %}
                 <label class="checkbox">
-                  <input type="checkbox" name="listing_ids" value="{{ listing.id }}" data-selection-item>
+                  <input type="checkbox" name="listing_ids" value="{{ listing.id }}" form="listing-bulk-form" data-selection-item>
                   <span>Select</span>
                 </label>
                 {% endif %}
@@ -251,7 +251,7 @@
             </article>
           {% endfor %}
         </div>
-      {% if can('properties.edit') %}</form>{% else %}</div>{% endif %}
+      </div>
     {% else %}
       <div class="empty-state dashboard-empty-state">
         <p>No listings match the current inventory view.</p>

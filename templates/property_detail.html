@@ -23,48 +23,10 @@
             <li aria-current="page">{{ listing.title }}</li>
           </ol>
         </nav>
-        <div class="detail-heading-meta">
-          <p class="eyebrow">{{ listing.status }}</p>
-          {% if listing.verified_property %}
-            <span class="dashboard-badge dashboard-badge-accent">Verified property</span>
-          {% endif %}
-          {% if listing.verified_landlord %}
-            <span class="dashboard-badge dashboard-badge-accent">Verified landlord</span>
-          {% endif %}
-          {% if listing.availability != 'Available' %}
-            <span class="dashboard-badge dashboard-badge-muted">{{ listing.availability }}</span>
-          {% endif %}
-        </div>
-        <p class="detail-review-scope">Review badges refer to the team's recorded checks. Confirm ownership documents separately with the advisor.</p>
+        <p class="eyebrow">{% if listing.availability != 'Available' %}{{ listing.availability }} &middot; {% endif %}{{ listing.district }} &middot; {{ listing.status }}</p>
         <h1>{{ listing.title }}</h1>
-        <p class="page-intro">{{ listing.summary }}</p>
-
-        <section class="detail-decision-card" aria-label="Listing summary">
-          <div>
-            <p class="detail-decision-label">{{ "Last published price" if listing.is_completed else "Asking price" }}</p>
-            <div class="detail-price">{{ listing.price | naira }}{{ listing.price_suffix }}</div>
-            <p class="page-hero-note detail-price-note">
-              {% if listing.is_completed %}This transaction is complete and the property is no longer being marketed.{% else %}Confirm agency fees, service charges, payment terms, and negotiation room with the advisor before booking a viewing.{% endif %}
-            </p>
-          </div>
-          <div class="detail-decision-actions">
-            {% if listing.is_completed %}
-              <a href="{{ url_for('properties') }}" class="cta cta-accent">Browse active properties</a>
-            {% else %}
-              <a href="#property-inspection" class="cta cta-accent">Request an inspection</a>
-              <a href="#property-enquiry" class="cta cta-outline">Ask a question first</a>
-            {% endif %}
-            <div class="detail-contact-links">
-              {% if site_settings.whatsapp_configured %}
-              <a href="{{ general_whatsapp_url if listing.is_completed else listing_whatsapp_url(listing) }}" class="text-link text-link-strong" target="_blank" rel="noreferrer">{{ "Ask for a similar property" if listing.is_completed else "Chat on WhatsApp" }}</a>
-              {% endif %}
-              {% if site_settings.contact_phone_configured %}
-                <a href="tel:{{ site_settings.contact_phone_raw }}" class="text-link">Call sales desk</a>
-              {% endif %}
-              {% if site_settings.contact_email_configured %}<a href="mailto:{{ site_settings.contact_email }}?subject=Enquiry about {{ listing.title | urlencode }}" class="text-link">Enquire by email</a>{% endif %}
-            </div>
-          </div>
-        </section>
+        <p class="detail-decision-label">{{ "Last published price" if listing.is_completed else "Asking price" }}</p>
+        <div class="detail-price">{{ listing.price | naira }}{{ listing.price_suffix }}</div>
       </div>
 
       <div class="detail-media-column">
@@ -107,6 +69,40 @@
       </div>
 
       <div class="detail-copy detail-content">
+        <section class="detail-decision-card" aria-label="Listing summary">
+          <p class="detail-price-note">{% if listing.is_completed %}This property is no longer being marketed.{% else %}Confirm agency fees, service charges, and payment terms before booking.{% endif %}</p>
+          <div class="detail-decision-actions">
+            {% if listing.is_completed %}
+              <a href="{{ url_for('properties') }}" class="cta cta-accent">Browse active properties</a>
+            {% else %}
+              <a href="#property-inspection" class="cta cta-accent">Request an inspection</a>
+              <a href="#property-enquiry" class="cta cta-outline">Ask a question first</a>
+            {% endif %}
+            <div class="detail-contact-links">
+              {% if site_settings.whatsapp_configured %}
+              <a href="{{ general_whatsapp_url if listing.is_completed else listing_whatsapp_url(listing) }}" class="text-link text-link-strong" target="_blank" rel="noreferrer">{{ "Ask for a similar property" if listing.is_completed else "Chat on WhatsApp" }}</a>
+              {% endif %}
+              {% if site_settings.contact_phone_configured %}
+                <a href="tel:{{ site_settings.contact_phone_raw }}" class="text-link">Call sales desk</a>
+              {% endif %}
+              {% if site_settings.contact_email_configured %}<a href="mailto:{{ site_settings.contact_email }}?subject=Enquiry about {{ listing.title | urlencode }}" class="text-link">Enquire by email</a>{% endif %}
+            </div>
+          </div>
+        </section>
+        <p class="page-intro">{{ listing.summary }}</p>
+
+        <div class="detail-heading-meta">
+          {% if listing.verified_property %}
+            <span class="dashboard-badge dashboard-badge-accent">Verified property</span>
+          {% endif %}
+          {% if listing.verified_landlord %}
+            <span class="dashboard-badge dashboard-badge-accent">Verified landlord</span>
+          {% endif %}
+          {% if listing.availability != 'Available' %}
+            <span class="dashboard-badge dashboard-badge-muted">{{ listing.availability }}</span>
+          {% endif %}
+        </div>
+
         <ul class="property-meta property-meta-large">
           <li>{{ listing.property_type }}</li>
           <li>{{ listing.district }}</li>
